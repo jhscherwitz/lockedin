@@ -17,4 +17,17 @@ Then open <http://localhost:8000> in your browser.
 
 ## Status
 
-In progress. Currently at Step 0: project skeleton.
+In progress.
+
+**Done**
+- Step 0 — project skeleton
+- Step 1 — animated gradient background, live clock
+- Step 2 — Pomodoro timer (focus / short break / long break)
+- Step 3 — corner docks and sliding frosted panels
+
+**Next**
+- Step 4 — ambient sound mixer
+- Step 5 — Spotify playlist embeds
+- Step 6 — task list
+- Step 7 — save settings between visits
+- Step 8 — deploy
