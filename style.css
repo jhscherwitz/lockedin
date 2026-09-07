@@ -1,8 +1,7 @@
 /* ==========================================================================
    Design tokens
-   Every colour and font lives here. Change a value once, and everything
-   that uses it updates. This is what makes the background and timer font
-   swappable later without hunting through the file.
+   Every colour, font and surface lives here. Change a value once and
+   everything using it updates.
    ========================================================================== */
 
 :root {
@@ -19,8 +18,16 @@
   --text: #ffffff;
   --text-dim: rgba(255, 255, 255, 0.7);
 
-  /* Font used by the clock and (later) the timer */
+  /* Frosted-glass surfaces */
+  --glass: rgba(255, 255, 255, 0.12);
+  --glass-hover: rgba(255, 255, 255, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --accent: #7c5cff;
+
+  /* Fonts. --timer-font follows --display-font unless set on its own,
+     which is what the font picker will change later. */
   --display-font: "Outfit", system-ui, sans-serif;
+  --timer-font: var(--display-font);
 }
 
 * {
@@ -67,21 +74,18 @@ body {
   left: -10%;
   animation: drift-a 26s ease-in-out infinite;
 }
-
 .blob-b {
   background: var(--blob-b);
   top: 5%;
   right: -15%;
   animation: drift-b 32s ease-in-out infinite;
 }
-
 .blob-c {
   background: var(--blob-c);
   bottom: -25%;
   left: 15%;
   animation: drift-c 29s ease-in-out infinite;
 }
-
 .blob-d {
   background: var(--blob-d);
   bottom: -15%;
@@ -89,50 +93,23 @@ body {
   animation: drift-d 35s ease-in-out infinite;
 }
 
-/* Different distances and durations, so the blobs never sync up
-   into an obvious repeating pattern. */
-
 @keyframes drift-a {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(16vw, 14vh) scale(1.25);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(16vw, 14vh) scale(1.25); }
 }
-
 @keyframes drift-b {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1.1);
-  }
-  50% {
-    transform: translate(-14vw, 18vh) scale(0.9);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1.1); }
+  50%      { transform: translate(-14vw, 18vh) scale(0.9); }
 }
-
 @keyframes drift-c {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(12vw, -16vh) scale(1.2);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(12vw, -16vh) scale(1.2); }
 }
-
 @keyframes drift-d {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1.15);
-  }
-  50% {
-    transform: translate(-18vw, -12vh) scale(0.95);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1.15); }
+  50%      { transform: translate(-18vw, -12vh) scale(0.95); }
 }
 
-/* Respect people who get motion sickness from animation. */
 @media (prefers-reduced-motion: reduce) {
   .blob {
     animation: none;
@@ -140,7 +117,7 @@ body {
 }
 
 /* ==========================================================================
-   Clock
+   Layout
    ========================================================================== */
 
 main {
@@ -152,19 +129,124 @@ main {
   padding: 1rem;
 }
 
+/* ==========================================================================
+   Clock (now secondary to the timer)
+   ========================================================================== */
+
 .clock {
   font-family: var(--display-font);
-  font-size: clamp(4rem, 16vw, 11rem);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
   font-weight: 200;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1;
-  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.25);
 }
 
 .greeting {
-  margin: 0.75rem 0 0;
+  margin: 0.4rem 0 0;
   font-family: var(--display-font);
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
   font-weight: 300;
   color: var(--text-dim);
+}
+
+/* ==========================================================================
+   Timer
+   ========================================================================== */
+
+.modes {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.mode-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.15rem;
+  font-family: var(--display-font);
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-btn:hover {
+  color: var(--text);
+  background: var(--glass);
+}
+
+.mode-btn.is-active {
+  color: var(--text);
+  background: var(--accent);
+}
+
+.timer {
+  font-family: var(--timer-font);
+  font-size: clamp(4.5rem, 17vw, 12rem);
+  font-weight: 200;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 1.5rem 0 0;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.3s;
+}
+
+/* Flashes when a session finishes. */
+.timer.is-done {
+  animation: pulse 0.9s ease-in-out 4;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.25; }
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.btn {
+  border-radius: 999px;
+  padding: 0.8rem 2.5rem;
+  font-family: var(--display-font);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  border: 0;
+  color: var(--text);
+  background: var(--accent);
+}
+
+.btn-primary:hover {
+  background: #8f72ff;
+}
+
+.btn-ghost {
+  color: var(--text-dim);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  padding: 0.8rem 1.5rem;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  background: var(--glass-hover);
 }
