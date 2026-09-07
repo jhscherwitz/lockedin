@@ -138,3 +138,78 @@ modeButtons.forEach((btn) => {
 });
 
 render();
+
+/* ==========================================================================
+   Panels
+
+   Same shape as the timer: a piece of state, one render function, and
+   handlers that only ever change state. One system serves all four panels
+   instead of four copies of near-identical code.
+   ========================================================================== */
+
+const dockButtons = document.querySelectorAll(".dock-btn[data-panel]");
+const panels = document.querySelectorAll(".panel");
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+
+// The name of the open panel, or null when everything is closed.
+let openPanel = null;
+
+function renderPanels() {
+  panels.forEach((panel) => {
+    panel.classList.toggle("is-open", panel.dataset.panel === openPanel);
+  });
+
+  dockButtons.forEach((btn) => {
+    const isOpen = btn.dataset.panel === openPanel;
+    btn.classList.toggle("is-active", isOpen);
+    // Tells screen readers whether this button's panel is showing.
+    btn.setAttribute("aria-expanded", String(isOpen));
+  });
+}
+
+function togglePanel(name) {
+  // Clicking the button of the panel that's already open closes it.
+  openPanel = openPanel === name ? null : name;
+  renderPanels();
+}
+
+function closePanels() {
+  if (!openPanel) return;
+  openPanel = null;
+  renderPanels();
+}
+
+dockButtons.forEach((btn) => {
+  btn.addEventListener("click", () => togglePanel(btn.dataset.panel));
+});
+
+document.querySelectorAll(".panel-close").forEach((btn) => {
+  btn.addEventListener("click", closePanels);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closePanels();
+});
+
+// Click anywhere that isn't inside a panel or on a dock button, and we close.
+// .closest() walks up from the clicked element looking for a match, so this
+// works even when you click the text inside a panel rather than the panel.
+document.addEventListener("click", (event) => {
+  if (!openPanel) return;
+  if (event.target.closest(".panel")) return;
+  if (event.target.closest(".dock-btn")) return;
+  closePanels();
+});
+
+/* ---- Fullscreen ---- */
+
+fullscreenBtn.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    // Can be refused by the browser, so swallow the rejection.
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+});
+
+renderPanels();

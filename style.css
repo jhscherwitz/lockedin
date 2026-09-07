@@ -250,3 +250,147 @@ main {
   color: var(--text);
   background: var(--glass-hover);
 }
+
+/* ==========================================================================
+   Docks (the corner buttons)
+   ========================================================================== */
+
+.dock {
+  position: fixed;
+  bottom: 1.5rem;
+  display: flex;
+  gap: 0.6rem;
+  z-index: 10;
+}
+
+.dock-left {
+  left: 1.5rem;
+}
+.dock-right {
+  right: 1.5rem;
+}
+
+.dock-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.12s;
+}
+
+.dock-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+}
+
+.dock-btn:active {
+  transform: scale(0.93);
+}
+
+.dock-btn.is-active {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--text);
+}
+
+/* stroke: currentColor makes the icon inherit the button's text colour,
+   so hover and active states recolour the icon for free. */
+.dock-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ==========================================================================
+   Panels
+   ========================================================================== */
+
+.panel {
+  position: fixed;
+  bottom: 5.75rem;
+  left: 1.5rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: min(400px, calc(100vw - 3rem));
+  max-height: min(58vh, 480px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  background: rgba(18, 14, 34, 0.7);
+  backdrop-filter: blur(28px) saturate(150%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+
+  /* Closed state. visibility (not display) so it can animate. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px) scale(0.98);
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+}
+
+.panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.panel-right {
+  left: auto;
+  right: 1.5rem;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-family: var(--display-font);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.panel-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.panel-close:hover {
+  color: var(--text);
+}
+
+.panel-body {
+  padding: 1.1rem 1.25rem 1.25rem;
+  overflow-y: auto;
+}
+
+.placeholder {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* Keyboard users get a visible focus ring; mouse users don't. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}

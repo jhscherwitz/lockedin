@@ -27,8 +27,6 @@
       <div id="clock" class="clock">--:--</div>
       <p id="greeting" class="greeting">&nbsp;</p>
 
-      <!-- data-mode lets each button carry its own value, so one click
-           handler can serve all three instead of writing three of them. -->
       <div class="modes" role="tablist" aria-label="Timer mode">
         <button class="mode-btn is-active" data-mode="focus">Focus</button>
         <button class="mode-btn" data-mode="short">Short Break</button>
@@ -42,6 +40,87 @@
         <button id="reset-btn" class="btn btn-ghost">Reset</button>
       </div>
     </main>
+
+    <!-- ====================================================================
+         Docks. Each button carries data-panel naming the panel it opens.
+         ==================================================================== -->
+
+    <nav class="dock dock-left" aria-label="Panels">
+      <button class="dock-btn" data-panel="tasks" aria-expanded="false" aria-label="Tasks">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+        </svg>
+      </button>
+      <button class="dock-btn" data-panel="sounds" aria-expanded="false" aria-label="Sounds">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 10v4M8 6v12M12 3v18M16 8v8M20 11v2" />
+        </svg>
+      </button>
+      <button class="dock-btn" data-panel="music" aria-expanded="false" aria-label="Music">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+      </button>
+    </nav>
+
+    <nav class="dock dock-right" aria-label="Settings">
+      <button class="dock-btn" data-panel="settings" aria-expanded="false" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
+        </svg>
+      </button>
+      <button class="dock-btn" id="fullscreen-btn" aria-label="Toggle fullscreen">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
+        </svg>
+      </button>
+    </nav>
+
+    <!-- ====================================================================
+         Panels. One markup shape, reused. Content arrives in later steps.
+         ==================================================================== -->
+
+    <section class="panel" data-panel="tasks" aria-label="Tasks">
+      <header class="panel-head">
+        <h2>Tasks</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+      <div class="panel-body">
+        <p class="placeholder">Your task list lands here in Step 6.</p>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="sounds" aria-label="Sounds">
+      <header class="panel-head">
+        <h2>Sounds</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+      <div class="panel-body">
+        <p class="placeholder">Rain, ocean and friends arrive in Step 4.</p>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="music" aria-label="Music">
+      <header class="panel-head">
+        <h2>Music</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+      <div class="panel-body">
+        <p class="placeholder">Your Spotify playlists go here in Step 5.</p>
+      </div>
+    </section>
+
+    <section class="panel panel-right" data-panel="settings" aria-label="Settings">
+      <header class="panel-head">
+        <h2>Settings</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+      <div class="panel-body">
+        <p class="placeholder">Timer font and background controls, Step 7.</p>
+      </div>
+    </section>
 
     <script src="script.js"></script>
   </body>
