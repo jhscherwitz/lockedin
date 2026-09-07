@@ -4,10 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Focus</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500&display=swap"
+      rel="stylesheet"
+    />
+
     <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
-    <h1 id="hello">If you can read this, JavaScript has not run.</h1>
+    <!-- The drifting colour blobs. Four empty divs; all the magic is in CSS. -->
+    <div class="background" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+      <div class="blob blob-d"></div>
+    </div>
+
+    <main>
+      <div id="clock" class="clock">--:--</div>
+      <p id="greeting" class="greeting">&nbsp;</p>
+    </main>
+
     <script src="script.js"></script>
   </body>
 </html>
