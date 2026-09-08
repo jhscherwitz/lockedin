@@ -94,6 +94,12 @@ Right-side panel, organised into tabs.
 - Playlists must be public; listeners need to be logged into Spotify for
   full tracks rather than 30-second previews.
 
+## Mini player
+
+- **[done]** Pop-out timer via Document Picture-in-Picture. Confirmed working
+  in Google Chrome (the user's browser). Chrome and Edge only; Firefox and
+  Safari have not implemented the API, and the button explains itself there.
+
 ## Calendar
 
 - **[later]** Google Calendar "today's events" widget via Sign in with Google.
