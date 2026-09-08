@@ -18,7 +18,7 @@ dependencies. Open the folder, run one command, and it works.
   each with its own volume plus a master
 - **Tasks and a notepad** — edited in place, saved automatically
 - **Five Letters** — a word game for breaks, with a fresh random word each
-  round drawn from a 1,300-word answer list and 15,900 accepted guesses
+  round drawn from a 1,186-word answer list and 8,636 accepted guesses
 - **Themes, fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
