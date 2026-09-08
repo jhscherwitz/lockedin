@@ -527,6 +527,13 @@ const players = {};
 // The tile elements, built once and then only re-styled.
 const tiles = {};
 
+/* One <audio> element per sound, created once and then reused.
+
+   An earlier version destroyed it on stop with `audio.src = ""`, which makes
+   the browser try to load an empty URL. That fails, fires the error event
+   below, and marked the sound permanently unavailable - so pausing a sound
+   greyed out its tile for good. Pausing is both correct and faster to
+   resume, since the file stays buffered. */
 function createFilePlayer(id) {
   const audio = new Audio(`assets/sounds/${id}.mp3`);
   audio.loop = true;
@@ -535,19 +542,18 @@ function createFilePlayer(id) {
   audio.addEventListener("error", () => {
     soundState[id].unavailable = true;
     soundState[id].on = false;
-    delete players[id];
     renderSounds();
   });
 
-  audio.play().catch(() => {});
-
   return {
+    play() {
+      audio.play().catch(() => {});
+    },
+    pause() {
+      audio.pause();
+    },
     setVolume(value) {
       audio.volume = Math.min(1, Math.max(0, value));
-    },
-    stop() {
-      audio.pause();
-      audio.src = "";
     },
   };
 }
@@ -566,14 +572,14 @@ function toggleSound(id) {
 
   state.on = !state.on;
 
-  if (state.on && !players[id]) {
-    players[id] = createFilePlayer(id);
-  } else if (!state.on && players[id]) {
-    players[id].stop();
-    delete players[id];
-  }
+  // Kept for the life of the page rather than rebuilt, so switching a sound
+  // back on resumes a buffered element instead of downloading it again.
+  if (!players[id]) players[id] = createFilePlayer(id);
 
   applyVolumes();
+  if (state.on) players[id].play();
+  else players[id].pause();
+
   renderSounds();
 }
 
