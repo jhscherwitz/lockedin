@@ -67,8 +67,6 @@ const APP_NAME = "LockedIn";
 const MINUTE = 60000;
 
 const timerEl = document.getElementById("timer");
-const timerMinsEl = document.getElementById("timer-mins");
-const timerSecsEl = document.getElementById("timer-secs");
 const timerEditEl = document.getElementById("timer-edit");
 const timerStatusEl = document.getElementById("timer-status");
 const startBtn = document.getElementById("start-btn");
@@ -76,7 +74,7 @@ const resetBtn = document.getElementById("reset-btn");
 
 const settings = {
   mode: "countdown",
-  focusMinutes: 30,
+  focusMinutes: 60,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   roundsBeforeLongBreak: 4,
@@ -112,19 +110,43 @@ function displayMs() {
 
 function formatTime(ms) {
   const total = Math.round(ms / 1000);
-  const minutes = Math.floor(total / 60);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
   const seconds = total % 60;
-  return minutes + ":" + String(seconds).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, "0");
+
+  // An hour or more reads as 1:05:30 rather than 65:30.
+  if (hours > 0) return hours + ":" + pad(minutes) + ":" + pad(seconds);
+  return minutes + ":" + pad(seconds);
 }
 
 /* The minutes and seconds are separate elements so the colon between them
    can be two drawn squares rather than a font glyph. */
+let timerSegments = [];
+
 function setTimerText(text) {
-  const split = text.indexOf(":");
-  const mins = text.slice(0, split);
-  const secs = text.slice(split + 1);
-  if (timerMinsEl.textContent !== mins) timerMinsEl.textContent = mins;
-  if (timerSecsEl.textContent !== secs) timerSecsEl.textContent = secs;
+  const parts = text.split(":");
+
+  // Rebuilt only when the shape changes - crossing an hour adds a segment
+  // and a colon. Rebuilding every tick would throw away the DOM 4x a second.
+  if (timerSegments.length !== parts.length) {
+    timerEl.innerHTML = "";
+    timerSegments = parts.map((_, i) => {
+      if (i > 0) {
+        const colon = document.createElement("span");
+        colon.className = "timer-colon";
+        colon.setAttribute("aria-hidden", "true");
+        timerEl.append(colon);
+      }
+      const segment = document.createElement("span");
+      timerEl.append(segment);
+      return segment;
+    });
+  }
+
+  parts.forEach((part, i) => {
+    if (timerSegments[i].textContent !== part) timerSegments[i].textContent = part;
+  });
 }
 
 function statusText() {
@@ -267,7 +289,7 @@ function endEdit(save) {
 
   if (save) {
     const value = Math.round(Number(timerEditEl.value));
-    if (Number.isFinite(value) && value >= 1 && value <= 180) {
+    if (Number.isFinite(value) && value >= 1 && value <= 600) {
       settings[editableField()] = value;
       syncSettingInputs();
       bankedMs = 0;
@@ -324,7 +346,7 @@ function bindNumberInput(input, key, min, max) {
   });
 }
 
-bindNumberInput(focusInput, "focusMinutes", 1, 180);
+bindNumberInput(focusInput, "focusMinutes", 1, 600);
 bindNumberInput(shortInput, "shortBreakMinutes", 1, 60);
 bindNumberInput(longInput, "longBreakMinutes", 1, 60);
 bindNumberInput(roundsInput, "roundsBeforeLongBreak", 2, 10);
@@ -1020,6 +1042,7 @@ function collectState() {
     theme: activeTheme,
     font: fontSelect.value,
     fontDefaultMigrated: true,
+    timerDefaultMigrated: true,
     clock: { hour12: clockSettings.hour12, timeZone: clockSettings.timeZone },
     timer: Object.assign({}, settings),
     master: masterVolume,
@@ -1063,6 +1086,12 @@ function applySavedState(data) {
      then respected. */
   if (!data.fontDefaultMigrated && data.font === LEGACY_DEFAULT_FONT) {
     delete data.font;
+  }
+
+  /* The default session length changed from 30 minutes to 60. Anyone still
+     carrying 30 never chose it, so let the new default through - once. */
+  if (!data.timerDefaultMigrated && data.timer && data.timer.focusMinutes === 30) {
+    delete data.timer.focusMinutes;
   }
 
   if (data.theme) applyTheme(data.theme);
@@ -2593,3 +2622,74 @@ document.addEventListener("keydown", (event) => {
     bjDeal();
   }
 });
+
+/* ==========================================================================
+   Music
+
+   Spotify's own embed player. Nothing is loaded until a playlist is chosen -
+   embedding it on page load would pull Spotify's script and cookies into
+   every visit, including visits where nobody touches the music panel.
+   ========================================================================== */
+
+const musicList = document.getElementById("music-list");
+const musicPlayer = document.getElementById("music-player");
+const MUSIC_LAST_KEY = "focus-app-music-last";
+
+const PLAYLISTS = [
+  { name: "Lofi", id: "0vvXsWCC9xrXsKd4FyS8kM" },
+  { name: "Morning Lofi", id: "3pTzWcIQHM5pUTJJcZoZr6" },
+  { name: "Synthwave", id: "1YIe34rcmLjCYpY9wJoM2p" },
+  { name: "Bouncy Synthwave", id: "1F9Di2wBgnwMqfWqYYuYKR" },
+  { name: "Jazz", id: "5boMTmAPPigEsoB6kRB0CB" },
+  { name: "Dark Ambient", id: "07lYUEyTkWP3NqIa7Kzyqx" },
+  { name: "Sleepy", id: "5WeNl7LfgUHUYOnCFOPkls" },
+];
+
+let activePlaylist = null;
+
+function playPlaylist(id) {
+  const playlist = PLAYLISTS.find((p) => p.id === id);
+  if (!playlist) return;
+
+  activePlaylist = id;
+
+  // Rebuilt rather than reusing the iframe: pointing an existing Spotify
+  // embed at a new src leaves the old player's state behind.
+  musicPlayer.innerHTML = "";
+  const frame = document.createElement("iframe");
+  frame.src =
+    "https://open.spotify.com/embed/playlist/" + id + "?utm_source=generator";
+  frame.loading = "lazy";
+  frame.allow =
+    "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+  frame.setAttribute("title", playlist.name + " on Spotify");
+  musicPlayer.append(frame);
+
+  musicList.querySelectorAll(".music-chip").forEach((chip) => {
+    chip.classList.toggle("is-active", chip.dataset.playlist === id);
+  });
+
+  try {
+    localStorage.setItem(MUSIC_LAST_KEY, id);
+  } catch (error) {
+    // Storage blocked; the choice just won't be remembered.
+  }
+}
+
+function buildMusicList() {
+  musicList.innerHTML = "";
+  PLAYLISTS.forEach((playlist) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "music-chip";
+    chip.dataset.playlist = playlist.id;
+    chip.textContent = playlist.name;
+    chip.addEventListener("click", () => playPlaylist(playlist.id));
+    musicList.append(chip);
+  });
+
+  musicPlayer.innerHTML =
+    '<p class="music-empty">Pick a playlist to start</p>';
+}
+
+buildMusicList();

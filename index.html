@@ -80,9 +80,11 @@
           tabindex="0"
           title="Click to change the length"
         >
-          <span id="timer-mins">30</span>
+          <span>1</span>
           <span class="timer-colon" aria-hidden="true"></span>
-          <span id="timer-secs">00</span>
+          <span>00</span>
+          <span class="timer-colon" aria-hidden="true"></span>
+          <span>00</span>
         </div>
         <input
           id="timer-edit"
@@ -190,6 +192,10 @@
             <span class="game-card-name">Blackjack</span>
             <span class="game-card-desc">Beat the dealer to 21</span>
           </button>
+          <button class="game-card" type="button" data-game="mines">
+            <span class="game-card-name">Minesweeper</span>
+            <span class="game-card-desc">Nine by nine, ten mines</span>
+          </button>
           <button class="game-card" type="button" data-game="squish">
             <span class="game-card-name">Squish 2048</span>
             <span class="game-card-desc">Merge the blobs, chase 2048</span>
@@ -271,6 +277,29 @@
               Out of chips — start again with 500
             </button>
           </div>
+
+          <div class="game-pane" data-game="mines" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Mines</span>
+                <span id="ms-left" class="sq-stat-value">10</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Time</span>
+                <span id="ms-time" class="sq-stat-value">0</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Best</span>
+                <span id="ms-best" class="sq-stat-value">—</span>
+              </div>
+            </div>
+
+            <div id="ms-board" class="ms-board"></div>
+            <p id="ms-message" class="sq-message">
+              Click to start · right-click to flag
+            </p>
+            <button id="ms-new" class="fl-new" type="button">New board</button>
+          </div>
         </div>   </section>
 
     <section class="panel" data-panel="tasks" aria-label="Tasks and notes">
@@ -341,7 +370,12 @@
         <button class="panel-close" aria-label="Close">&times;</button>
       </header>
       <div class="panel-body">
-        <p class="placeholder">Your Spotify playlists go here in Step 5.</p>
+        <div id="music-list" class="music-list"></div>
+        <div id="music-player" class="music-player"></div>
+        <p class="sound-hint">
+          Spotify plays 30-second previews unless you are signed in to Spotify
+          in this browser. Signed in, you get full tracks.
+        </p>
       </div>
     </section>
 
@@ -374,7 +408,7 @@
           <div class="field" data-show-for="countdown pomodoro">
             <label class="field-label" for="focus-minutes">Focus length</label>
             <div class="number-row">
-              <input id="focus-minutes" type="number" min="1" max="180" value="30" />
+              <input id="focus-minutes" type="number" min="1" max="600" value="60" />
               <span class="unit">min</span>
             </div>
           </div>
