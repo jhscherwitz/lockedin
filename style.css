@@ -6,12 +6,12 @@
 
 :root {
   /* Background */
-  --bg-base: #0d0a1a;
+  --bg-base: #241a3d;
   --blob-a: #7c3aed;
   --blob-b: #ec4899;
   --blob-c: #f43f5e;
   --blob-d: #2563eb;
-  --blob-opacity: 0.85;
+  --blob-opacity: 0.38;
 
   /* Text */
   --text: #ffffff;
@@ -52,11 +52,20 @@ body {
    Animated background
    ========================================================================== */
 
+/* A static painted mesh sits underneath the drifting blobs. Without it, the
+   blobs pull away from the edges as they move and leave bare dark bands at
+   the top and bottom. Static gradients are painted once and cost nothing per
+   frame, so this guarantees full coverage for free. */
 .background {
   position: fixed;
   inset: 0;
   z-index: -1;
   overflow: hidden;
+  background: radial-gradient(145% 115% at 8% 6%, var(--blob-a), transparent 76%),
+    radial-gradient(135% 105% at 74% 10%, var(--blob-b), transparent 74%),
+    radial-gradient(160% 130% at 38% 104%, var(--blob-c), transparent 78%),
+    radial-gradient(140% 115% at 100% 66%, var(--blob-d), transparent 76%),
+    var(--bg-base);
 }
 
 /* A radial gradient fading to transparent looks like a blurred circle but
@@ -75,8 +84,7 @@ body {
   background: radial-gradient(
     circle closest-side,
     var(--blob-a) 0%,
-    var(--blob-a) 32%,
-    transparent 78%
+    transparent 68%
   );
   top: -26%;
   left: -22%;
@@ -86,8 +94,7 @@ body {
   background: radial-gradient(
     circle closest-side,
     var(--blob-b) 0%,
-    var(--blob-b) 32%,
-    transparent 78%
+    transparent 68%
   );
   top: -22%;
   right: -26%;
@@ -97,8 +104,7 @@ body {
   background: radial-gradient(
     circle closest-side,
     var(--blob-c) 0%,
-    var(--blob-c) 32%,
-    transparent 78%
+    transparent 68%
   );
   bottom: -30%;
   left: -6%;
@@ -108,8 +114,7 @@ body {
   background: radial-gradient(
     circle closest-side,
     var(--blob-d) 0%,
-    var(--blob-d) 32%,
-    transparent 78%
+    transparent 68%
   );
   bottom: -26%;
   right: -8%;
