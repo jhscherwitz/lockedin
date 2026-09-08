@@ -98,7 +98,27 @@
         <button class="panel-close" aria-label="Close">&times;</button>
       </header>
       <div class="panel-body">
-        <p class="placeholder">Rain, ocean and friends arrive in Step 4.</p>
+        <div class="sound-master">
+          <span class="sound-master-label">Master</span>
+          <input
+            id="master-volume"
+            class="slider"
+            type="range"
+            min="0"
+            max="100"
+            value="80"
+            aria-label="Master volume"
+          />
+        </div>
+
+        <!-- Tiles are built by script.js from the SOUNDS list, so adding a
+             sound means editing one line there rather than this file. -->
+        <div id="sound-grid" class="sound-grid"></div>
+
+        <p class="sound-hint">
+          Greyed-out tiles are waiting on an MP3 in
+          <code>assets/sounds/</code>.
+        </p>
       </div>
     </section>
 
