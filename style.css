@@ -80,7 +80,7 @@ main {
    ========================================================================== */
 
 .timer-status {
-  margin: 2.75rem 0 0;
+  margin: 0.85rem 0 0;
   min-height: 1.2em;
   font-family: var(--display-font);
   font-size: clamp(0.8rem, 1.7vw, 0.95rem);
@@ -127,11 +127,11 @@ main {
 }
 
 .btn {
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 0.85rem 2.75rem;
   font-family: var(--display-font);
   font-size: 0.98rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
@@ -145,12 +145,10 @@ main {
   border: 0;
   color: var(--text);
   background: var(--accent);
-  box-shadow: 0 8px 26px -8px rgba(0, 0, 0, 0.65);
 }
 
 .btn-primary:hover {
   filter: brightness(1.12);
-  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.7);
 }
 
 /* No backdrop-filter here or on the dock buttons. Both are permanently on
@@ -915,16 +913,15 @@ main {
   place-items: center;
   width: 46px;
   height: 46px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-border);
-  background: var(--chip);
-  color: var(--text-dim);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, transform 0.25s;
+  transition: color 0.2s, transform 0.25s;
 }
 
 .icon-btn:hover {
-  background: var(--chip-hover);
   color: var(--text);
 }
 
@@ -934,11 +931,11 @@ main {
 }
 
 .icon-btn svg {
-  width: 19px;
-  height: 19px;
+  width: 24px;
+  height: 24px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
