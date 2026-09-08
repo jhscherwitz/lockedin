@@ -186,6 +186,10 @@
             <span class="game-card-name">Five Letters</span>
             <span class="game-card-desc">Guess the word in six tries</span>
           </button>
+          <button class="game-card" type="button" data-game="blackjack">
+            <span class="game-card-name">Blackjack</span>
+            <span class="game-card-desc">Beat the dealer to 21</span>
+          </button>
           <button class="game-card" type="button" data-game="squish">
             <span class="game-card-name">Squish 2048</span>
             <span class="game-card-desc">Merge the blobs, chase 2048</span>
@@ -218,6 +222,54 @@
             <div id="sq-board" class="sq-board"></div>
             <p id="sq-message" class="sq-message" role="status">&nbsp;</p>
             <button id="sq-new" class="fl-new" type="button">New game</button>
+          </div>
+
+          <div class="game-pane" data-game="blackjack" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Chips</span>
+                <span id="bj-chips" class="sq-stat-value">500</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Bet</span>
+                <span id="bj-bet" class="sq-stat-value">0</span>
+              </div>
+            </div>
+
+            <div class="bj-side">
+              <span class="bj-side-label">
+                Dealer <span id="bj-dealer-total" class="bj-total"></span>
+              </span>
+              <div id="bj-dealer" class="bj-hand"></div>
+            </div>
+
+            <div class="bj-side">
+              <span class="bj-side-label">
+                You <span id="bj-player-total" class="bj-total"></span>
+              </span>
+              <div id="bj-player" class="bj-hand"></div>
+            </div>
+
+            <p id="bj-message" class="sq-message">&nbsp;</p>
+
+            <div id="bj-bet-controls" class="bj-controls">
+              <button class="bj-chip" type="button" data-chip="10">10</button>
+              <button class="bj-chip" type="button" data-chip="25">25</button>
+              <button class="bj-chip" type="button" data-chip="50">50</button>
+              <button class="bj-chip" type="button" data-chip="100">100</button>
+              <button id="bj-clear" class="bj-btn" type="button">Clear</button>
+              <button id="bj-deal" class="bj-btn bj-btn-primary" type="button">Deal</button>
+            </div>
+
+            <div id="bj-play-controls" class="bj-controls" hidden>
+              <button id="bj-hit" class="bj-btn bj-btn-primary" type="button">Hit</button>
+              <button id="bj-stand" class="bj-btn" type="button">Stand</button>
+              <button id="bj-double" class="bj-btn" type="button">Double</button>
+            </div>
+
+            <button id="bj-reset" class="fl-new" type="button" hidden>
+              Out of chips — start again with 500
+            </button>
           </div>
         </div>   </section>
 

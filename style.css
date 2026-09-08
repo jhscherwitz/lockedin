@@ -1531,3 +1531,137 @@ body.pip-open main {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Blackjack
+   ========================================================================== */
+
+.bj-side {
+  margin-bottom: 0.7rem;
+}
+
+.bj-side-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-family: var(--display-font);
+  font-size: 0.66rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.bj-total {
+  margin-left: 0.2rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.bj-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 62px;
+}
+
+.bj-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 42px;
+  height: 60px;
+  border-radius: 7px;
+  background: #f6f3ef;
+  color: #1a1526;
+  font-family: var(--display-font);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  animation: bj-deal 0.22s ease-out;
+}
+
+.bj-card.is-red {
+  color: #c0263c;
+}
+
+/* The dealer's hole card, patterned rather than blank. */
+.bj-card.is-facedown {
+  background: repeating-linear-gradient(
+    45deg,
+    #4c3f8a,
+    #4c3f8a 4px,
+    #3d3273 4px,
+    #3d3273 8px
+  );
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 2px #f6f3ef;
+}
+
+.bj-rank {
+  font-size: 1rem;
+}
+
+.bj-suit {
+  font-size: 0.9rem;
+}
+
+@keyframes bj-deal {
+  0% {
+    transform: translateY(-10px) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.bj-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.bj-chip,
+.bj-btn {
+  flex: 1;
+  min-width: 52px;
+  padding: 0.5rem 0.4rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.09);
+  font-family: var(--display-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.bj-chip:hover,
+.bj-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.bj-btn-primary {
+  border-color: transparent;
+  background: var(--accent);
+}
+
+.bj-btn-primary:hover {
+  filter: brightness(1.12);
+  background: var(--accent);
+}
+
+.bj-chip:disabled,
+.bj-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bj-card {
+    animation: none;
+  }
+}

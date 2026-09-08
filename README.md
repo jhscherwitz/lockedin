@@ -20,7 +20,8 @@ dependencies. Open the folder, run one command, and it works.
 - **Games for breaks** — *Five Letters*, a word game with a fresh random word
   each round from a 1,186-word answer list and 8,636 accepted guesses; and
   *Squish 2048*, whose blobs squash on merge with a synthesised squelch
-  pitched by tile value
+  pitched by tile value; and *Blackjack* with a six-deck shoe, doubling down
+  and pretend chips
 - **Themes, fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
