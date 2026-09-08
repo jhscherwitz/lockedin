@@ -150,6 +150,11 @@ function canEditDuration() {
   return !isRunning && settings.mode !== "stopwatch";
 }
 
+/* Anything that needs redrawing whenever the timer redraws registers here.
+   The mini player uses it, and it keeps render() from having to know what
+   else exists. */
+const renderHooks = [];
+
 function render() {
   // render() runs four times a second while the timer runs, so every write is
   // guarded - assigning an unchanged value still costs the browser work.
@@ -169,6 +174,8 @@ function render() {
 
   const title = isRunning ? text + " · " + APP_NAME : APP_NAME;
   if (document.title !== title) document.title = title;
+
+  renderHooks.forEach((hook) => hook());
 }
 
 function advancePhase() {
@@ -713,6 +720,9 @@ function applyTheme(id) {
   themeGrid.querySelectorAll(".theme-swatch").forEach((swatch) => {
     swatch.classList.toggle("is-active", swatch.dataset.theme === id);
   });
+
+  // Redraw so anything mirroring the theme - the mini player - keeps up.
+  render();
 }
 
 function buildThemeGrid() {
@@ -1026,3 +1036,142 @@ function loadState() {
 }
 
 loadState();
+
+/* ==========================================================================
+   Mini player (Document Picture-in-Picture)
+
+   Opens a small real OS window containing the timer and a pause button. It
+   floats above everything - other tabs, other applications - so the
+   countdown stays visible while you work somewhere else.
+
+   Only Chrome and Edge support this API today. Where it is missing the
+   button disables itself and says why, rather than failing silently.
+   ========================================================================== */
+
+const pipBtn = document.getElementById("pip-btn");
+const pipSupported = "documentPictureInPicture" in window;
+
+let pipWindow = null;
+let pipTimeEl = null;
+let pipButtonEl = null;
+let pipStatusEl = null;
+
+function pipStyles() {
+  const root = getComputedStyle(document.documentElement);
+  const base = root.getPropertyValue("--bg-base").trim() || "#241a3d";
+  const accent = root.getPropertyValue("--accent").trim() || "#7c5cff";
+  const font = root.getPropertyValue("--timer-font").trim() || "system-ui";
+
+  return `
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 10px;
+      background: ${base};
+      color: #fff;
+      font-family: ${font};
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mini-status {
+      margin: 0;
+      font-size: 11px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      min-height: 13px;
+    }
+    .mini-time {
+      font-size: 17vw;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .mini-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 26px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      background: ${accent};
+      cursor: pointer;
+    }
+    .mini-btn:active { transform: scale(0.97); }
+  `;
+}
+
+// Registered as a render hook, so it redraws whenever the main timer does.
+function renderPip() {
+  if (!pipWindow || !pipTimeEl) return;
+
+  const text = formatTime(displayMs());
+  if (pipTimeEl.textContent !== text) pipTimeEl.textContent = text;
+
+  const label = isRunning ? "Pause" : "Start";
+  if (pipButtonEl.textContent !== label) pipButtonEl.textContent = label;
+
+  const status = statusText() || "";
+  if (pipStatusEl.textContent !== status) pipStatusEl.textContent = status;
+}
+
+async function openPip() {
+  pipWindow = await documentPictureInPicture.requestWindow({
+    width: 300,
+    height: 170,
+  });
+
+  const style = pipWindow.document.createElement("style");
+  style.textContent = pipStyles();
+  pipWindow.document.head.append(style);
+
+  pipStatusEl = pipWindow.document.createElement("p");
+  pipStatusEl.className = "mini-status";
+
+  pipTimeEl = pipWindow.document.createElement("div");
+  pipTimeEl.className = "mini-time";
+
+  pipButtonEl = pipWindow.document.createElement("button");
+  pipButtonEl.className = "mini-btn";
+  pipButtonEl.addEventListener("click", () => (isRunning ? stop() : start()));
+
+  pipWindow.document.body.append(pipStatusEl, pipTimeEl, pipButtonEl);
+
+  // Fires whether it was closed by its own X or by the browser.
+  pipWindow.addEventListener("pagehide", () => {
+    pipWindow = null;
+    pipTimeEl = null;
+    pipButtonEl = null;
+    pipStatusEl = null;
+    pipBtn.classList.remove("is-active");
+  });
+
+  pipBtn.classList.add("is-active");
+  renderPip();
+}
+
+if (!pipSupported) {
+  pipBtn.disabled = true;
+  pipBtn.style.opacity = "0.4";
+  pipBtn.style.cursor = "not-allowed";
+  pipBtn.title = "Pop-out timer needs Chrome or Edge";
+} else {
+  pipBtn.title = "Pop out a mini timer";
+  pipBtn.addEventListener("click", () => {
+    if (pipWindow) pipWindow.close();
+    else
+      openPip().catch((error) => {
+        // Never swallow this silently: if the window will not open, the only
+        // clue anyone gets is what the browser said.
+        console.warn("Mini player could not open:", error);
+        pipBtn.title = "Mini player could not open: " + error.message;
+      });
+  });
+  renderHooks.push(renderPip);
+}

@@ -80,15 +80,29 @@
       </button>
     </nav>
 
-    <nav class="dock dock-right" aria-label="Settings">
-      <button class="dock-btn" data-panel="settings" aria-expanded="false" aria-label="Settings">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
-        </svg>
-      </button>
+    <nav class="dock dock-right" aria-label="Tools">
       <button class="dock-btn" id="fullscreen-btn" aria-label="Toggle fullscreen">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
+        </svg>
+      </button>
+      <button class="dock-btn" id="pip-btn" aria-label="Pop out mini timer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
+          <rect
+            x="12"
+            y="11.5"
+            width="8"
+            height="6"
+            rx="1.5"
+            fill="currentColor"
+            stroke="none"
+          />
+        </svg>
+      </button>
+      <button class="dock-btn" data-panel="settings" aria-expanded="false" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
         </svg>
       </button>
     </nav>

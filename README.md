@@ -10,10 +10,15 @@ Built with plain HTML, CSS, and JavaScript. No frameworks, no build step.
 You need Python installed. From the project folder:
 
 ```bash
-python -m http.server 8000
+python serve.py
 ```
 
 Then open <http://localhost:8000> in your browser.
+
+`serve.py` is the same as Python's built-in `http.server` except it sends
+no-cache headers, so an edit always shows up on a normal refresh. Without
+that, browsers happily serve a stale copy of `script.js` and it looks like
+your change did nothing.
 
 ## Status
 
