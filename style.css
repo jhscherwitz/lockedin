@@ -1791,3 +1791,57 @@ body.pip-open main {
   text-align: center;
   color: var(--text-dim);
 }
+
+/* Custom playlists */
+
+.music-add {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr auto;
+  gap: 4px;
+  margin-bottom: 0.6rem;
+}
+
+.music-add input {
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-family: var(--display-font);
+  font-size: 0.76rem;
+}
+
+.music-add input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.music-error {
+  margin: 0 0 0.6rem;
+  font-family: var(--display-font);
+  font-size: 0.72rem;
+  color: #ff9c9c;
+}
+
+/* A chip you added, with room for its remove button. */
+.music-chip.is-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+}
+
+.music-remove {
+  flex-shrink: 0;
+  border: 0;
+  padding: 0 0.15rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.music-remove:hover {
+  color: var(--text);
+}

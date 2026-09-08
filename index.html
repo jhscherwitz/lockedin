@@ -369,9 +369,43 @@
         <h2>Music</h2>
         <button class="panel-close" aria-label="Close">&times;</button>
       </header>
+      <nav class="tabs" role="tablist" aria-label="Music sections">
+        <button class="tab is-active" data-tab="curated">Playlists</button>
+        <button class="tab" data-tab="mine">Yours</button>
+      </nav>
+
       <div class="panel-body">
-        <div id="music-list" class="music-list"></div>
+        <div class="tab-panel is-active" data-tab="curated">
+          <div id="music-list" class="music-list"></div>
+        </div>
+
+        <div class="tab-panel" data-tab="mine">
+          <form id="music-add" class="music-add">
+            <input
+              id="music-name"
+              type="text"
+              placeholder="Name"
+              autocomplete="off"
+              aria-label="Playlist name"
+            />
+            <input
+              id="music-url"
+              type="text"
+              placeholder="Paste a Spotify playlist link"
+              autocomplete="off"
+              aria-label="Spotify playlist link"
+            />
+            <button type="submit" class="task-add" aria-label="Add playlist">+</button>
+          </form>
+          <p id="music-error" class="music-error" hidden></p>
+          <div id="music-mine" class="music-list"></div>
+          <p id="music-mine-empty" class="placeholder">
+            Paste any Spotify playlist link above to keep it here.
+          </p>
+        </div>
+
         <div id="music-player" class="music-player"></div>
+
         <p class="sound-hint">
           Spotify plays 30-second previews unless you are signed in to Spotify
           in this browser. Signed in, you get full tracks.

@@ -112,8 +112,12 @@ Right-side panel, organised into tabs.
   picker, so a second game later is a drop-in rather than a restructure -
   same shape as the sounds/music and tasks/notes panels.
 - **[done]** Wordie (word game), Squish 2048, Blackjack, Minesweeper.
-- **[open]** Piano and Study Lofi playlists still need real links - the ones
-  supplied were the same id as Lofi.
+- **[open]** Piano playlist still needs a real link; the one supplied was the
+  same id as Lofi. Study Lofi was scrapped.
+- **[ruled out]** A shuffle button on the Spotify embed. The embed is a closed
+  widget and Spotify's iFrame API exposes play, pause, seek and loadUri -
+  there is no shuffle. Shuffling needs the Web Playback SDK, which means
+  OAuth, a token backend, and Spotify Premium for every listener.
 - **[next]** Sequence memory - tiles flash a growing pattern to repeat back,
   each tile with its own synthesised tone. Chosen over bubble wrap and the
   Schulte table.
