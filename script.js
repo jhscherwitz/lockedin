@@ -686,7 +686,7 @@ probeFileSounds();
 
 const THEMES = [
   { id: "aurora", name: "Aurora", base: "#241a3d", accent: "#7c5cff",
-    blobs: ["#7c3aed", "#ec4899", "#f43f5e", "#2563eb"] },
+    blobs: ["#7c3aed", "#d946ef", "#ec4899", "#4f46e5"] },
   { id: "ocean", name: "Ocean", base: "#04121f", accent: "#0ea5e9",
     blobs: ["#0ea5e9", "#06b6d4", "#3b82f6", "#14b8a6"] },
   { id: "sunset", name: "Sunset", base: "#1a0a0f", accent: "#f97316",
