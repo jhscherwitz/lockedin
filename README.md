@@ -29,8 +29,13 @@ In progress.
 - Step 6 — clock options (12/24 + timezone), themes, timer font picker
 - Step 7 — task list and notepad
 - Step 8 — everything saves between visits
+- Step 9 — seven ambient sound recordings wired up
+- Step 10 — background performance rewrite (no per-frame blurs)
 
 **Next**
-- Step 9 — Spotify playlists, merged into the sounds panel
-- Step 10 — ambient MP3s (waiting on files)
-- Step 11 — deploy (confirm the project name first)
+- Spotify playlists, merged into the sounds panel — needs playlist links
+- Confirm the project name (leading candidate: LockedIn)
+- Deploy to a public URL
+
+**Known**
+- `underwater.mp3` is 7 seconds, so its loop is audible. Worth replacing.
