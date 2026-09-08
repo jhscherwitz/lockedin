@@ -1,0 +1,87 @@
+# Ideas & Requirements
+
+A running list. Nothing here is a commitment to build — it's a place to park
+wants so they don't get lost. Items move from here into the roadmap in README.
+
+Legend: **[structural]** must influence how things are built · **[cosmetic]**
+safe to add any time · **[open]** needs a decision · **[out]** ruled out
+
+---
+
+## Identity
+
+- **[open]** Pick a real project name. Currently "Focus", which is generic and
+  too close to Flocus for a portfolio piece. Affects: page title, wordmark,
+  repo name, deployed URL. Cheapest to decide before deploying (Step 8).
+- **[cosmetic]** Wordmark in the top-left, styled like Flocus's.
+
+## Fonts
+
+- Flocus uses **Degular Bold** for the timer, **Degular Semibold** for
+  headings, and **Inter** for UI text. (Verified from the live site.)
+- **Degular is a commercial font** from OH no Type Co. Not free, not on
+  Google Fonts. Matching it exactly means buying a web licence.
+- **[structural — done]** `--timer-font` CSS variable already in place.
+- **[cosmetic]** Font picker offers several free display faces to choose from
+  by eye. Candidates: Outfit, Figtree, Plus Jakarta Sans, Poppins (Google);
+  Switzer, General Sans, Cabinet Grotesk (Fontshare, free commercial use).
+- Inter is free, so UI text can match Flocus exactly.
+
+## Settings panel
+
+Right-side panel, organised into tabs.
+
+- **[structural]** Tabbed layout, extensible — more tabs will be added.
+- **Theme tab** — theme selector. All themes free. No separate "ambient
+  mode"; themes only.
+- **Clock tab** — 12-hour / 24-hour toggle.
+- **Timer tab** — mode selector: **Countdown (default)**, **Stopwatch**,
+  **Pomodoro**.
+- **Timezone tab** — dropdown to pick a timezone.
+
+## Controls
+
+- **[structural]** Mode selection uses a **segmented slider** — a row of
+  options where a highlighted box *slides* to whichever you click. Explicitly
+  **not** a dropdown. Will be reused in several places, so build it once as a
+  shared component.
+
+## Timer
+
+- **[structural]** Three modes change the timer's state shape:
+  - *Countdown* — set a duration, count to zero (default)
+  - *Stopwatch* — count up from zero, no target
+  - *Pomodoro* — focus/break cycle with rounds
+- **[open]** Where do the existing Focus / Short Break / Long Break pills
+  live once Pomodoro is its own mode? Proposal: they appear only in Pomodoro.
+
+## Clock
+
+- **[structural]** 12/24-hour and timezone together mean rewriting the clock
+  to use `Intl.DateTimeFormat` rather than raw `Date` methods.
+
+## Sounds
+
+- Ambient mixer, layerable, per-sound volume.
+- White / pink / brown noise generated in-browser, no files needed.
+- User supplies MP3s: rain, ocean, forest, cafe, fireplace, thunder.
+
+## Music
+
+- Spotify playlist embeds. User will supply the playlist links.
+- Playlists must be public; listeners need to be logged into Spotify for
+  full tracks rather than 30-second previews.
+
+## Calendar
+
+- **[later]** Google Calendar "today's events" widget via Sign in with Google.
+  Unverified-app cap of 100 users accepted as fine for this project.
+- **[out]** Notion Calendar — no public API, cannot be integrated.
+- **[out]** Canvas LMS — API exists, but browser calls are blocked and
+  per-user tokens would expose friends' whole accounts. If wanted later,
+  subscribe the Canvas calendar feed into Google Calendar instead; that needs
+  no code here.
+
+## Accounts
+
+- **[out]** No login. Settings persist in the browser.
