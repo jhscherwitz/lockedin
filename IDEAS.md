@@ -77,6 +77,14 @@ Right-side panel, organised into tabs.
 - White / pink / brown noise generated in-browser, no files needed.
 - User supplies MP3s: rain, ocean, forest, cafe, fireplace, thunder.
 
+## Panels
+
+- **[structural]** Sounds and Music share **one dock button**, like Flocus:
+  a single panel with tabs (Sounds / Music). Reuse the tab component built
+  for Settings in Step 5. Do this when Spotify lands.
+- **[planned]** **Notepad** — free-text scratchpad, like Flocus's.
+- **[planned]** **To-do list** — checkable tasks, like Flocus's.
+
 ## Music
 
 - Spotify playlist embeds. User will supply the playlist links.
