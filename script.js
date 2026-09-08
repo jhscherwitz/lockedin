@@ -1839,22 +1839,28 @@ function flNewGame() {
    plus its own pane in the markup. */
 const GAMES = {
   wordie: {
+    inProgress: () => fl.status !== "idle",
     start() {
       flSay("Loading words…");
       flNewGame().catch(() => flSay("Could not load the word list"));
     },
   },
   squish: {
+    inProgress: () => sqStatus !== "idle",
     start() {
       sqNewGame();
     },
   },
   blackjack: {
+    // Mid-hand, or a bet placed, or a finished hand still on the table.
+    inProgress: () =>
+      bjPhase === "playing" || bjBet > 0 || bjPlayerHand.length > 0,
     start() {
       bjNewRound();
     },
   },
   mines: {
+    inProgress: () => msStatus !== "idle",
     start() {
       msNewGame();
     },
@@ -1862,14 +1868,22 @@ const GAMES = {
 };
 
 function openGame(id) {
-  if (!GAMES[id]) return;
+  const game = GAMES[id];
+  if (!game) return;
+
   activeGame = id;
   gamesMenu.hidden = true;
   gameView.hidden = false;
   gameView.querySelectorAll(".game-pane").forEach((pane) => {
     pane.hidden = pane.dataset.game !== id;
   });
-  GAMES[id].start();
+
+  /* Only deal a fresh game when there is nothing to come back to. Panes are
+     hidden rather than destroyed, so a game left half-finished is still
+     sitting there in the DOM - starting a new one every time threw away work
+     just for glancing at the menu. Each game has its own New button for when
+     a fresh start is actually wanted. */
+  if (!game.inProgress || !game.inProgress()) game.start();
 }
 
 function closeGame() {
