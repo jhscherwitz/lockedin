@@ -111,6 +111,7 @@ Right-side panel, organised into tabs.
 - **[planned]** A "mind games" dock button opening a panel with a game
   picker, so a second game later is a drop-in rather than a restructure -
   same shape as the sounds/music and tasks/notes panels.
+- **[done]** Five Letters (word game) and Squish 2048.
 - **First game: a Wordle clone.** Random word every game rather than one word
   per day, which is simpler than the real thing and better for a study break
   since it can be replayed.

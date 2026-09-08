@@ -1415,3 +1415,119 @@ body.pip-open main {
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   Squish 2048
+   ========================================================================== */
+
+.sq-head {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+
+.sq-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sq-stat-label {
+  font-family: var(--display-font);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.sq-stat-value {
+  font-family: var(--display-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tiles are absolutely positioned and moved with transform, so the browser
+   animates them sliding rather than teleporting between cells. */
+.sq-board {
+  position: relative;
+  width: 286px;
+  height: 286px;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+  touch-action: none;
+}
+
+.sq-cell {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sq-tile {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  font-family: var(--display-font);
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #1b1033;
+  transition: transform 0.13s ease-out;
+  will-change: transform;
+}
+
+/* Larger numbers need to fit in the same blob. */
+.sq-tile.len3 { font-size: 1.15rem; }
+.sq-tile.len4 { font-size: 0.92rem; }
+
+.sq-tile.is-spawn {
+  animation: sq-pop 0.19s ease-out;
+}
+
+.sq-tile.is-merge {
+  animation: sq-squish 0.24s ease-out;
+}
+
+@keyframes sq-pop {
+  0% { transform: var(--pos) scale(0.1); }
+  70% { transform: var(--pos) scale(1.12); }
+  100% { transform: var(--pos) scale(1); }
+}
+
+/* Squashed wide then tall, like something soft being pressed. */
+@keyframes sq-squish {
+  0% { transform: var(--pos) scale(1, 1); }
+  35% { transform: var(--pos) scale(1.22, 0.74); }
+  65% { transform: var(--pos) scale(0.9, 1.14); }
+  100% { transform: var(--pos) scale(1, 1); }
+}
+
+.sq-message {
+  min-height: 1.3em;
+  margin: 0.7rem 0 0;
+  font-family: var(--display-font);
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sq-tile {
+    transition: none;
+  }
+  .sq-tile.is-spawn,
+  .sq-tile.is-merge {
+    animation: none;
+  }
+}

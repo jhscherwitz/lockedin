@@ -186,6 +186,10 @@
             <span class="game-card-name">Five Letters</span>
             <span class="game-card-desc">Guess the word in six tries</span>
           </button>
+          <button class="game-card" type="button" data-game="squish">
+            <span class="game-card-name">Squish 2048</span>
+            <span class="game-card-desc">Merge the blobs, chase 2048</span>
+          </button>
         </div>
 
         <div id="game-view" class="game-view" hidden>
@@ -193,13 +197,29 @@
             &larr; All games
           </button>
 
-          <div id="fl-board" class="fl-board"></div>
-          <p id="fl-message" class="fl-message" role="status">&nbsp;</p>
-          <div id="fl-keyboard" class="fl-keyboard"></div>
-          <button id="fl-new" class="fl-new" type="button" hidden>New word</button>
-        </div>
-      </div>
-    </section>
+          <div class="game-pane" data-game="fiveletters" hidden>
+            <div id="fl-board" class="fl-board"></div>
+            <p id="fl-message" class="fl-message" role="status">&nbsp;</p>
+            <div id="fl-keyboard" class="fl-keyboard"></div>
+            <button id="fl-new" class="fl-new" type="button" hidden>New word</button>
+          </div>
+
+          <div class="game-pane" data-game="squish" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Score</span>
+                <span id="sq-score" class="sq-stat-value">0</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Best</span>
+                <span id="sq-best" class="sq-stat-value">0</span>
+              </div>
+            </div>
+            <div id="sq-board" class="sq-board"></div>
+            <p id="sq-message" class="sq-message" role="status">&nbsp;</p>
+            <button id="sq-new" class="fl-new" type="button">New game</button>
+          </div>
+        </div>   </section>
 
     <section class="panel" data-panel="tasks" aria-label="Tasks and notes">
       <header class="panel-head">
