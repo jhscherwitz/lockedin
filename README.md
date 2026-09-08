@@ -26,10 +26,10 @@ In progress.
 - Step 3 — corner docks and sliding frosted panels
 - Step 4 — ambient sound mixer (Web Audio noise + MP3 slots)
 - Step 5 — timer modes, settings tabs, segmented control
+- Step 6 — clock options (12/24 + timezone), themes, timer font picker
 
 **Next**
-- Step 6 — Spotify playlist embeds
-- Step 7 — task list
-- Step 8 — clock options, theme and font pickers
+- Step 7 — Spotify playlists, merged into the sounds panel
+- Step 8 — task list and notepad
 - Step 9 — save settings between visits
 - Step 10 — deploy (confirm the project name first)

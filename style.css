@@ -681,3 +681,72 @@ main {
     transition: none;
   }
 }
+
+/* ==========================================================================
+   Theme picker
+   ========================================================================== */
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.theme-swatch {
+  position: relative;
+  height: 46px;
+  border-radius: 11px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  transition: border-color 0.2s, transform 0.12s;
+}
+
+.theme-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.theme-swatch.is-active {
+  border-color: #fff;
+}
+
+.theme-swatch-name {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.15rem 0.3rem 0.2rem;
+  font-family: var(--display-font);
+  font-size: 0.6rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ==========================================================================
+   Dropdowns
+   ========================================================================== */
+
+.select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border-radius: 9px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-family: var(--display-font);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* The dropdown list itself is drawn by the OS, so it needs a readable
+   background rather than the panel's translucent one. */
+.select option {
+  background: #17132b;
+  color: #fff;
+}
+
+.field-hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.45);
+}

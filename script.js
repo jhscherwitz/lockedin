@@ -1,9 +1,18 @@
 /* ==========================================================================
    Clock
+
+   Formatting goes through Intl.DateTimeFormat rather than Date's own
+   getHours(). That is what makes 12/24-hour and timezone support possible
+   without hand-writing conversion logic.
    ========================================================================== */
 
 const clockEl = document.getElementById("clock");
 const greetingEl = document.getElementById("greeting");
+
+const clockSettings = {
+  hour12: true,
+  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+};
 
 function greetingFor(hour) {
   if (hour < 12) return "Good morning";
@@ -11,14 +20,38 @@ function greetingFor(hour) {
   return "Good evening";
 }
 
+// The hour, 0-23, in whichever timezone is selected.
+function hourInZone(date) {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hourCycle: "h23",
+      timeZone: clockSettings.timeZone,
+    }).format(date)
+  );
+}
+
 function updateClock() {
   const now = new Date();
-  const hours24 = now.getHours();
-  const hours12 = hours24 % 12 || 12;
-  const minutes = String(now.getMinutes()).padStart(2, "0");
 
-  clockEl.textContent = `${hours12}:${minutes}`;
-  greetingEl.textContent = greetingFor(hours24);
+  const options = {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: clockSettings.timeZone,
+  };
+  if (clockSettings.hour12) options.hour12 = true;
+  else options.hourCycle = "h23";
+
+  // formatToParts hands back the pieces separately, which lets us drop the
+  // AM/PM label and keep the display clean.
+  const parts = new Intl.DateTimeFormat("en-US", options).formatToParts(now);
+  const pick = (type) => {
+    const part = parts.find((p) => p.type === type);
+    return part ? part.value : "";
+  };
+
+  clockEl.textContent = pick("hour") + ":" + pick("minute");
+  greetingEl.textContent = greetingFor(hourInZone(now));
 }
 
 updateClock();
@@ -289,20 +322,39 @@ function positionThumb(control) {
   thumb.style.left = active.offsetLeft + "px";
 }
 
-modeControl.addEventListener("click", (event) => {
-  const segment = event.target.closest(".segment");
-  if (!segment) return;
+/* Wires up any segmented control, so the pattern is written once and reused
+   wherever a slider-style choice is needed. */
+const segmentedControls = [];
 
-  modeControl.querySelectorAll(".segment").forEach((other) => {
-    other.classList.toggle("is-active", other === segment);
+function initSegmented(control, onChange) {
+  control.addEventListener("click", (event) => {
+    const segment = event.target.closest(".segment");
+    if (!segment) return;
+
+    control.querySelectorAll(".segment").forEach((other) => {
+      other.classList.toggle("is-active", other === segment);
+    });
+
+    // Run the change first: it may show or hide fields, which can add a
+    // scrollbar and narrow the control. Measuring before that would place
+    // the pill using widths that are about to change.
+    onChange(segment.dataset.value);
+    requestAnimationFrame(() => positionThumb(control));
   });
 
-  // Change the mode first: it shows/hides fields, which can add a scrollbar
-  // and narrow the control. Measuring before that would place the thumb
-  // using widths that are about to change.
-  setTimerMode(segment.dataset.value);
-  requestAnimationFrame(() => positionThumb(modeControl));
-});
+  // Belt and braces: reposition whenever the control changes size for any
+  // reason - scrollbars appearing, the panel opening, fonts loading.
+  if (window.ResizeObserver) {
+    new ResizeObserver(() => positionThumb(control)).observe(control);
+  }
+
+  segmentedControls.push(control);
+  positionThumb(control);
+}
+
+function positionAllThumbs() {
+  segmentedControls.forEach(positionThumb);
+}
 
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -316,21 +368,16 @@ tabButtons.forEach((button) => {
       );
     });
     // Widths are only measurable once the panel is displayed.
-    positionThumb(modeControl);
+    positionAllThumbs();
   });
 });
 
-window.addEventListener("resize", () => positionThumb(modeControl));
+window.addEventListener("resize", positionAllThumbs);
 
-// Belt and braces: reposition whenever the control itself changes size, for
-// any reason at all - scrollbars appearing, the panel opening, fonts loading.
-if (window.ResizeObserver) {
-  new ResizeObserver(() => positionThumb(modeControl)).observe(modeControl);
-}
+initSegmented(modeControl, setTimerMode);
 
 syncSettingInputs();
 updateConditionalFields();
-positionThumb(modeControl);
 render();
 
 /* ==========================================================================
@@ -658,3 +705,149 @@ masterSlider.addEventListener("input", () => {
 buildSoundTiles();
 renderSounds();
 probeFileSounds();
+
+/* ==========================================================================
+   Appearance and clock options
+
+   Themes and fonts work by rewriting the CSS custom properties declared at
+   the top of style.css. Nothing here knows what uses them - it just changes
+   the variable, and everything referring to it updates at once.
+   ========================================================================== */
+
+const THEMES = [
+  { id: "aurora", name: "Aurora", base: "#0d0a1a", accent: "#7c5cff",
+    blobs: ["#7c3aed", "#ec4899", "#f43f5e", "#2563eb"] },
+  { id: "ocean", name: "Ocean", base: "#04121f", accent: "#0ea5e9",
+    blobs: ["#0ea5e9", "#06b6d4", "#3b82f6", "#14b8a6"] },
+  { id: "sunset", name: "Sunset", base: "#1a0a0f", accent: "#f97316",
+    blobs: ["#f97316", "#ef4444", "#ec4899", "#eab308"] },
+  { id: "forest", name: "Forest", base: "#071410", accent: "#10b981",
+    blobs: ["#10b981", "#22c55e", "#84cc16", "#0d9488"] },
+  { id: "midnight", name: "Midnight", base: "#050510", accent: "#6366f1",
+    blobs: ["#312e81", "#1e3a8a", "#4c1d95", "#0f172a"] },
+  { id: "rose", name: "Rose", base: "#1a0812", accent: "#ec4899",
+    blobs: ["#f43f5e", "#ec4899", "#d946ef", "#fb7185"] },
+];
+
+const FONTS = [
+  { label: "Outfit", stack: '"Outfit", system-ui, sans-serif' },
+  { label: "Figtree", stack: '"Figtree", system-ui, sans-serif' },
+  { label: "Plus Jakarta Sans", stack: '"Plus Jakarta Sans", system-ui, sans-serif' },
+  { label: "Poppins", stack: '"Poppins", system-ui, sans-serif' },
+  { label: "Space Grotesk", stack: '"Space Grotesk", system-ui, sans-serif' },
+  { label: "DM Mono", stack: '"DM Mono", ui-monospace, monospace' },
+];
+
+const themeGrid = document.getElementById("theme-grid");
+const fontSelect = document.getElementById("font-select");
+const zoneSelect = document.getElementById("zone-select");
+const hourFormatControl = document.getElementById("hour-format-control");
+
+let activeTheme = "aurora";
+
+function applyTheme(id) {
+  const theme = THEMES.find((t) => t.id === id);
+  if (!theme) return;
+  activeTheme = id;
+
+  const root = document.documentElement.style;
+  root.setProperty("--bg-base", theme.base);
+  root.setProperty("--accent", theme.accent);
+  theme.blobs.forEach((colour, index) => {
+    root.setProperty("--blob-" + "abcd"[index], colour);
+  });
+
+  themeGrid.querySelectorAll(".theme-swatch").forEach((swatch) => {
+    swatch.classList.toggle("is-active", swatch.dataset.theme === id);
+  });
+}
+
+function buildThemeGrid() {
+  THEMES.forEach((theme) => {
+    const swatch = document.createElement("button");
+    swatch.className = "theme-swatch";
+    swatch.dataset.theme = theme.id;
+    swatch.title = theme.name;
+    swatch.style.background =
+      "linear-gradient(135deg, " + theme.blobs.join(", ") + ")";
+    swatch.innerHTML =
+      '<span class="theme-swatch-name">' + theme.name + "</span>";
+    swatch.addEventListener("click", () => applyTheme(theme.id));
+    themeGrid.append(swatch);
+  });
+}
+
+function buildFontSelect() {
+  FONTS.forEach((font) => {
+    const option = document.createElement("option");
+    option.value = font.stack;
+    option.textContent = font.label;
+    option.style.fontFamily = font.stack;
+    fontSelect.append(option);
+  });
+
+  fontSelect.addEventListener("change", () => {
+    document.documentElement.style.setProperty(
+      "--timer-font",
+      fontSelect.value
+    );
+  });
+}
+
+/* The full IANA timezone list where the browser exposes it, with a short
+   fallback for older browsers that do not. */
+function timeZoneOptions() {
+  if (typeof Intl.supportedValuesOf === "function") {
+    try {
+      return Intl.supportedValuesOf("timeZone");
+    } catch (error) {
+      // fall through to the short list
+    }
+  }
+  return [
+    "UTC",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Asia/Kolkata",
+    "Australia/Sydney",
+  ];
+}
+
+function buildZoneSelect() {
+  const zones = timeZoneOptions().slice();
+  if (!zones.includes(clockSettings.timeZone)) {
+    zones.unshift(clockSettings.timeZone);
+  }
+
+  zones.forEach((zone) => {
+    const option = document.createElement("option");
+    option.value = zone;
+    option.textContent = zone.replace(/_/g, " ");
+    zoneSelect.append(option);
+  });
+
+  zoneSelect.value = clockSettings.timeZone;
+
+  zoneSelect.addEventListener("change", () => {
+    clockSettings.timeZone = zoneSelect.value;
+    updateClock();
+  });
+}
+
+function setHourFormat(value) {
+  clockSettings.hour12 = value === "12";
+  updateClock();
+}
+
+buildThemeGrid();
+applyTheme(activeTheme);
+buildFontSelect();
+buildZoneSelect();
+initSegmented(hourFormatControl, setHourFormat);

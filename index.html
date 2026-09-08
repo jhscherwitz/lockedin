@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&family=Figtree:wght@300;400&family=Plus+Jakarta+Sans:wght@200;300;400&family=Poppins:wght@200;300&family=Space+Grotesk:wght@300;400&family=DM+Mono:wght@300;400&display=swap"
       rel="stylesheet"
     />
 
@@ -207,15 +207,37 @@
         </div>
 
         <div class="tab-panel" data-tab="clock">
-          <p class="placeholder">12 / 24-hour toggle lands here next.</p>
+          <div class="field">
+            <span class="field-label">Hour format</span>
+            <div class="segmented" id="hour-format-control">
+              <span class="segmented-thumb"></span>
+              <button class="segment is-active" data-value="12">12-hour</button>
+              <button class="segment" data-value="24">24-hour</button>
+            </div>
+          </div>
         </div>
 
         <div class="tab-panel" data-tab="theme">
-          <p class="placeholder">Theme and font pickers land here.</p>
+          <div class="field">
+            <span class="field-label">Background</span>
+            <div id="theme-grid" class="theme-grid"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="font-select">Timer font</label>
+            <select id="font-select" class="select"></select>
+          </div>
         </div>
 
         <div class="tab-panel" data-tab="zone">
-          <p class="placeholder">Timezone picker lands here.</p>
+          <div class="field">
+            <label class="field-label" for="zone-select">Timezone</label>
+            <select id="zone-select" class="select"></select>
+            <p class="field-hint">
+              The clock and greeting follow this. Defaults to your computer's
+              own timezone.
+            </p>
+          </div>
         </div>
       </div>
     </section>
