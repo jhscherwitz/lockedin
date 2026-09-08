@@ -74,8 +74,11 @@ Right-side panel, organised into tabs.
 ## Sounds
 
 - Ambient mixer, layerable, per-sound volume.
-- White / pink / brown noise generated in-browser, no files needed.
-- User supplies MP3s: rain, ocean, forest, cafe, fireplace, thunder.
+- **[removed]** White / pink / brown noise. Were generated in-browser with
+  the Web Audio API; user didn't like them. The code is preserved in commit
+  9fa42e0 if it's ever wanted back.
+- User supplies the MPGs — free choice of sounds and filenames; the SOUNDS
+  list gets rewritten to match whatever lands in assets/sounds/.
 
 ## Panels
 

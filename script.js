@@ -458,24 +458,19 @@ renderPanels();
 /* ==========================================================================
    Sounds
 
-   Two different engines behind one interface:
-     - "file"  sounds play an MP3 with a plain <audio> element
-     - "noise" sounds are generated from scratch with the Web Audio API,
-               so they need no files and loop perfectly by definition
+   Each sound is an MP3 in assets/sounds/, played on loop by its own <audio>
+   element. Any number can play at once, each with its own volume.
    ========================================================================== */
 
 // Adding a sound means adding a line here (and, for kind "file", an MP3
 // named <id>.mp3 in assets/sounds/). Nothing else needs to change.
 const SOUNDS = [
-  { id: "rain", name: "Rain", icon: "\u{1F327}\u{FE0F}", kind: "file" },
-  { id: "ocean", name: "Ocean", icon: "\u{1F30A}", kind: "file" },
-  { id: "forest", name: "Forest", icon: "\u{1F332}", kind: "file" },
-  { id: "cafe", name: "Café", icon: "\u{2615}", kind: "file" },
-  { id: "fireplace", name: "Fireplace", icon: "\u{1F525}", kind: "file" },
-  { id: "thunder", name: "Thunder", icon: "\u{26C8}\u{FE0F}", kind: "file" },
-  { id: "white", name: "White Noise", icon: "\u{26AA}", kind: "noise" },
-  { id: "pink", name: "Pink Noise", icon: "\u{1F338}", kind: "noise" },
-  { id: "brown", name: "Brown Noise", icon: "\u{1F7E4}", kind: "noise" },
+  { id: "rain", name: "Rain", icon: "\u{1F327}\u{FE0F}" },
+  { id: "ocean", name: "Ocean", icon: "\u{1F30A}" },
+  { id: "forest", name: "Forest", icon: "\u{1F332}" },
+  { id: "cafe", name: "Café", icon: "\u{2615}" },
+  { id: "fireplace", name: "Fireplace", icon: "\u{1F525}" },
+  { id: "thunder", name: "Thunder", icon: "\u{26C8}\u{FE0F}" },
 ];
 
 const soundGrid = document.getElementById("sound-grid");
@@ -487,7 +482,7 @@ SOUNDS.forEach((sound) => {
   soundState[sound.id] = {
     on: false,
     volume: 0.6,
-    unavailable: sound.kind === "file",
+    unavailable: true, // until the MP3 is confirmed to exist
   };
 });
 
@@ -497,86 +492,6 @@ let masterVolume = 0.8;
 const players = {};
 // The tile elements, built once and then only re-styled.
 const tiles = {};
-
-/* ---- Web Audio plumbing ---- */
-
-let audioCtx = null;
-
-function getAudioContext() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  // Browsers create the context suspended until the user interacts with the
-  // page, so it has to be resumed from inside a click handler.
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  return audioCtx;
-}
-
-/* Fills a few seconds of raw audio samples with noise, by hand.
-
-   White noise is just random numbers. Pink and brown are white noise with
-   progressively more energy pushed into the low frequencies, which is why
-   brown sounds like a waterfall and white sounds like TV static. */
-function createNoiseBuffer(ctx, kind) {
-  const length = ctx.sampleRate * 4;
-  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-
-  if (kind === "white") {
-    for (let i = 0; i < length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-  } else if (kind === "pink") {
-    // Paul Kellet's filter: six running averages summed together.
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < length; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + white * 0.0555179;
-      b1 = 0.99332 * b1 + white * 0.0750759;
-      b2 = 0.969 * b2 + white * 0.153852;
-      b3 = 0.8665 * b3 + white * 0.3104856;
-      b4 = 0.55 * b4 + white * 0.5329522;
-      b5 = -0.7616 * b5 - white * 0.016898;
-      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
-      b6 = white * 0.115926;
-    }
-  } else {
-    // Brown: a leaky running total of white noise.
-    let last = 0;
-    for (let i = 0; i < length; i++) {
-      const white = Math.random() * 2 - 1;
-      last = (last + 0.02 * white) / 1.02;
-      data[i] = last * 3.5;
-    }
-  }
-
-  return buffer;
-}
-
-function createNoisePlayer(id) {
-  const ctx = getAudioContext();
-  const source = ctx.createBufferSource();
-  source.buffer = createNoiseBuffer(ctx, id);
-  source.loop = true;
-
-  const gain = ctx.createGain();
-  gain.gain.value = 0;
-
-  source.connect(gain);
-  gain.connect(ctx.destination);
-  source.start();
-
-  return {
-    setVolume(value) {
-      gain.gain.value = value;
-    },
-    stop() {
-      source.stop();
-      source.disconnect();
-      gain.disconnect();
-    },
-  };
-}
 
 function createFilePlayer(id) {
   const audio = new Audio(`assets/sounds/${id}.mp3`);
@@ -618,9 +533,7 @@ function toggleSound(id) {
   state.on = !state.on;
 
   if (state.on && !players[id]) {
-    const sound = SOUNDS.find((s) => s.id === id);
-    players[id] =
-      sound.kind === "noise" ? createNoisePlayer(id) : createFilePlayer(id);
+    players[id] = createFilePlayer(id);
   } else if (!state.on && players[id]) {
     players[id].stop();
     delete players[id];
@@ -682,7 +595,7 @@ function renderSounds() {
 /* Asks the browser whether each MP3 actually exists, so tiles are honest
    before you click them rather than after. */
 function probeFileSounds() {
-  SOUNDS.filter((sound) => sound.kind === "file").forEach((sound) => {
+  SOUNDS.forEach((sound) => {
     const probe = new Audio();
     probe.preload = "metadata";
     probe.addEventListener("loadedmetadata", () => {
