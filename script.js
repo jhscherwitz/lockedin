@@ -20,19 +20,17 @@ function greetingFor(hour) {
   return "Good evening";
 }
 
-// The hour, 0-23, in whichever timezone is selected.
-function hourInZone(date) {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      hourCycle: "h23",
-      timeZone: clockSettings.timeZone,
-    }).format(date)
-  );
-}
+/* Intl.DateTimeFormat is expensive to construct - it loads locale data - and
+   the clock ticks once a second. Build the formatters once and rebuild them
+   only when the timezone or hour format actually changes. */
+let timeFormatter = null;
+let hourFormatter = null;
+let formatterKey = null;
 
-function updateClock() {
-  const now = new Date();
+function ensureFormatters() {
+  const key = clockSettings.timeZone + "|" + clockSettings.hour12;
+  if (key === formatterKey) return;
+  formatterKey = key;
 
   const options = {
     hour: "numeric",
@@ -42,16 +40,33 @@ function updateClock() {
   if (clockSettings.hour12) options.hour12 = true;
   else options.hourCycle = "h23";
 
+  timeFormatter = new Intl.DateTimeFormat("en-US", options);
+  hourFormatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hourCycle: "h23",
+    timeZone: clockSettings.timeZone,
+  });
+}
+
+function updateClock() {
+  ensureFormatters();
+  const now = new Date();
+
   // formatToParts hands back the pieces separately, which lets us drop the
   // AM/PM label and keep the display clean.
-  const parts = new Intl.DateTimeFormat("en-US", options).formatToParts(now);
+  const parts = timeFormatter.formatToParts(now);
   const pick = (type) => {
     const part = parts.find((p) => p.type === type);
     return part ? part.value : "";
   };
 
-  clockEl.textContent = pick("hour") + ":" + pick("minute");
-  greetingEl.textContent = greetingFor(hourInZone(now));
+  // Writing to the DOM costs work even when the value is identical, and the
+  // clock text only actually changes once a minute.
+  const text = pick("hour") + ":" + pick("minute");
+  if (clockEl.textContent !== text) clockEl.textContent = text;
+
+  const greeting = greetingFor(Number(hourFormatter.format(now)));
+  if (greetingEl.textContent !== greeting) greetingEl.textContent = greeting;
 }
 
 updateClock();
@@ -136,14 +151,24 @@ function canEditDuration() {
 }
 
 function render() {
-  if (!editing) timerEl.textContent = formatTime(displayMs());
-  startBtn.textContent = isRunning ? "Pause" : "Start";
-  timerStatusEl.textContent = statusText() || " ";
-  timerEl.style.cursor = canEditDuration() ? "pointer" : "default";
-  timerEl.title = canEditDuration() ? "Click to change the length" : "";
-  document.title = isRunning
-    ? formatTime(displayMs()) + " · " + APP_NAME
-    : APP_NAME;
+  // render() runs four times a second while the timer runs, so every write is
+  // guarded - assigning an unchanged value still costs the browser work.
+  const text = formatTime(displayMs());
+  if (!editing && timerEl.textContent !== text) timerEl.textContent = text;
+
+  const label = isRunning ? "Pause" : "Start";
+  if (startBtn.textContent !== label) startBtn.textContent = label;
+
+  const status = statusText() || " ";
+  if (timerStatusEl.textContent !== status) timerStatusEl.textContent = status;
+
+  const editable = canEditDuration();
+  timerEl.classList.toggle("is-editable", editable);
+  const tip = editable ? "Click to change the length" : "";
+  if (timerEl.title !== tip) timerEl.title = tip;
+
+  const title = isRunning ? text + " · " + APP_NAME : APP_NAME;
+  if (document.title !== title) document.title = title;
 }
 
 function advancePhase() {

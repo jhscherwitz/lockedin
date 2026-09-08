@@ -11,8 +11,7 @@
   --blob-b: #ec4899;
   --blob-c: #f43f5e;
   --blob-d: #2563eb;
-  --blob-blur: 80px;
-  --blob-opacity: 0.7;
+  --blob-opacity: 0.85;
 
   /* Text */
   --text: #ffffff;
@@ -20,6 +19,8 @@
 
   /* Frosted-glass surfaces */
   --glass: rgba(255, 255, 255, 0.12);
+  --chip: rgba(0, 0, 0, 0.3);
+  --chip-hover: rgba(0, 0, 0, 0.42);
   --glass-hover: rgba(255, 255, 255, 0.2);
   --glass-border: rgba(255, 255, 255, 0.18);
   --accent: #7c5cff;
@@ -58,56 +59,78 @@ body {
   overflow: hidden;
 }
 
+/* A radial gradient fading to transparent looks like a blurred circle but
+   costs almost nothing - it is a gradient fill, not a filter pass recomputed
+   over ~700x700 pixels on every single frame. */
 .blob {
   position: absolute;
-  width: 55vmax;
-  height: 55vmax;
+  width: 78vmax;
+  height: 78vmax;
   border-radius: 50%;
-  filter: blur(var(--blob-blur));
   opacity: var(--blob-opacity);
   will-change: transform;
 }
 
 .blob-a {
-  background: var(--blob-a);
-  top: -15%;
-  left: -10%;
+  background: radial-gradient(
+    circle closest-side,
+    var(--blob-a) 0%,
+    var(--blob-a) 32%,
+    transparent 78%
+  );
+  top: -26%;
+  left: -22%;
   animation: drift-a 26s ease-in-out infinite;
 }
 .blob-b {
-  background: var(--blob-b);
-  top: 5%;
-  right: -15%;
+  background: radial-gradient(
+    circle closest-side,
+    var(--blob-b) 0%,
+    var(--blob-b) 32%,
+    transparent 78%
+  );
+  top: -22%;
+  right: -26%;
   animation: drift-b 32s ease-in-out infinite;
 }
 .blob-c {
-  background: var(--blob-c);
-  bottom: -25%;
-  left: 15%;
+  background: radial-gradient(
+    circle closest-side,
+    var(--blob-c) 0%,
+    var(--blob-c) 32%,
+    transparent 78%
+  );
+  bottom: -30%;
+  left: -6%;
   animation: drift-c 29s ease-in-out infinite;
 }
 .blob-d {
-  background: var(--blob-d);
-  bottom: -15%;
-  right: 5%;
+  background: radial-gradient(
+    circle closest-side,
+    var(--blob-d) 0%,
+    var(--blob-d) 32%,
+    transparent 78%
+  );
+  bottom: -26%;
+  right: -8%;
   animation: drift-d 35s ease-in-out infinite;
 }
 
 @keyframes drift-a {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(16vw, 14vh) scale(1.25); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(14vw, 12vh, 0); }
 }
 @keyframes drift-b {
-  0%, 100% { transform: translate(0, 0) scale(1.1); }
-  50%      { transform: translate(-14vw, 18vh) scale(0.9); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-12vw, 15vh, 0); }
 }
 @keyframes drift-c {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(12vw, -16vh) scale(1.2); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(11vw, -14vh, 0); }
 }
 @keyframes drift-d {
-  0%, 100% { transform: translate(0, 0) scale(1.15); }
-  50%      { transform: translate(-18vw, -12vh) scale(0.95); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-15vw, -10vh, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -170,7 +193,7 @@ main {
 
 .timer {
   font-family: var(--timer-font);
-  cursor: pointer;
+  cursor: default;
   font-size: clamp(4.5rem, 17vw, 12rem);
   font-weight: 200;
   letter-spacing: -0.04em;
@@ -182,6 +205,10 @@ main {
 }
 
 /* Flashes when a session finishes. */
+.timer.is-editable {
+  cursor: pointer;
+}
+
 .timer.is-done {
   animation: pulse 0.9s ease-in-out 4;
 }
@@ -220,17 +247,20 @@ main {
   background: #8f72ff;
 }
 
+/* No backdrop-filter here or on the dock buttons. Both are permanently on
+   screen, and each backdrop-filter re-blurs whatever is behind it on every
+   frame - six of them over a moving background is expensive for an effect
+   nobody notices on a 44px circle. */
 .btn-ghost {
   color: var(--text-dim);
-  background: var(--glass);
+  background: var(--chip);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(12px);
   padding: 0.8rem 1.5rem;
 }
 
 .btn-ghost:hover {
   color: var(--text);
-  background: var(--glass-hover);
+  background: var(--chip-hover);
 }
 
 /* ==========================================================================
@@ -259,15 +289,14 @@ main {
   place-items: center;
   border-radius: 50%;
   border: 1px solid var(--glass-border);
-  background: var(--glass);
-  backdrop-filter: blur(16px);
+  background: var(--chip);
   color: var(--text-dim);
   cursor: pointer;
   transition: background 0.2s, color 0.2s, transform 0.12s;
 }
 
 .dock-btn:hover {
-  background: var(--glass-hover);
+  background: var(--chip-hover);
   color: var(--text);
 }
 
@@ -309,7 +338,7 @@ main {
   border-radius: 20px;
   border: 1px solid var(--glass-border);
   background: rgba(18, 14, 34, 0.7);
-  backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(18px);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
 
   /* Closed state. visibility (not display) so it can animate. */
