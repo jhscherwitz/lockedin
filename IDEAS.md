@@ -10,9 +10,11 @@ safe to add any time · **[open]** needs a decision · **[out]** ruled out
 
 ## Identity
 
-- **[open]** Pick a real project name. Currently "Focus", which is generic and
-  too close to Flocus for a portfolio piece. Affects: page title, wordmark,
-  repo name, deployed URL. Cheapest to decide before deploying (Step 8).
+- **[open]** Name: leading candidate is **LockedIn**. Never intended to use
+  "Focus" — that was only a placeholder. Decide the exact styling
+  (`LockedIn` / `Locked In` / lowercase `lockedin`) with the wordmark.
+- **REMINDER OWED TO USER:** confirm the final name *before Step 8 (deploy)*.
+  It sets the repo name, the deployed URL and the page title.
 - **[cosmetic]** Wordmark in the top-left, styled like Flocus's.
 
 ## Fonts
@@ -35,8 +37,11 @@ Right-side panel, organised into tabs.
 - **Theme tab** — theme selector. All themes free. No separate "ambient
   mode"; themes only.
 - **Clock tab** — 12-hour / 24-hour toggle.
-- **Timer tab** — mode selector: **Countdown (default)**, **Stopwatch**,
-  **Pomodoro**.
+- **Timer tab** — mode selector (**Countdown** default / **Stopwatch** /
+  **Pomodoro**), plus the Pomodoro **break durations**, set here and nowhere
+  else.
+- **Font picker** — a dropdown, in one of these tabs. (A dropdown is fine
+  here; only the *mode* selectors must be sliders.)
 - **Timezone tab** — dropdown to pick a timezone.
 
 ## Controls
@@ -48,12 +53,18 @@ Right-side panel, organised into tabs.
 
 ## Timer
 
+- **Default duration is 30 minutes**, not 25.
 - **[structural]** Three modes change the timer's state shape:
   - *Countdown* — set a duration, count to zero (default)
   - *Stopwatch* — count up from zero, no target
   - *Pomodoro* — focus/break cycle with rounds
-- **[open]** Where do the existing Focus / Short Break / Long Break pills
-  live once Pomodoro is its own mode? Proposal: they appear only in Pomodoro.
+- **[decided]** The Focus / Short Break / Long Break pills come **off the main
+  screen entirely** and never return. Break lengths are configured in the
+  Settings → Timer tab only. The main screen stays clock, timer, controls.
+- **[open]** With the pills gone, where does the *countdown duration* get
+  set? Options: Settings only, or click the big number to edit it inline.
+- **[open]** When Pomodoro reaches a break it should announce it. User will
+  decide how (sound / on-screen message / both) later.
 
 ## Clock
 
