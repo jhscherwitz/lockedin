@@ -37,6 +37,16 @@ Then open <http://localhost:8000>.
 edit always shows up on a normal refresh. Without it, browsers happily serve
 a stale copy of `script.js` and it looks like your change did nothing.
 
+## Deploying
+
+A push to `main` is the deploy; GitHub Pages rebuilds in about 30 seconds.
+
+**GitHub Pages sets roughly a ten-minute cache on the served files**, so the
+build finishing does not mean your browser will show it. If a change is
+definitely pushed but not visible on the live site, hard refresh
+(`Ctrl+Shift+R`) rather than assuming the change failed. Locally this never
+happens, because `serve.py` disables caching.
+
 ## Notes on how it's built
 
 A few decisions worth calling out:
