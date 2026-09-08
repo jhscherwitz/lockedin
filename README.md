@@ -1,4 +1,4 @@
-# Focus
+# LockedIn
 
 A single-page focus and study dashboard: a Pomodoro timer, layerable ambient
 sounds, and Spotify playlists, all on one calm screen.
@@ -39,7 +39,6 @@ In progress.
 
 **Next**
 - Spotify playlists, merged into the sounds panel — needs playlist links
-- Confirm the project name (leading candidate: LockedIn)
 - Deploy to a public URL
 
 **Known**

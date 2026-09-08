@@ -6,7 +6,6 @@
    without hand-writing conversion logic.
    ========================================================================== */
 
-const clockEl = document.getElementById("clock");
 const greetingEl = document.getElementById("greeting");
 
 const clockSettings = {
@@ -20,57 +19,67 @@ function greetingFor(hour) {
   return "Good evening";
 }
 
-/* Intl.DateTimeFormat is expensive to construct - it loads locale data - and
-   the clock ticks once a second. Build the formatters once and rebuild them
-   only when the timezone or hour format actually changes. */
-let timeFormatter = null;
+/* Intl.DateTimeFormat is expensive to construct - it loads locale data - so
+   this is built once and rebuilt only when the timezone changes. */
 let hourFormatter = null;
-let formatterKey = null;
+let hourFormatterZone = null;
 
-function ensureFormatters() {
-  const key = clockSettings.timeZone + "|" + clockSettings.hour12;
-  if (key === formatterKey) return;
-  formatterKey = key;
+function updateGreeting() {
+  if (clockSettings.timeZone !== hourFormatterZone) {
+    hourFormatterZone = clockSettings.timeZone;
+    hourFormatter = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hourCycle: "h23",
+      timeZone: clockSettings.timeZone,
+    });
+  }
 
-  const options = {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: clockSettings.timeZone,
-  };
-  if (clockSettings.hour12) options.hour12 = true;
-  else options.hourCycle = "h23";
-
-  timeFormatter = new Intl.DateTimeFormat("en-US", options);
-  hourFormatter = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    hourCycle: "h23",
-    timeZone: clockSettings.timeZone,
-  });
-}
-
-function updateClock() {
-  ensureFormatters();
-  const now = new Date();
-
-  // formatToParts hands back the pieces separately, which lets us drop the
-  // AM/PM label and keep the display clean.
-  const parts = timeFormatter.formatToParts(now);
-  const pick = (type) => {
-    const part = parts.find((p) => p.type === type);
-    return part ? part.value : "";
-  };
-
-  // Writing to the DOM costs work even when the value is identical, and the
-  // clock text only actually changes once a minute.
-  const text = pick("hour") + ":" + pick("minute");
-  if (clockEl.textContent !== text) clockEl.textContent = text;
-
-  const greeting = greetingFor(Number(hourFormatter.format(now)));
+  const greeting = greetingFor(Number(hourFormatter.format(new Date())));
   if (greetingEl.textContent !== greeting) greetingEl.textContent = greeting;
 }
 
-updateClock();
-setInterval(updateClock, 1000);
+updateGreeting();
+setInterval(updateGreeting, 30000);
+
+/* ==========================================================================
+   Live clock, top right
+
+   Shows seconds, so it visibly ticks. Follows the same timezone and 12/24
+   setting as the main clock, and caches its formatter for the same reason.
+   ========================================================================== */
+
+const nowEl = document.getElementById("now");
+
+let nowFormatter = null;
+let nowFormatterKey = null;
+
+function updateNow() {
+  const key = clockSettings.timeZone + "|" + clockSettings.hour12;
+  if (key !== nowFormatterKey) {
+    nowFormatterKey = key;
+    const options = {
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: clockSettings.timeZone,
+    };
+    if (clockSettings.hour12) options.hour12 = true;
+    else options.hourCycle = "h23";
+    nowFormatter = new Intl.DateTimeFormat("en-US", options);
+  }
+
+  const parts = nowFormatter.formatToParts(new Date());
+  const pick = (type) => {
+    const part = parts.find((piece) => piece.type === type);
+    return part ? part.value : "";
+  };
+
+  const text = pick("hour") + ":" + pick("minute") + ":" + pick("second");
+  if (nowEl.textContent !== text) nowEl.textContent = text;
+}
+
+updateNow();
+setInterval(updateNow, 1000);
 
 /* ==========================================================================
    Timer
@@ -84,7 +93,7 @@ setInterval(updateClock, 1000);
    so pausing, resuming and background-tab throttling cannot make it drift.
    ========================================================================== */
 
-const APP_NAME = "Focus";
+const APP_NAME = "LockedIn";
 const MINUTE = 60000;
 
 const timerEl = document.getElementById("timer");
@@ -801,13 +810,14 @@ function buildZoneSelect() {
 
   zoneSelect.addEventListener("change", () => {
     clockSettings.timeZone = zoneSelect.value;
-    updateClock();
+    updateGreeting();
+    updateNow();
   });
 }
 
 function setHourFormat(value) {
   clockSettings.hour12 = value === "12";
-  updateClock();
+  updateNow();
 }
 
 buildThemeGrid();
@@ -1000,7 +1010,8 @@ function applySavedState(data) {
         clockSettings.timeZone = data.clock.timeZone;
       }
     }
-    updateClock();
+    updateGreeting();
+    updateNow();
   }
 
   if (data.timer) {
@@ -1275,46 +1286,6 @@ function showToast(message, ms) {
     toastEl.hidden = true;
   }, ms || 7000);
 }
-
-/* ==========================================================================
-   Live clock, top right
-
-   Shows seconds, so it visibly ticks. Follows the same timezone and 12/24
-   setting as the main clock, and caches its formatter for the same reason.
-   ========================================================================== */
-
-const nowEl = document.getElementById("now");
-
-let nowFormatter = null;
-let nowFormatterKey = null;
-
-function updateNow() {
-  const key = clockSettings.timeZone + "|" + clockSettings.hour12;
-  if (key !== nowFormatterKey) {
-    nowFormatterKey = key;
-    const options = {
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-      timeZone: clockSettings.timeZone,
-    };
-    if (clockSettings.hour12) options.hour12 = true;
-    else options.hourCycle = "h23";
-    nowFormatter = new Intl.DateTimeFormat("en-US", options);
-  }
-
-  const parts = nowFormatter.formatToParts(new Date());
-  const pick = (type) => {
-    const part = parts.find((piece) => piece.type === type);
-    return part ? part.value : "";
-  };
-
-  const text = pick("hour") + ":" + pick("minute") + ":" + pick("second");
-  if (nowEl.textContent !== text) nowEl.textContent = text;
-}
-
-updateNow();
-setInterval(updateNow, 1000);
 
 /* ==========================================================================
    Focus prompt - opens the tasks panel

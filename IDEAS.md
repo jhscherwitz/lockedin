@@ -10,11 +10,9 @@ safe to add any time · **[open]** needs a decision · **[out]** ruled out
 
 ## Identity
 
-- **[open]** Name: leading candidate is **LockedIn**. Never intended to use
-  "Focus" — that was only a placeholder. Decide the exact styling
-  (`LockedIn` / `Locked In` / lowercase `lockedin`) with the wordmark.
-- **REMINDER OWED TO USER:** confirm the final name *before Step 8 (deploy)*.
-  It sets the repo name, the deployed URL and the page title.
+- **[decided]** Name is **LockedIn**. Page title and tab clock use `LockedIn`;
+  the on-screen wordmark is lowercase `lockedin` as a styling choice, mirroring
+  Flocus's lowercase mark. Say the word to capitalise it.
 - **[cosmetic]** Wordmark in the top-left, styled like Flocus's.
 
 ## Fonts

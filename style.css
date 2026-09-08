@@ -49,102 +49,6 @@ body {
 }
 
 /* ==========================================================================
-   Animated background
-   ========================================================================== */
-
-/* A static painted mesh sits underneath the drifting blobs. Without it, the
-   blobs pull away from the edges as they move and leave bare dark bands at
-   the top and bottom. Static gradients are painted once and cost nothing per
-   frame, so this guarantees full coverage for free. */
-.background {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  background: radial-gradient(145% 115% at 8% 6%, var(--blob-a), transparent 76%),
-    radial-gradient(135% 105% at 74% 10%, var(--blob-b), transparent 74%),
-    radial-gradient(160% 130% at 38% 104%, var(--blob-c), transparent 78%),
-    radial-gradient(140% 115% at 100% 66%, var(--blob-d), transparent 76%),
-    var(--bg-base);
-}
-
-/* A radial gradient fading to transparent looks like a blurred circle but
-   costs almost nothing - it is a gradient fill, not a filter pass recomputed
-   over ~700x700 pixels on every single frame. */
-.blob {
-  position: absolute;
-  width: 78vmax;
-  height: 78vmax;
-  border-radius: 50%;
-  opacity: var(--blob-opacity);
-  will-change: transform;
-}
-
-.blob-a {
-  background: radial-gradient(
-    circle closest-side,
-    var(--blob-a) 0%,
-    transparent 68%
-  );
-  top: -26%;
-  left: -22%;
-  animation: drift-a 26s ease-in-out infinite;
-}
-.blob-b {
-  background: radial-gradient(
-    circle closest-side,
-    var(--blob-b) 0%,
-    transparent 68%
-  );
-  top: -22%;
-  right: -26%;
-  animation: drift-b 32s ease-in-out infinite;
-}
-.blob-c {
-  background: radial-gradient(
-    circle closest-side,
-    var(--blob-c) 0%,
-    transparent 68%
-  );
-  bottom: -30%;
-  left: -6%;
-  animation: drift-c 29s ease-in-out infinite;
-}
-.blob-d {
-  background: radial-gradient(
-    circle closest-side,
-    var(--blob-d) 0%,
-    transparent 68%
-  );
-  bottom: -26%;
-  right: -8%;
-  animation: drift-d 35s ease-in-out infinite;
-}
-
-@keyframes drift-a {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50%      { transform: translate3d(14vw, 12vh, 0); }
-}
-@keyframes drift-b {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50%      { transform: translate3d(-12vw, 15vh, 0); }
-}
-@keyframes drift-c {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50%      { transform: translate3d(11vw, -14vh, 0); }
-}
-@keyframes drift-d {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50%      { transform: translate3d(-15vw, -10vh, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .blob {
-    animation: none;
-  }
-}
-
-/* ==========================================================================
    Layout
    ========================================================================== */
 
@@ -1110,4 +1014,122 @@ body.pip-open main {
 .task-add-row:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
+}
+
+/* ==========================================================================
+   Background
+
+   Nothing here animates, and that changes what is affordable. A blur on a
+   static element is painted once and then cached, so these can be genuinely
+   irregular blurred shapes rather than the plain gradient circles an
+   animated version forced on us.
+
+   A base mesh underneath guarantees full coverage, and a grain layer on top
+   keeps the whole thing from looking like flat vector artwork.
+   ========================================================================== */
+
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: radial-gradient(120% 95% at 6% 2%, var(--blob-a), transparent 66%),
+    radial-gradient(115% 90% at 82% 8%, var(--blob-b), transparent 64%),
+    radial-gradient(130% 105% at 30% 104%, var(--blob-c), transparent 68%),
+    radial-gradient(118% 95% at 102% 74%, var(--blob-d), transparent 66%),
+    var(--bg-base);
+}
+
+/* The two-value border-radius syntax (horizontal / vertical) is what makes
+   these read as organic forms instead of ellipses. */
+.shape {
+  position: absolute;
+  filter: blur(46px);
+}
+
+.s1 {
+  width: 44vmax;
+  height: 30vmax;
+  top: -10%;
+  left: -8%;
+  background: var(--blob-a);
+  border-radius: 62% 38% 46% 54% / 58% 42% 58% 42%;
+  transform: rotate(-14deg);
+  opacity: 0.72;
+}
+
+.s2 {
+  width: 38vmax;
+  height: 46vmax;
+  top: -14%;
+  right: -6%;
+  background: var(--blob-b);
+  border-radius: 41% 59% 33% 67% / 55% 30% 70% 45%;
+  transform: rotate(18deg);
+  opacity: 0.68;
+}
+
+.s3 {
+  width: 34vmax;
+  height: 22vmax;
+  top: 34%;
+  left: -12%;
+  background: var(--blob-c);
+  border-radius: 70% 30% 55% 45% / 35% 60% 40% 65%;
+  transform: rotate(8deg);
+  opacity: 0.62;
+}
+
+.s4 {
+  width: 48vmax;
+  height: 32vmax;
+  bottom: -14%;
+  right: -10%;
+  background: var(--blob-d);
+  border-radius: 33% 67% 58% 42% / 62% 38% 62% 38%;
+  transform: rotate(-8deg);
+  opacity: 0.72;
+}
+
+.s5 {
+  width: 36vmax;
+  height: 26vmax;
+  bottom: -12%;
+  left: 4%;
+  background: var(--blob-a);
+  border-radius: 55% 45% 70% 30% / 40% 65% 35% 60%;
+  transform: rotate(12deg);
+  opacity: 0.62;
+}
+
+.s6 {
+  width: 26vmax;
+  height: 20vmax;
+  top: -6%;
+  left: 22%;
+  background: var(--blob-d);
+  border-radius: 48% 52% 36% 64% / 66% 34% 66% 34%;
+  transform: rotate(-22deg);
+  opacity: 0.52;
+}
+
+.s7 {
+  width: 24vmax;
+  height: 30vmax;
+  bottom: -8%;
+  left: 34%;
+  background: var(--blob-c);
+  border-radius: 65% 35% 42% 58% / 44% 56% 44% 56%;
+  transform: rotate(26deg);
+  opacity: 0.48;
+}
+
+/* Film grain, generated by an inline SVG noise filter. Static, so it is
+   rasterised once. Stops the gradients reading as flat vector artwork. */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
 }
