@@ -473,12 +473,13 @@ renderPanels();
 // Adding a sound means adding a line here (and, for kind "file", an MP3
 // named <id>.mp3 in assets/sounds/). Nothing else needs to change.
 const SOUNDS = [
-  { id: "rain", name: "Rain", icon: "\u{1F327}\u{FE0F}" },
-  { id: "ocean", name: "Ocean", icon: "\u{1F30A}" },
-  { id: "forest", name: "Forest", icon: "\u{1F332}" },
-  { id: "cafe", name: "Café", icon: "\u{2615}" },
-  { id: "fireplace", name: "Fireplace", icon: "\u{1F525}" },
-  { id: "thunder", name: "Thunder", icon: "\u{26C8}\u{FE0F}" },
+  { id: "light-rain", name: "Light Rain", icon: "\u{1F326}\u{FE0F}" },
+  { id: "heavy-rain", name: "Heavy Rain", icon: "\u{1F327}\u{FE0F}" },
+  { id: "ocean-waves", name: "Ocean Waves", icon: "\u{1F30A}" },
+  { id: "river", name: "River", icon: "\u{1F3DE}\u{FE0F}" },
+  { id: "underwater", name: "Underwater", icon: "\u{1FAE7}" },
+  { id: "forest-ambience", name: "Forest", icon: "\u{1F332}" },
+  { id: "campfire", name: "Campfire", icon: "\u{1F525}" },
 ];
 
 const soundGrid = document.getElementById("sound-grid");
