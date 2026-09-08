@@ -155,8 +155,12 @@ function render() {
   const label = isRunning ? "Pause" : "Start";
   if (startBtn.textContent !== label) startBtn.textContent = label;
 
-  const status = statusText() || " ";
+  // Hidden rather than filled with a space: an empty status line still
+  // reserved a full line of height, pushing the prompt away from the timer
+  // even though nothing was visible there.
+  const status = statusText();
   if (timerStatusEl.textContent !== status) timerStatusEl.textContent = status;
+  timerStatusEl.hidden = status === "";
 
   const editable = canEditDuration();
   timerEl.classList.toggle("is-editable", editable);

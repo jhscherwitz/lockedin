@@ -80,8 +80,7 @@ main {
    ========================================================================== */
 
 .timer-status {
-  margin: 0.85rem 0 0;
-  min-height: 1.2em;
+  margin: 0 0 0.45rem;
   font-family: var(--display-font);
   font-size: clamp(0.8rem, 1.7vw, 0.95rem);
   font-weight: 400;
@@ -99,12 +98,12 @@ main {
   cursor: default;
   font-size: clamp(3.6rem, 14vw, 10rem);
   font-weight: 700;
-  letter-spacing: -0.005em;
+  letter-spacing: 0.02em;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 0.92;
-  margin: 0.5rem 0 0;
+  line-height: 0.95;
+  margin: 0.15rem 0 0;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 4px 44px rgba(0, 0, 0, 0.35);
   transition: opacity 0.3s;
@@ -126,7 +125,7 @@ main {
 .controls {
   display: flex;
   gap: 0.75rem;
-  margin-top: 2rem;
+  margin-top: 0.9rem;
 }
 
 .btn {
