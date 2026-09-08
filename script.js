@@ -1157,10 +1157,17 @@ async function openPip() {
 }
 
 if (!pipSupported) {
-  pipBtn.disabled = true;
-  pipBtn.style.opacity = "0.4";
-  pipBtn.style.cursor = "not-allowed";
+  // Deliberately NOT disabled: a disabled button fires no click event, so
+  // the explanation below could never be shown. A button that tells you why
+  // it cannot help beats a dead one.
+  pipBtn.style.opacity = "0.45";
   pipBtn.title = "Pop-out timer needs Chrome or Edge";
+  pipBtn.addEventListener("click", () => {
+    showToast(
+      "The pop-out timer needs Chrome or Edge - this browser has not " +
+        "implemented the Picture-in-Picture window API yet."
+    );
+  });
 } else {
   pipBtn.title = "Pop out a mini timer";
   pipBtn.addEventListener("click", () => {
@@ -1171,7 +1178,49 @@ if (!pipSupported) {
         // clue anyone gets is what the browser said.
         console.warn("Mini player could not open:", error);
         pipBtn.title = "Mini player could not open: " + error.message;
+        showToast("Mini player could not open - " + error.name + ": " + error.message);
       });
   });
   renderHooks.push(renderPip);
 }
+
+/* ==========================================================================
+   Toast
+
+   Somewhere for messages the user needs to see. Anything that can fail
+   should say so on screen, not only in a console nobody has open.
+   ========================================================================== */
+
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+
+function showToast(message, ms) {
+  toastEl.textContent = message;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastEl.hidden = true;
+  }, ms || 7000);
+}
+
+/* ==========================================================================
+   Quote
+
+   Picked once per visit rather than rotating, so it never changes under you
+   mid-session.
+   ========================================================================== */
+
+const QUOTES = [
+  { text: "Well begun is half done.", who: "Aristotle" },
+  { text: "The secret of getting ahead is getting started.", who: "Mark Twain" },
+  { text: "Simplicity is the ultimate sophistication.", who: "Leonardo da Vinci" },
+  { text: "He who has a why can endure any how.", who: "Friedrich Nietzsche" },
+  { text: "It always seems impossible until it is done.", who: "Nelson Mandela" },
+  { text: "Nothing will work unless you do.", who: "Maya Angelou" },
+  { text: "Concentrate all your thoughts upon the work in hand.", who: "Alexander Graham Bell" },
+  { text: "Do the hard jobs first. The easy jobs will take care of themselves.", who: "Dale Carnegie" },
+];
+
+const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+document.getElementById("quote-text").textContent = "“" + quote.text + "”";
+document.getElementById("quote-author").textContent = quote.who;
