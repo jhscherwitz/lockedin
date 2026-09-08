@@ -17,7 +17,7 @@ dependencies. Open the folder, run one command, and it works.
 - **Ambient sound mixer** — seven recordings, any number playing at once,
   each with its own volume plus a master
 - **Tasks and a notepad** — edited in place, saved automatically
-- **Games for breaks** — *Five Letters*, a word game with a fresh random word
+- **Games for breaks** — *Wordie*, a word game with a fresh random word
   each round from a 1,186-word answer list and 8,636 accepted guesses; and
   *Squish 2048*, whose blobs squash on merge with a synthesised squelch
   pitched by tile value; and *Blackjack* with a six-deck shoe, doubling down

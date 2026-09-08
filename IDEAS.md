@@ -111,7 +111,7 @@ Right-side panel, organised into tabs.
 - **[planned]** A "mind games" dock button opening a panel with a game
   picker, so a second game later is a drop-in rather than a restructure -
   same shape as the sounds/music and tasks/notes panels.
-- **[done]** Five Letters (word game), Squish 2048, Blackjack.
+- **[done]** Wordie (word game), Squish 2048, Blackjack.
 - **[next]** Sequence memory - tiles flash a growing pattern to repeat back,
   each tile with its own synthesised tone. Chosen over bubble wrap and the
   Schulte table.

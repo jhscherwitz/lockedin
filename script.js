@@ -1455,7 +1455,11 @@ function gameIsActive() {
   return openPanel === "games" && activeGame !== null;
 }
 
-/* ---- Five Letters ---- */
+/* ---- Wordie ----------------------------------------------------------------
+   Functions here keep an `fl` prefix from when the game was called Five
+   Letters. The name changed; the prefix stayed, since renaming forty
+   identifiers buys nothing.
+   -------------------------------------------------------------------------- */
 
 const flBoard = document.getElementById("fl-board");
 const flMessage = document.getElementById("fl-message");
@@ -1482,7 +1486,7 @@ const fl = {
 };
 
 function flActive() {
-  return openPanel === "games" && activeGame === "fiveletters";
+  return openPanel === "games" && activeGame === "wordie";
 }
 
 /* Fetched the first time the game is opened rather than on page load, so
@@ -1805,7 +1809,7 @@ function flNewGame() {
 /* A registry rather than a chain of ifs, so a third game is one more entry
    plus its own pane in the markup. */
 const GAMES = {
-  fiveletters: {
+  wordie: {
     start() {
       flSay("Loading words…");
       flNewGame().catch(() => flSay("Could not load the word list"));
