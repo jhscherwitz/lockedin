@@ -26,117 +26,311 @@ setInterval(updateClock, 1000);
 
 /* ==========================================================================
    Timer
+
+   Three modes share one clock:
+     countdown  - count down to zero from a set length
+     stopwatch  - count up from zero, no target
+     pomodoro   - focus/break cycle with rounds
+
+   Everything is derived from elapsed milliseconds rather than counted down,
+   so pausing, resuming and background-tab throttling cannot make it drift.
    ========================================================================== */
 
+const APP_NAME = "Focus";
+const MINUTE = 60000;
+
 const timerEl = document.getElementById("timer");
+const timerEditEl = document.getElementById("timer-edit");
+const timerStatusEl = document.getElementById("timer-status");
 const startBtn = document.getElementById("start-btn");
 const resetBtn = document.getElementById("reset-btn");
-const modeButtons = document.querySelectorAll(".mode-btn");
 
-// How long each mode runs, in seconds.
-const DURATIONS = {
-  focus: 25 * 60,
-  short: 5 * 60,
-  long: 15 * 60,
+const settings = {
+  mode: "countdown",
+  focusMinutes: 30,
+  shortBreakMinutes: 5,
+  longBreakMinutes: 15,
+  roundsBeforeLongBreak: 4,
 };
 
-/* ---- State ----------------------------------------------------------------
-   These four variables are the entire memory of the timer. Everything on
-   screen is drawn from them, and nothing on screen is ever the source of
-   truth. Change state, then call render().
-   -------------------------------------------------------------------------- */
-
-let mode = "focus";
-let remaining = DURATIONS[mode]; // seconds left
 let isRunning = false;
-let endTime = null; // real-world timestamp when we should reach zero
-let ticker = null; // id of the repeating timer, so we can cancel it
+let runStartedAt = null; // Date.now() when the current run began
+let bankedMs = 0; // time from earlier runs, preserved across pauses
+let ticker = null;
 
-function formatTime(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+let phase = "focus"; // pomodoro only: "focus" | "short" | "long"
+let round = 1;
+let announcement = ""; // shown after a session ends, cleared on start/reset
+let editing = false;
+
+function elapsedMs() {
+  return bankedMs + (isRunning ? Date.now() - runStartedAt : 0);
 }
 
-// The single place that writes to the page.
+// null means "no target", which is what makes the stopwatch a stopwatch.
+function targetMs() {
+  if (settings.mode === "stopwatch") return null;
+  if (settings.mode === "countdown") return settings.focusMinutes * MINUTE;
+  if (phase === "focus") return settings.focusMinutes * MINUTE;
+  if (phase === "short") return settings.shortBreakMinutes * MINUTE;
+  return settings.longBreakMinutes * MINUTE;
+}
+
+function displayMs() {
+  const target = targetMs();
+  return target === null ? elapsedMs() : Math.max(0, target - elapsedMs());
+}
+
+function formatTime(ms) {
+  const total = Math.round(ms / 1000);
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return minutes + ":" + String(seconds).padStart(2, "0");
+}
+
+function statusText() {
+  if (announcement) return announcement;
+  if (settings.mode === "pomodoro") {
+    if (phase === "focus") return "Focus · Round " + round;
+    return phase === "short" ? "Short break" : "Long break";
+  }
+  if (settings.mode === "stopwatch") return "Stopwatch";
+  return "";
+}
+
+function canEditDuration() {
+  return !isRunning && settings.mode !== "stopwatch";
+}
+
 function render() {
-  timerEl.textContent = formatTime(remaining);
+  if (!editing) timerEl.textContent = formatTime(displayMs());
   startBtn.textContent = isRunning ? "Pause" : "Start";
+  timerStatusEl.textContent = statusText() || " ";
+  timerEl.style.cursor = canEditDuration() ? "pointer" : "default";
+  timerEl.title = canEditDuration() ? "Click to change the length" : "";
+  document.title = isRunning
+    ? formatTime(displayMs()) + " · " + APP_NAME
+    : APP_NAME;
+}
 
-  modeButtons.forEach((btn) => {
-    btn.classList.toggle("is-active", btn.dataset.mode === mode);
-  });
-
-  document.title = isRunning ? `${formatTime(remaining)} · Focus` : "Focus";
+function advancePhase() {
+  if (phase === "focus") {
+    phase = round % settings.roundsBeforeLongBreak === 0 ? "long" : "short";
+  } else {
+    phase = "focus";
+    round += 1;
+  }
 }
 
 function tick() {
-  // Recomputed from the real clock every time rather than counting down by
-  // one. Browsers throttle background tabs hard, so a naive counter loses
-  // minutes while you're reading something in another tab. This can't.
-  remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
-
-  if (remaining === 0) {
-    stop();
+  const target = targetMs();
+  if (target !== null && elapsedMs() >= target) {
     complete();
     return;
   }
-
   render();
 }
 
 function start() {
   if (isRunning) return;
-
-  // Starting from a finished timer should begin a fresh session.
-  if (remaining === 0) remaining = DURATIONS[mode];
-
-  isRunning = true;
-  endTime = Date.now() + remaining * 1000;
+  announcement = "";
   timerEl.classList.remove("is-done");
-
-  // Four times a second, so the display never looks a beat behind.
+  isRunning = true;
+  runStartedAt = Date.now();
   ticker = setInterval(tick, 250);
   render();
 }
 
 function stop() {
-  isRunning = false;
+  if (isRunning) {
+    bankedMs += Date.now() - runStartedAt;
+    isRunning = false;
+  }
   clearInterval(ticker);
   ticker = null;
   render();
 }
 
-function reset() {
+function complete() {
   stop();
-  remaining = DURATIONS[mode];
-  timerEl.classList.remove("is-done");
+  bankedMs = 0;
+  if (settings.mode === "pomodoro") {
+    advancePhase();
+    announcement = phase === "focus" ? "Back to work" : "Break time";
+  } else {
+    announcement = "Time is up";
+  }
+  timerEl.classList.add("is-done");
   render();
 }
 
-function setMode(newMode) {
-  mode = newMode;
-  reset();
+function resetTimer() {
+  stop();
+  bankedMs = 0;
+  announcement = "";
+  timerEl.classList.remove("is-done");
+  if (settings.mode === "pomodoro") {
+    phase = "focus";
+    round = 1;
+  }
+  render();
 }
 
-function complete() {
-  document.title = "Time's up!";
-  timerEl.classList.add("is-done");
+function setTimerMode(mode) {
+  settings.mode = mode;
+  phase = "focus";
+  round = 1;
+  resetTimer();
+  updateConditionalFields();
 }
 
-/* ---- Wiring ---- */
+/* ---- Click the big number to change the length ---- */
 
-startBtn.addEventListener("click", () => {
-  if (isRunning) stop();
-  else start();
+function editableField() {
+  if (settings.mode === "countdown" || phase === "focus") return "focusMinutes";
+  return phase === "short" ? "shortBreakMinutes" : "longBreakMinutes";
+}
+
+function beginEdit() {
+  if (!canEditDuration() || editing) return;
+  editing = true;
+  timerEditEl.value = settings[editableField()];
+  timerEl.hidden = true;
+  timerEditEl.hidden = false;
+  timerEditEl.focus();
+  timerEditEl.select();
+}
+
+function endEdit(save) {
+  if (!editing) return;
+  editing = false;
+
+  if (save) {
+    const value = Math.round(Number(timerEditEl.value));
+    if (Number.isFinite(value) && value >= 1 && value <= 180) {
+      settings[editableField()] = value;
+      syncSettingInputs();
+      bankedMs = 0;
+    }
+  }
+
+  timerEditEl.hidden = true;
+  timerEl.hidden = false;
+  render();
+}
+
+timerEl.addEventListener("click", beginEdit);
+timerEl.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    beginEdit();
+  }
 });
 
-resetBtn.addEventListener("click", reset);
-
-modeButtons.forEach((btn) => {
-  btn.addEventListener("click", () => setMode(btn.dataset.mode));
+timerEditEl.addEventListener("blur", () => endEdit(true));
+timerEditEl.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") endEdit(true);
+  if (event.key === "Escape") endEdit(false);
 });
 
+startBtn.addEventListener("click", () => (isRunning ? stop() : start()));
+resetBtn.addEventListener("click", resetTimer);
+
+/* ==========================================================================
+   Settings panel
+   ========================================================================== */
+
+const focusInput = document.getElementById("focus-minutes");
+const shortInput = document.getElementById("short-minutes");
+const longInput = document.getElementById("long-minutes");
+const roundsInput = document.getElementById("rounds");
+const modeControl = document.getElementById("timer-mode-control");
+const tabButtons = document.querySelectorAll(".tab");
+const tabPanels = document.querySelectorAll(".tab-panel");
+
+function syncSettingInputs() {
+  focusInput.value = settings.focusMinutes;
+  shortInput.value = settings.shortBreakMinutes;
+  longInput.value = settings.longBreakMinutes;
+  roundsInput.value = settings.roundsBeforeLongBreak;
+}
+
+function bindNumberInput(input, key, min, max) {
+  input.addEventListener("change", () => {
+    const value = Math.round(Number(input.value));
+    if (Number.isFinite(value)) {
+      settings[key] = Math.min(max, Math.max(min, value));
+    }
+    input.value = settings[key];
+    bankedMs = 0;
+    render();
+  });
+}
+
+bindNumberInput(focusInput, "focusMinutes", 1, 180);
+bindNumberInput(shortInput, "shortBreakMinutes", 1, 60);
+bindNumberInput(longInput, "longBreakMinutes", 1, 60);
+bindNumberInput(roundsInput, "roundsBeforeLongBreak", 2, 10);
+
+// Only show the fields that apply to the current mode.
+function updateConditionalFields() {
+  document.querySelectorAll("[data-show-for]").forEach((field) => {
+    field.hidden = !field.dataset.showFor.split(" ").includes(settings.mode);
+  });
+}
+
+/* The sliding pill. Its width and position are copied from whichever segment
+   is active, which is why clicking one makes it glide across. */
+function positionThumb(control) {
+  const active = control.querySelector(".segment.is-active");
+  const thumb = control.querySelector(".segmented-thumb");
+  if (!active || !thumb) return;
+  thumb.style.width = active.offsetWidth + "px";
+  thumb.style.left = active.offsetLeft + "px";
+}
+
+modeControl.addEventListener("click", (event) => {
+  const segment = event.target.closest(".segment");
+  if (!segment) return;
+
+  modeControl.querySelectorAll(".segment").forEach((other) => {
+    other.classList.toggle("is-active", other === segment);
+  });
+
+  // Change the mode first: it shows/hides fields, which can add a scrollbar
+  // and narrow the control. Measuring before that would place the thumb
+  // using widths that are about to change.
+  setTimerMode(segment.dataset.value);
+  requestAnimationFrame(() => positionThumb(modeControl));
+});
+
+tabButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    tabButtons.forEach((other) => {
+      other.classList.toggle("is-active", other === button);
+    });
+    tabPanels.forEach((panel) => {
+      panel.classList.toggle(
+        "is-active",
+        panel.dataset.tab === button.dataset.tab
+      );
+    });
+    // Widths are only measurable once the panel is displayed.
+    positionThumb(modeControl);
+  });
+});
+
+window.addEventListener("resize", () => positionThumb(modeControl));
+
+// Belt and braces: reposition whenever the control itself changes size, for
+// any reason at all - scrollbars appearing, the panel opening, fonts loading.
+if (window.ResizeObserver) {
+  new ResizeObserver(() => positionThumb(modeControl)).observe(modeControl);
+}
+
+syncSettingInputs();
+updateConditionalFields();
+positionThumb(modeControl);
 render();
 
 /* ==========================================================================

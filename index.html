@@ -27,13 +27,28 @@
       <div id="clock" class="clock">--:--</div>
       <p id="greeting" class="greeting">&nbsp;</p>
 
-      <div class="modes" role="tablist" aria-label="Timer mode">
-        <button class="mode-btn is-active" data-mode="focus">Focus</button>
-        <button class="mode-btn" data-mode="short">Short Break</button>
-        <button class="mode-btn" data-mode="long">Long Break</button>
-      </div>
+      <p id="timer-status" class="timer-status">&nbsp;</p>
 
-      <div id="timer" class="timer">25:00</div>
+      <div class="timer-wrap">
+        <div
+          id="timer"
+          class="timer"
+          role="button"
+          tabindex="0"
+          title="Click to change the length"
+        >
+          30:00
+        </div>
+        <input
+          id="timer-edit"
+          class="timer timer-edit"
+          type="number"
+          min="1"
+          max="180"
+          aria-label="Minutes"
+          hidden
+        />
+      </div>
 
       <div class="controls">
         <button id="start-btn" class="btn btn-primary">Start</button>
@@ -137,8 +152,71 @@
         <h2>Settings</h2>
         <button class="panel-close" aria-label="Close">&times;</button>
       </header>
+      <nav class="tabs" role="tablist" aria-label="Settings sections">
+        <button class="tab is-active" data-tab="timer">Timer</button>
+        <button class="tab" data-tab="clock">Clock</button>
+        <button class="tab" data-tab="theme">Theme</button>
+        <button class="tab" data-tab="zone">Timezone</button>
+      </nav>
+
       <div class="panel-body">
-        <p class="placeholder">Timer font and background controls, Step 7.</p>
+        <div class="tab-panel is-active" data-tab="timer">
+          <div class="field">
+            <span class="field-label">Mode</span>
+            <div class="segmented" id="timer-mode-control">
+              <span class="segmented-thumb"></span>
+              <button class="segment is-active" data-value="countdown">
+                Countdown
+              </button>
+              <button class="segment" data-value="stopwatch">Stopwatch</button>
+              <button class="segment" data-value="pomodoro">Pomodoro</button>
+            </div>
+          </div>
+
+          <div class="field" data-show-for="countdown pomodoro">
+            <label class="field-label" for="focus-minutes">Focus length</label>
+            <div class="number-row">
+              <input id="focus-minutes" type="number" min="1" max="180" value="30" />
+              <span class="unit">min</span>
+            </div>
+          </div>
+
+          <div class="field" data-show-for="pomodoro">
+            <label class="field-label" for="short-minutes">Short break</label>
+            <div class="number-row">
+              <input id="short-minutes" type="number" min="1" max="60" value="5" />
+              <span class="unit">min</span>
+            </div>
+          </div>
+
+          <div class="field" data-show-for="pomodoro">
+            <label class="field-label" for="long-minutes">Long break</label>
+            <div class="number-row">
+              <input id="long-minutes" type="number" min="1" max="60" value="15" />
+              <span class="unit">min</span>
+            </div>
+          </div>
+
+          <div class="field" data-show-for="pomodoro">
+            <label class="field-label" for="rounds">Rounds before long break</label>
+            <div class="number-row">
+              <input id="rounds" type="number" min="2" max="10" value="4" />
+              <span class="unit">rounds</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="clock">
+          <p class="placeholder">12 / 24-hour toggle lands here next.</p>
+        </div>
+
+        <div class="tab-panel" data-tab="theme">
+          <p class="placeholder">Theme and font pickers land here.</p>
+        </div>
+
+        <div class="tab-panel" data-tab="zone">
+          <p class="placeholder">Timezone picker lands here.</p>
+        </div>
       </div>
     </section>
 

@@ -24,10 +24,12 @@ In progress.
 - Step 1 — animated gradient background, live clock
 - Step 2 — Pomodoro timer (focus / short break / long break)
 - Step 3 — corner docks and sliding frosted panels
+- Step 4 — ambient sound mixer (Web Audio noise + MP3 slots)
+- Step 5 — timer modes, settings tabs, segmented control
 
 **Next**
-- Step 4 — ambient sound mixer
-- Step 5 — Spotify playlist embeds
-- Step 6 — task list
-- Step 7 — save settings between visits
-- Step 8 — deploy
+- Step 6 — Spotify playlist embeds
+- Step 7 — task list
+- Step 8 — clock options, theme and font pickers
+- Step 9 — save settings between visits
+- Step 10 — deploy (confirm the project name first)
