@@ -106,6 +106,25 @@ Right-side panel, organised into tabs.
   in Google Chrome (the user's browser). Chrome and Edge only; Firefox and
   Safari have not implemented the API, and the button explains itself there.
 
+## Mind games
+
+- **[planned]** A "mind games" dock button opening a panel with a game
+  picker, so a second game later is a drop-in rather than a restructure -
+  same shape as the sounds/music and tasks/notes panels.
+- **First game: a Wordle clone.** Random word every game rather than one word
+  per day, which is simpler than the real thing and better for a study break
+  since it can be replayed.
+- **The word list is the actual work, not the game.** Needs two lists: a set
+  of answers, and a much larger set of accepted guesses so real words are not
+  rejected. Source from a permissively licensed dictionary rather than
+  copying NYT's curated answer list.
+- **[watch out]** Duplicate letters are the classic clone bug. Answer SPEED,
+  guess ERASE - a naive pass marks every E, which is wrong. Greens must be
+  allocated first, then yellows only up to the number of that letter actually
+  remaining in the answer.
+- **[naming]** "Wordle" is a New York Times trademark. Give it its own name
+  on a public, resume-linked site.
+
 ## Calendar
 
 - **[later]** Google Calendar "today's events" widget via Sign in with Google.
