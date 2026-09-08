@@ -25,16 +25,17 @@
 
     <div class="wordmark" id="wordmark">lockedin</div>
 
-    <div class="quote">
-      <p class="quote-text" id="quote-text"></p>
-      <p class="quote-author" id="quote-author"></p>
-    </div>
+    <div class="now" id="now">--:--:--</div>
 
     <div class="toast" id="toast" role="status" hidden></div>
 
     <main>
       <div id="clock" class="clock">--:--</div>
       <p id="greeting" class="greeting">&nbsp;</p>
+
+      <button class="focus-prompt" id="focus-prompt" type="button">
+        What are you focusing on?
+      </button>
 
       <p id="timer-status" class="timer-status">&nbsp;</p>
 
@@ -61,7 +62,12 @@
 
       <div class="controls">
         <button id="start-btn" class="btn btn-primary">Start</button>
-        <button id="reset-btn" class="btn btn-ghost">Reset</button>
+        <button id="reset-btn" class="icon-btn" aria-label="Reset timer" title="Reset">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 2.64-6.36" />
+            <path d="M3 3v6h6" />
+          </svg>
+        </button>
       </div>
     </main>
 
@@ -90,11 +96,6 @@
     </nav>
 
     <nav class="dock dock-right" aria-label="Tools">
-      <button class="dock-btn" id="fullscreen-btn" aria-label="Toggle fullscreen">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
-        </svg>
-      </button>
       <button class="dock-btn" id="pip-btn" aria-label="Pop out mini timer">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
@@ -107,6 +108,11 @@
             fill="currentColor"
             stroke="none"
           />
+        </svg>
+      </button>
+      <button class="dock-btn" id="fullscreen-btn" aria-label="Toggle fullscreen">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
         </svg>
       </button>
       <button class="dock-btn" data-panel="settings" aria-expanded="false" aria-label="Settings">
@@ -133,21 +139,12 @@
 
       <div class="panel-body">
         <div class="tab-panel is-active" data-tab="tasks">
-          <form id="task-form" class="task-form">
-            <input
-              id="task-input"
-              type="text"
-              placeholder="Add a task"
-              autocomplete="off"
-              aria-label="New task"
-            />
-            <button type="submit" class="task-add" aria-label="Add task">+</button>
-          </form>
-
+          <!-- Rows are built by script.js; there are always at least three,
+               empty and ready to type into. -->
           <ul id="task-list" class="task-list"></ul>
-          <p id="task-empty" class="placeholder">
-            Nothing yet. Add your first task above.
-          </p>
+          <button type="button" class="task-add-row" id="task-add">
+            + Add task
+          </button>
         </div>
 
         <div class="tab-panel" data-tab="notes">

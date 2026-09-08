@@ -479,6 +479,7 @@ document.addEventListener("click", (event) => {
   if (!openPanel) return;
   if (event.target.closest(".panel")) return;
   if (event.target.closest(".dock-btn")) return;
+  if (event.target.closest(".focus-prompt")) return;
   closePanels();
 });
 
@@ -817,21 +818,36 @@ initSegmented(hourFormatControl, setHourFormat);
 
 /* ==========================================================================
    Tasks and notepad
+
+   There are always at least three rows, empty and ready to type into, so the
+   panel never looks like it is waiting for you to find an Add button. Each
+   row is a live text input rather than a label, so a task is edited in place.
    ========================================================================== */
 
-const taskForm = document.getElementById("task-form");
-const taskInput = document.getElementById("task-input");
+const MIN_TASK_ROWS = 3;
+
 const taskList = document.getElementById("task-list");
-const taskEmpty = document.getElementById("task-empty");
+const taskAddBtn = document.getElementById("task-add");
 const notepad = document.getElementById("notepad");
 
 // { id, text, done }
 let tasks = [];
 
-/* This one rebuilds its DOM on every render, unlike the sound tiles. That's
-   fine here because nothing in a task is mid-drag - but it's the reason the
-   sounds panel had to be written the other way. */
+function newTask(text) {
+  return {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    text: text || "",
+    done: false,
+  };
+}
+
+// Pad up to the minimum so there are always spare rows to type into.
+function padTasks() {
+  while (tasks.length < MIN_TASK_ROWS) tasks.push(newTask());
+}
+
 function renderTasks() {
+  padTasks();
   taskList.innerHTML = "";
 
   tasks.forEach((task) => {
@@ -841,36 +857,42 @@ function renderTasks() {
 
     const check = document.createElement("button");
     check.className = "task-check";
+    check.type = "button";
     check.setAttribute("aria-pressed", String(task.done));
     check.setAttribute("aria-label", "Mark complete");
     check.addEventListener("click", () => toggleTask(task.id));
 
-    const text = document.createElement("span");
-    text.className = "task-text";
-    // textContent, not innerHTML: whatever is typed stays text and can
-    // never be interpreted as markup.
-    text.textContent = task.text;
+    const input = document.createElement("input");
+    input.className = "task-text";
+    input.type = "text";
+    input.value = task.text;
+    input.placeholder = "Type your priority";
+    input.autocomplete = "off";
+    input.setAttribute("aria-label", "Task");
+    // Edited in place: the input is the task.
+    input.addEventListener("input", () => {
+      task.text = input.value;
+    });
+    // Enter drops you into the next row, like a list should behave.
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      const inputs = [...taskList.querySelectorAll(".task-text")];
+      const next = inputs[inputs.indexOf(input) + 1];
+      if (next) next.focus();
+      else addTaskRow();
+    });
 
     const remove = document.createElement("button");
     remove.className = "task-delete";
+    remove.type = "button";
     remove.textContent = "×";
     remove.setAttribute("aria-label", "Delete task");
     remove.addEventListener("click", () => deleteTask(task.id));
 
-    item.append(check, text, remove);
+    item.append(check, input, remove);
     taskList.append(item);
   });
-
-  taskEmpty.hidden = tasks.length > 0;
-}
-
-function addTask(text) {
-  tasks.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    text,
-    done: false,
-  });
-  renderTasks();
 }
 
 function toggleTask(id) {
@@ -883,20 +905,18 @@ function toggleTask(id) {
 function deleteTask(id) {
   tasks = tasks.filter((t) => t.id !== id);
   renderTasks();
+  scheduleSave();
 }
 
-taskForm.addEventListener("submit", (event) => {
-  // Without this the browser reloads the page, which is a form's default
-  // behaviour and would wipe everything.
-  event.preventDefault();
+function addTaskRow() {
+  tasks.push(newTask());
+  renderTasks();
+  const inputs = taskList.querySelectorAll(".task-text");
+  const last = inputs[inputs.length - 1];
+  if (last) last.focus();
+}
 
-  const text = taskInput.value.trim();
-  if (!text) return;
-
-  addTask(text);
-  taskInput.value = "";
-  taskInput.focus();
-});
+taskAddBtn.addEventListener("click", addTaskRow);
 
 renderTasks();
 
@@ -1055,12 +1075,22 @@ let pipWindow = null;
 let pipTimeEl = null;
 let pipButtonEl = null;
 let pipStatusEl = null;
+let pipStyleEl = null;
+let pipThemeKey = null;
 
+/* Rebuilds the mini window's stylesheet from the live CSS variables, so it
+   carries the same background mesh, accent and timer font as the page. */
 function pipStyles() {
   const root = getComputedStyle(document.documentElement);
-  const base = root.getPropertyValue("--bg-base").trim() || "#241a3d";
-  const accent = root.getPropertyValue("--accent").trim() || "#7c5cff";
-  const font = root.getPropertyValue("--timer-font").trim() || "system-ui";
+  const get = (name, fallback) => root.getPropertyValue(name).trim() || fallback;
+
+  const base = get("--bg-base", "#241a3d");
+  const accent = get("--accent", "#7c5cff");
+  const font = get("--timer-font", "system-ui, sans-serif");
+  const a = get("--blob-a", "#7c3aed");
+  const b = get("--blob-b", "#ec4899");
+  const c = get("--blob-c", "#f43f5e");
+  const d = get("--blob-d", "#2563eb");
 
   return `
     * { box-sizing: border-box; }
@@ -1070,27 +1100,48 @@ function pipStyles() {
       display: grid;
       place-content: center;
       justify-items: center;
-      gap: 10px;
-      background: ${base};
+      gap: 8px;
+      position: relative;
       color: #fff;
       font-family: ${font};
       user-select: none;
       -webkit-user-select: none;
+      background:
+        radial-gradient(120% 95% at 10% 6%, ${a}, transparent 70%),
+        radial-gradient(115% 90% at 84% 12%, ${b}, transparent 68%),
+        radial-gradient(125% 105% at 28% 102%, ${c}, transparent 72%),
+        radial-gradient(115% 95% at 98% 78%, ${d}, transparent 70%),
+        ${base};
     }
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(
+        125% 105% at 50% 45%,
+        transparent 28%,
+        rgba(0, 0, 0, 0.3) 70%,
+        rgba(0, 0, 0, 0.6) 100%
+      );
+    }
+    .mini-status, .mini-time, .mini-btn { position: relative; z-index: 1; }
     .mini-status {
       margin: 0;
-      font-size: 11px;
-      letter-spacing: 0.09em;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.11em;
       text-transform: uppercase;
-      opacity: 0.6;
-      min-height: 13px;
+      opacity: 0.7;
+      min-height: 12px;
     }
     .mini-time {
-      font-size: 17vw;
-      font-weight: 300;
-      line-height: 1;
-      letter-spacing: -0.03em;
+      font-size: 19vw;
+      font-weight: 600;
+      line-height: 0.95;
+      letter-spacing: -0.045em;
       font-variant-numeric: tabular-nums;
+      text-shadow: 0 3px 26px rgba(0, 0, 0, 0.4);
     }
     .mini-btn {
       border: 0;
@@ -1098,18 +1149,35 @@ function pipStyles() {
       padding: 7px 26px;
       font-family: inherit;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       color: #fff;
       background: ${accent};
       cursor: pointer;
+      box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.6);
     }
     .mini-btn:active { transform: scale(0.97); }
   `;
 }
 
+function currentPipThemeKey() {
+  const root = getComputedStyle(document.documentElement);
+  return (
+    root.getPropertyValue("--accent") +
+    root.getPropertyValue("--bg-base") +
+    root.getPropertyValue("--timer-font")
+  );
+}
+
 // Registered as a render hook, so it redraws whenever the main timer does.
 function renderPip() {
   if (!pipWindow || !pipTimeEl) return;
+
+  // Pick up a theme or font change made while the window is open.
+  const themeKey = currentPipThemeKey();
+  if (pipStyleEl && themeKey !== pipThemeKey) {
+    pipThemeKey = themeKey;
+    pipStyleEl.textContent = pipStyles();
+  }
 
   const text = formatTime(displayMs());
   if (pipTimeEl.textContent !== text) pipTimeEl.textContent = text;
@@ -1127,9 +1195,10 @@ async function openPip() {
     height: 170,
   });
 
-  const style = pipWindow.document.createElement("style");
-  style.textContent = pipStyles();
-  pipWindow.document.head.append(style);
+  pipStyleEl = pipWindow.document.createElement("style");
+  pipStyleEl.textContent = pipStyles();
+  pipThemeKey = currentPipThemeKey();
+  pipWindow.document.head.append(pipStyleEl);
 
   pipStatusEl = pipWindow.document.createElement("p");
   pipStatusEl.className = "mini-status";
@@ -1149,10 +1218,14 @@ async function openPip() {
     pipTimeEl = null;
     pipButtonEl = null;
     pipStatusEl = null;
+    pipStyleEl = null;
+    pipThemeKey = null;
     pipBtn.classList.remove("is-active");
+    document.body.classList.remove("pip-open");
   });
 
   pipBtn.classList.add("is-active");
+  document.body.classList.add("pip-open");
   renderPip();
 }
 
@@ -1204,23 +1277,103 @@ function showToast(message, ms) {
 }
 
 /* ==========================================================================
-   Quote
+   Live clock, top right
 
-   Picked once per visit rather than rotating, so it never changes under you
-   mid-session.
+   Shows seconds, so it visibly ticks. Follows the same timezone and 12/24
+   setting as the main clock, and caches its formatter for the same reason.
    ========================================================================== */
 
-const QUOTES = [
-  { text: "Well begun is half done.", who: "Aristotle" },
-  { text: "The secret of getting ahead is getting started.", who: "Mark Twain" },
-  { text: "Simplicity is the ultimate sophistication.", who: "Leonardo da Vinci" },
-  { text: "He who has a why can endure any how.", who: "Friedrich Nietzsche" },
-  { text: "It always seems impossible until it is done.", who: "Nelson Mandela" },
-  { text: "Nothing will work unless you do.", who: "Maya Angelou" },
-  { text: "Concentrate all your thoughts upon the work in hand.", who: "Alexander Graham Bell" },
-  { text: "Do the hard jobs first. The easy jobs will take care of themselves.", who: "Dale Carnegie" },
-];
+const nowEl = document.getElementById("now");
 
-const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-document.getElementById("quote-text").textContent = "“" + quote.text + "”";
-document.getElementById("quote-author").textContent = quote.who;
+let nowFormatter = null;
+let nowFormatterKey = null;
+
+function updateNow() {
+  const key = clockSettings.timeZone + "|" + clockSettings.hour12;
+  if (key !== nowFormatterKey) {
+    nowFormatterKey = key;
+    const options = {
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: clockSettings.timeZone,
+    };
+    if (clockSettings.hour12) options.hour12 = true;
+    else options.hourCycle = "h23";
+    nowFormatter = new Intl.DateTimeFormat("en-US", options);
+  }
+
+  const parts = nowFormatter.formatToParts(new Date());
+  const pick = (type) => {
+    const part = parts.find((piece) => piece.type === type);
+    return part ? part.value : "";
+  };
+
+  const text = pick("hour") + ":" + pick("minute") + ":" + pick("second");
+  if (nowEl.textContent !== text) nowEl.textContent = text;
+}
+
+updateNow();
+setInterval(updateNow, 1000);
+
+/* ==========================================================================
+   Focus prompt - opens the tasks panel
+   ========================================================================== */
+
+document.getElementById("focus-prompt").addEventListener("click", () => {
+  togglePanel("tasks");
+});
+
+/* ==========================================================================
+   Keyboard shortcuts
+   ========================================================================== */
+
+// Never hijack a key while someone is typing into something.
+function isTyping(target) {
+  if (!target || !target.tagName) return false;
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    target.isContentEditable === true
+  );
+}
+
+const SHORTCUTS = {
+  " ": { label: "Start / pause", run: () => (isRunning ? stop() : start()) },
+  r: { label: "Reset timer", run: resetTimer },
+  f: { label: "Fullscreen", run: () => fullscreenBtn.click() },
+  p: { label: "Mini player", run: () => pipBtn.click() },
+  s: { label: "Sounds", run: () => togglePanel("sounds") },
+  m: { label: "Music", run: () => togglePanel("music") },
+  t: { label: "Tasks & notes", run: () => togglePanel("tasks") },
+  ",": { label: "Settings", run: () => togglePanel("settings") },
+};
+
+function shortcutSummary() {
+  const pretty = { " ": "Space", ",": "," };
+  return Object.keys(SHORTCUTS)
+    .map((key) => (pretty[key] || key.toUpperCase()) + " " + SHORTCUTS[key].label)
+    .join("   ·   ");
+}
+
+document.addEventListener("keydown", (event) => {
+  if (isTyping(event.target)) return;
+
+  // Leave browser combinations alone: Ctrl+R should still reload the page.
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+  if (event.key === "?") {
+    event.preventDefault();
+    showToast(shortcutSummary(), 9000);
+    return;
+  }
+
+  const shortcut = SHORTCUTS[event.key.toLowerCase()];
+  if (!shortcut) return;
+
+  // Space would otherwise scroll the page or re-trigger a focused button.
+  event.preventDefault();
+  shortcut.run();
+});

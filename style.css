@@ -798,40 +798,6 @@ main {
   width: min(380px, calc(100vw - 3rem));
 }
 
-.task-form {
-  display: flex;
-  gap: 0.45rem;
-  margin-bottom: 0.85rem;
-}
-
-.task-form input {
-  flex: 1;
-  min-width: 0;
-  padding: 0.55rem 0.7rem;
-  border-radius: 10px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text);
-  font-family: var(--display-font);
-  font-size: 0.85rem;
-}
-
-.task-form input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.task-add {
-  flex-shrink: 0;
-  width: 34px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--text);
-  font-size: 1.2rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
 .task-list {
   list-style: none;
   margin: 0;
@@ -869,10 +835,22 @@ main {
 
 .task-text {
   flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0.15rem 0;
+  background: transparent;
   font-family: var(--display-font);
   font-size: 0.85rem;
-  line-height: 1.35;
-  word-break: break-word;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.task-text::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.task-text:focus {
+  outline: none;
 }
 
 .task.is-done .task-text {
@@ -936,10 +914,7 @@ main {
 }
 
 /* ==========================================================================
-   Wordmark and quote
-
-   Both top corners were empty, which is most of why the page read as
-   unfinished rather than minimal.
+   Wordmark and live clock
    ========================================================================== */
 
 .wordmark {
@@ -956,41 +931,18 @@ main {
   user-select: none;
 }
 
-.quote {
+.now {
   position: fixed;
-  top: 1.7rem;
+  top: 1.75rem;
   right: 1.8rem;
   z-index: 5;
-  max-width: min(300px, 38vw);
-  text-align: right;
-}
-
-.quote-text {
-  margin: 0;
   font-family: var(--display-font);
-  font-size: clamp(0.78rem, 1.5vw, 0.92rem);
-  font-weight: 400;
-  font-style: italic;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
-}
-
-.quote-author {
-  margin: 0.3rem 0 0;
-  font-family: var(--display-font);
-  font-size: 0.68rem;
+  font-size: clamp(0.95rem, 1.9vw, 1.2rem);
   font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* Both step aside on narrow screens rather than colliding with the timer. */
-@media (max-width: 560px) {
-  .quote {
-    display: none;
-  }
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+  user-select: none;
 }
 
 /* ==========================================================================
@@ -1033,4 +985,129 @@ main {
 .panel-head h2 {
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   Focus prompt
+   ========================================================================== */
+
+.focus-prompt {
+  margin-top: 1.4rem;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font-family: var(--display-font);
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.focus-prompt:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   Round icon button (reset)
+   ========================================================================== */
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--chip);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.25s;
+}
+
+.icon-btn:hover {
+  background: var(--chip-hover);
+  color: var(--text);
+}
+
+/* The arrows spin when you press it, so the reset reads as a reset. */
+.icon-btn:active {
+  transform: rotate(-180deg) scale(0.94);
+}
+
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ==========================================================================
+   Editing the timer
+
+   The browser's default focus ring and text selection both looked terrible
+   on 13rem type, which is what produced the blue box over the numbers.
+   ========================================================================== */
+
+::selection {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.timer:focus,
+.timer-edit:focus,
+.timer-edit:focus-visible {
+  outline: none;
+}
+
+/* No selection highlight at all here. The value is selected on open so that
+   typing replaces it, but at this type size any highlight reads as an ugly
+   box behind the digits. The blinking caret is enough of a signal. */
+.timer-edit::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.timer-edit {
+  caret-color: #fff;
+}
+
+.timer.is-editable:hover {
+  opacity: 0.82;
+}
+
+/* ==========================================================================
+   Mini player open: the centre of the page steps aside
+   ========================================================================== */
+
+main {
+  transition: opacity 0.25s ease;
+}
+
+body.pip-open main {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.task-add-row {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.5rem;
+  border: 1px dashed var(--glass-border);
+  border-radius: 10px;
+  background: transparent;
+  font-family: var(--display-font);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.task-add-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
 }
