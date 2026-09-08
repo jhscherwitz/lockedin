@@ -1385,3 +1385,33 @@ body.pip-open main {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Tile reveal
+
+   Each tile turns edge-on and back, and its colour is applied at the halfway
+   point while it is invisible - so the answer appears to be on the far face
+   rather than fading in. JavaScript staggers the start of each one.
+   ========================================================================== */
+
+.fl-row {
+  perspective: 800px;
+}
+
+@keyframes fl-flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-tile {
+    animation: none !important;
+  }
+}

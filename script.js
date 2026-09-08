@@ -1460,6 +1460,10 @@ const FL_ROWS = 6;
 const FL_LEN = 5;
 const FL_RECENT_KEY = "focus-app-fl-recent";
 
+const FL_FLIP_MS = 290; // half a flip: edge-on at this point
+const FL_STAGGER_MS = 210; // gap between one tile starting and the next
+
+let flRevealing = false;
 let flWords = null; // { answers: [...], guesses: Set }
 let flLoading = null; // in-flight fetch, so two clicks don't load twice
 
@@ -1591,9 +1595,12 @@ function flRenderBoard() {
       const tile = document.createElement("div");
       tile.className = "fl-tile";
 
+      const revealingThisRow = flRevealing && row === fl.submitted.length - 1;
+
       if (guess) {
         tile.textContent = guess[i];
-        tile.classList.add("is-" + scores[i]);
+        // Mid-reveal the colours are applied tile by tile, not all at once.
+        tile.classList.add(revealingThisRow ? "is-filled" : "is-" + scores[i]);
       } else if (isCurrentRow && fl.current[i]) {
         tile.textContent = fl.current[i];
         tile.classList.add("is-filled");
@@ -1667,7 +1674,7 @@ const FL_PRAISE = [
 ];
 
 function flPress(key) {
-  if (fl.status !== "playing") return;
+  if (fl.status !== "playing" || flRevealing) return;
 
   if (key === "Back") {
     fl.current = fl.current.slice(0, -1);
@@ -1689,7 +1696,46 @@ function flPress(key) {
   flRenderBoard();
 }
 
+/* Turns one row over, left to right. Resolves when the last tile has landed,
+   so the win or lose message waits for the reveal to finish rather than
+   spoiling it. */
+function flRevealRow(rowIndex, scores) {
+  const rowEl = flBoard.querySelectorAll(".fl-row")[rowIndex];
+  if (!rowEl) return Promise.resolve();
+
+  const tiles = Array.from(rowEl.children);
+  const paint = (tile, i) => {
+    tile.classList.remove("is-filled");
+    tile.classList.add("is-" + scores[i]);
+  };
+
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  if (reduceMotion) {
+    tiles.forEach(paint);
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    tiles.forEach((tile, i) => {
+      const delay = i * FL_STAGGER_MS;
+      tile.style.animation =
+        "fl-flip " + FL_FLIP_MS * 2 + "ms ease " + delay + "ms";
+      // Halfway through, the tile is edge-on and invisible - the only moment
+      // the colour can change without the change itself being visible.
+      setTimeout(() => paint(tile, i), delay + FL_FLIP_MS);
+    });
+
+    const total = (tiles.length - 1) * FL_STAGGER_MS + FL_FLIP_MS * 2;
+    setTimeout(resolve, total);
+  });
+}
+
 function flSubmit() {
+  if (flRevealing) return;
+
   if (fl.current.length < FL_LEN) {
     flSay("Not enough letters");
     flShakeCurrentRow();
@@ -1703,23 +1749,32 @@ function flSubmit() {
   }
 
   const guess = fl.current;
+  const scores = flScore(guess, fl.answer);
+
   fl.submitted.push(guess);
   fl.current = "";
-  flMergeKeyStates(guess, flScore(guess, fl.answer));
+  flSay("");
 
-  if (guess === fl.answer) {
-    fl.status = "won";
-    flSay(FL_PRAISE[fl.submitted.length - 1]);
-  } else if (fl.submitted.length >= FL_ROWS) {
-    fl.status = "lost";
-    flSay("It was " + fl.answer.toUpperCase());
-  } else {
-    flSay("");
-  }
-
-  flNewBtn.hidden = fl.status === "playing";
+  flRevealing = true;
   flRenderBoard();
-  flRenderKeyboard();
+
+  flRevealRow(fl.submitted.length - 1, scores).then(() => {
+    flRevealing = false;
+
+    // The keyboard updates with the row, not ahead of it.
+    flMergeKeyStates(guess, scores);
+    flRenderKeyboard();
+
+    if (guess === fl.answer) {
+      fl.status = "won";
+      flSay(FL_PRAISE[fl.submitted.length - 1]);
+    } else if (fl.submitted.length >= FL_ROWS) {
+      fl.status = "lost";
+      flSay("It was " + fl.answer.toUpperCase());
+    }
+
+    flNewBtn.hidden = fl.status === "playing";
+  });
 }
 
 function flNewGame() {
@@ -1729,6 +1784,8 @@ function flNewGame() {
     fl.current = "";
     fl.status = "playing";
     fl.keyState = {};
+    // In case a new game is started while a row is still turning over.
+    flRevealing = false;
     flRememberAnswer(fl.answer);
     flNewBtn.hidden = true;
     flSay("");
