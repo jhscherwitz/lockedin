@@ -1,5 +1,7 @@
 # LockedIn
 
+**[Open it →](https://jhscherwitz.github.io/lockedin/)**
+
 A single-page focus dashboard: a Pomodoro timer, layerable ambient sounds,
 tasks and a notepad, on one calm screen.
 
