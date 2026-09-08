@@ -20,7 +20,15 @@ safe to add any time · **[open]** needs a decision · **[out]** ruled out
 - Flocus uses **Degular Bold** for the timer, **Degular Semibold** for
   headings, and **Inter** for UI text. (Verified from the live site.)
 - **Degular is a commercial font** from OH no Type Co. Not free, not on
-  Google Fonts. Matching it exactly means buying a web licence.
+  Google Fonts. Licences on ohnotype.co are priced at **$179 / $419 / $519**
+  (checked 2026-09-08) - not the ~$50 previously guessed here. Judged not
+  worth it for a free portfolio project, so the aim is the least-wrong free
+  face rather than a match.
+- Closest free candidates, all verified to actually load: **Onest** (widest,
+  nearest to Degular's proportions), Gabarito, Bricolage Grotesque,
+  Clash Display, Satoshi.
+- **The square colon is solved independently of the font** - it is drawn as
+  two CSS blocks sized in `em`, so any font gets Degular's boxed colon.
 - **[structural — done]** `--timer-font` CSS variable already in place.
 - **[cosmetic]** Font picker offers several free display faces to choose from
   by eye. Candidates: Outfit, Figtree, Plus Jakarta Sans, Poppins (Google);
