@@ -67,6 +67,8 @@ const APP_NAME = "LockedIn";
 const MINUTE = 60000;
 
 const timerEl = document.getElementById("timer");
+const timerMinsEl = document.getElementById("timer-mins");
+const timerSecsEl = document.getElementById("timer-secs");
 const timerEditEl = document.getElementById("timer-edit");
 const timerStatusEl = document.getElementById("timer-status");
 const startBtn = document.getElementById("start-btn");
@@ -115,6 +117,16 @@ function formatTime(ms) {
   return minutes + ":" + String(seconds).padStart(2, "0");
 }
 
+/* The minutes and seconds are separate elements so the colon between them
+   can be two drawn squares rather than a font glyph. */
+function setTimerText(text) {
+  const split = text.indexOf(":");
+  const mins = text.slice(0, split);
+  const secs = text.slice(split + 1);
+  if (timerMinsEl.textContent !== mins) timerMinsEl.textContent = mins;
+  if (timerSecsEl.textContent !== secs) timerSecsEl.textContent = secs;
+}
+
 function statusText() {
   if (announcement) return announcement;
   if (settings.mode === "pomodoro") {
@@ -138,7 +150,7 @@ function render() {
   // render() runs four times a second while the timer runs, so every write is
   // guarded - assigning an unchanged value still costs the browser work.
   const text = formatTime(displayMs());
-  if (!editing && timerEl.textContent !== text) timerEl.textContent = text;
+  if (!editing) setTimerText(text);
 
   const label = isRunning ? "Pause" : "Start";
   if (startBtn.textContent !== label) startBtn.textContent = label;
@@ -715,6 +727,8 @@ const THEMES = [
 
 const FONTS = [
   { label: "Outfit", stack: '"Outfit", system-ui, sans-serif' },
+  { label: "Satoshi", stack: '"Satoshi", system-ui, sans-serif' },
+  { label: "Clash Display", stack: '"Clash Display", system-ui, sans-serif' },
   { label: "Figtree", stack: '"Figtree", system-ui, sans-serif' },
   { label: "Plus Jakarta Sans", stack: '"Plus Jakarta Sans", system-ui, sans-serif' },
   { label: "Poppins", stack: '"Poppins", system-ui, sans-serif' },

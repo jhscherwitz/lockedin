@@ -28,6 +28,19 @@
       rel="stylesheet"
     />
 
+    <!-- Fontshare: free for commercial use. Closest free faces to Degular,
+         which is commercial.
+
+         Requested without weight filters on purpose: asking for a weight a
+         family does not publish makes Fontshare drop that family from the
+         response silently, with no error at all - which would leave a dead
+         option in the font picker falling back to a system font. Unfiltered
+         returns a variable font covering every weight in one file. -->
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=satoshi&amp;f[]=clash-display&amp;display=swap"
+      rel="stylesheet"
+    />
+
     <link rel="stylesheet" href="style.css" />
   </head>
 
@@ -58,6 +71,8 @@
       <p id="timer-status" class="timer-status">&nbsp;</p>
 
       <div class="timer-wrap">
+        <!-- Split into parts so the colon can be drawn as two squares
+             rather than relying on the font's own round dots. -->
         <div
           id="timer"
           class="timer"
@@ -65,7 +80,9 @@
           tabindex="0"
           title="Click to change the length"
         >
-          30:00
+          <span id="timer-mins">30</span>
+          <span class="timer-colon" aria-hidden="true"></span>
+          <span id="timer-secs">00</span>
         </div>
         <input
           id="timer-edit"

@@ -98,8 +98,11 @@ main {
   font-family: var(--timer-font);
   cursor: default;
   font-size: clamp(3.6rem, 14vw, 10rem);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.005em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 0.92;
   margin: 0.5rem 0 0;
   font-variant-numeric: tabular-nums;
@@ -892,9 +895,9 @@ main {
   border-radius: 9px;
   background: transparent;
   font-family: var(--display-font);
-  font-size: clamp(1.3rem, 3.1vw, 2rem);
+  font-size: clamp(1.4rem, 3.4vw, 2.5rem);
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: normal;
   color: var(--text);
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
@@ -1111,4 +1114,34 @@ body.pip-open main {
   pointer-events: none;
   opacity: 0.055;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   The boxed colon
+
+   Degular's colon is two squares rather than two dots, which is a big part
+   of why Flocus's timer looks the way it does. Rather than buying the font,
+   the colon is drawn: two blocks sized in `em`, so they scale with the timer
+   automatically and stay correct at every screen size.
+   ========================================================================== */
+
+.timer-colon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.16em;
+  margin: 0 0.11em;
+  /* Nudged up so the pair sits on the digits' optical centre rather than
+     the line box's mathematical one. */
+  transform: translateY(-0.03em);
+}
+
+.timer-colon::before,
+.timer-colon::after {
+  content: "";
+  display: block;
+  width: 0.135em;
+  height: 0.135em;
+  border-radius: 0.022em;
+  background: currentColor;
 }
