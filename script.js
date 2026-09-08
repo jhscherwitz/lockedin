@@ -488,8 +488,8 @@ const SOUNDS = [
   { id: "light-rain", name: "Light Rain", icon: "\u{1F326}\u{FE0F}" },
   { id: "heavy-rain", name: "Heavy Rain", icon: "\u{1F327}\u{FE0F}" },
   { id: "ocean-waves", name: "Ocean Waves", icon: "\u{1F30A}" },
-  { id: "river", name: "River", icon: "\u{1F3DE}\u{FE0F}" },
-  { id: "underwater", name: "Underwater", icon: "\u{1FAE7}" },
+  { id: "river", name: "River", icon: "\u{1F3DE}\u{FE0F}", doubleTrack: true },
+  { id: "underwater", name: "Underwater", icon: "\u{1FAE7}", doubleTrack: true },
   { id: "forest-ambience", name: "Forest", icon: "\u{1F332}" },
   { id: "campfire", name: "Campfire", icon: "\u{1F525}" },
 ];
@@ -514,19 +514,54 @@ const players = {};
 // The tile elements, built once and then only re-styled.
 const tiles = {};
 
-/* One <audio> element per sound, created once and then reused.
+/* One or two <audio> elements per sound, created once and reused.
 
-   An earlier version destroyed it on stop with `audio.src = ""`, which makes
-   the browser try to load an empty URL. That fails, fires the error event
-   below, and marked the sound permanently unavailable - so pausing a sound
-   greyed out its tile for good. Pausing is both correct and faster to
-   resume, since the file stays buffered. */
-function createFilePlayer(id) {
-  const audio = new Audio(`assets/sounds/${id}.mp3`);
-  audio.loop = true;
-  audio.volume = 0;
+   An earlier version destroyed the element on stop with `audio.src = ""`,
+   which makes the browser try to load an empty URL. That fails, fires the
+   error event below, and marked the sound permanently unavailable - so
+   pausing a sound greyed out its tile for good. Pausing is both correct and
+   faster to resume, since the file stays buffered.
 
-  audio.addEventListener("error", () => {
+   Sounds flagged doubleTrack get a second copy of the same file playing
+   offset by half its length. Each copy plays straight through the moment the
+   other reaches its loop point, so the seam is never exposed:
+
+     copy A:  --------seam--------seam--------
+     copy B:  --seam--------seam--------seam--
+
+   Only worth doing on short files, where the seam comes round often enough
+   to hear. The MP3 itself is untouched - this is two players, not an edit. */
+function createFilePlayer(id, doubleTrack) {
+  const src = "assets/sounds/" + id + ".mp3";
+
+  const primary = new Audio(src);
+  primary.loop = true;
+  primary.volume = 0;
+
+  const secondary = doubleTrack ? new Audio(src) : null;
+  let offsetApplied = false;
+
+  function applyOffset() {
+    if (!secondary || offsetApplied) return;
+    if (!Number.isFinite(secondary.duration) || secondary.duration === 0) return;
+    secondary.currentTime = secondary.duration / 2;
+    offsetApplied = true;
+  }
+
+  if (secondary) {
+    secondary.loop = true;
+    secondary.volume = 0;
+    secondary.addEventListener("loadedmetadata", applyOffset);
+  }
+
+  const layers = secondary ? [primary, secondary] : [primary];
+
+  /* Two streams of the same broadly noise-like material add by amplitude
+     rather than linearly, so about 0.71 each lands near the loudness of one
+     at full volume. */
+  const perLayer = secondary ? Math.SQRT1_2 : 1;
+
+  primary.addEventListener("error", () => {
     soundState[id].unavailable = true;
     soundState[id].on = false;
     renderSounds();
@@ -534,13 +569,15 @@ function createFilePlayer(id) {
 
   return {
     play() {
-      audio.play().catch(() => {});
+      applyOffset();
+      layers.forEach((audio) => audio.play().catch(() => {}));
     },
     pause() {
-      audio.pause();
+      layers.forEach((audio) => audio.pause());
     },
     setVolume(value) {
-      audio.volume = Math.min(1, Math.max(0, value));
+      const level = Math.min(1, Math.max(0, value)) * perLayer;
+      layers.forEach((audio) => (audio.volume = level));
     },
   };
 }
@@ -561,7 +598,10 @@ function toggleSound(id) {
 
   // Kept for the life of the page rather than rebuilt, so switching a sound
   // back on resumes a buffered element instead of downloading it again.
-  if (!players[id]) players[id] = createFilePlayer(id);
+  if (!players[id]) {
+    const sound = SOUNDS.find((entry) => entry.id === id);
+    players[id] = createFilePlayer(id, Boolean(sound && sound.doubleTrack));
+  }
 
   applyVolumes();
   if (state.on) players[id].play();
@@ -619,21 +659,26 @@ function renderSounds() {
   });
 }
 
-/* Asks the browser whether each MP3 actually exists, so tiles are honest
-   before you click them rather than after. */
+/* Checks which MP3s actually exist, so tiles are honest before you click
+   them rather than after.
+
+   A HEAD request asks only for the headers - "is this there?" - and returns
+   no file body at all, so it is near-instant whatever the file size. The
+   first version of this set preload="metadata" on an <audio> element, which
+   made the browser begin downloading each file just to find out it existed:
+   the 6.5MB forest recording left its tile greyed out and unclickable for
+   several seconds after load. */
 function probeFileSounds() {
   SOUNDS.forEach((sound) => {
-    const probe = new Audio();
-    probe.preload = "metadata";
-    probe.addEventListener("loadedmetadata", () => {
-      soundState[sound.id].unavailable = false;
-      renderSounds();
-    });
-    probe.addEventListener("error", () => {
-      soundState[sound.id].unavailable = true;
-      renderSounds();
-    });
-    probe.src = `assets/sounds/${sound.id}.mp3`;
+    fetch("assets/sounds/" + sound.id + ".mp3", { method: "HEAD" })
+      .then((response) => {
+        soundState[sound.id].unavailable = !response.ok;
+        renderSounds();
+      })
+      .catch(() => {
+        soundState[sound.id].unavailable = true;
+        renderSounds();
+      });
   });
 }
 

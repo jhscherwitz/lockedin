@@ -19,9 +19,11 @@ not slow the initial page load.
 
 ## Notes
 
-- `underwater.mp3` is only 7 seconds, so its loop repeats about nine times a
-  minute and is audible as a loop. Worth replacing with something longer.
-- `river.mp3` at 22 seconds is borderline for the same reason.
+- `underwater.mp3` (7s) and `river.mp3` (22s) are flagged `doubleTrack` in the
+  `SOUNDS` list. That plays a second copy of the same file offset by half its
+  length, so each copy covers the other's loop point and the seam is never
+  exposed. The files themselves are untouched. Remove the flag to disable.
+- Long files do not need it: their seam comes round once every few minutes.
 - Most files are encoded around 256 kbps. Ambient loops sound
   indistinguishable at 128 kbps, which would roughly halve the total size.
 
