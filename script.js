@@ -762,9 +762,9 @@ const THEMES = [
 ];
 
 const FONTS = [
+  { label: "Clash Display", stack: '"Clash Display", "Outfit", system-ui, sans-serif' },
   { label: "Outfit", stack: '"Outfit", system-ui, sans-serif' },
   { label: "Satoshi", stack: '"Satoshi", system-ui, sans-serif' },
-  { label: "Clash Display", stack: '"Clash Display", system-ui, sans-serif' },
   { label: "Gabarito", stack: '"Gabarito", system-ui, sans-serif' },
   { label: "Onest", stack: '"Onest", system-ui, sans-serif' },
   { label: "Bricolage Grotesque", stack: '"Bricolage Grotesque", system-ui, sans-serif' },
@@ -1019,6 +1019,7 @@ function collectState() {
   return {
     theme: activeTheme,
     font: fontSelect.value,
+    fontDefaultMigrated: true,
     clock: { hour12: clockSettings.hour12, timeZone: clockSettings.timeZone },
     timer: Object.assign({}, settings),
     master: masterVolume,
@@ -1052,7 +1053,18 @@ document.addEventListener("change", scheduleSave);
 document.addEventListener("click", scheduleSave);
 window.addEventListener("beforeunload", saveState);
 
+const LEGACY_DEFAULT_FONT = '"Outfit", system-ui, sans-serif';
+
 function applySavedState(data) {
+  /* The default timer font changed from Outfit to Clash Display. Anyone
+     carrying the old default in their saved settings never actually chose a
+     font - they just had the default - so let the new one through. The flag
+     means this happens exactly once; a deliberate later choice of Outfit is
+     then respected. */
+  if (!data.fontDefaultMigrated && data.font === LEGACY_DEFAULT_FONT) {
+    delete data.font;
+  }
+
   if (data.theme) applyTheme(data.theme);
 
   // Guard every field: a saved font or timezone might not exist any more,

@@ -27,8 +27,15 @@
 
   /* Fonts. --timer-font follows --display-font unless set on its own,
      which is what the font picker will change later. */
+  /* --display-font is the UI: panel labels, buttons, settings.
+     --timer-font is the timer and the focus prompt, and is what the font
+     picker changes.
+
+     Clash Display comes from Fontshare rather than Google Fonts, so Outfit
+     sits behind it in the stack: if Fontshare is ever unreachable the timer
+     falls back to another webfont rather than to a system face. */
   --display-font: "Outfit", system-ui, sans-serif;
-  --timer-font: var(--display-font);
+  --timer-font: "Clash Display", "Outfit", system-ui, sans-serif;
 }
 
 * {
