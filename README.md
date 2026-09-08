@@ -21,8 +21,8 @@ dependencies. Open the folder, run one command, and it works.
   each round from a 1,186-word answer list and 8,636 accepted guesses; and
   *Squish 2048*, whose blobs squash on merge with a synthesised squelch
   pitched by tile value; *Blackjack* with a six-deck shoe, doubling down
-  and pretend chips; and *Minesweeper* on a beginner board
-- **Spotify playlists**, loaded only when you pick one
+  and pretend chips; *Minesweeper* on a beginner board; and *Sequence*, a growing pattern to repeat back, each pad with its own tone
+- **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Themes, fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits

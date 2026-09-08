@@ -111,16 +111,13 @@ Right-side panel, organised into tabs.
 - **[planned]** A "mind games" dock button opening a panel with a game
   picker, so a second game later is a drop-in rather than a restructure -
   same shape as the sounds/music and tasks/notes panels.
-- **[done]** Wordie (word game), Squish 2048, Blackjack, Minesweeper.
+- **[done]** Wordie, Squish 2048, Blackjack, Minesweeper, Sequence.
 - **[open]** Piano playlist still needs a real link; the one supplied was the
   same id as Lofi. Study Lofi was scrapped.
 - **[ruled out]** A shuffle button on the Spotify embed. The embed is a closed
   widget and Spotify's iFrame API exposes play, pause, seek and loadUri -
   there is no shuffle. Shuffling needs the Web Playback SDK, which means
   OAuth, a token backend, and Spotify Premium for every listener.
-- **[next]** Sequence memory - tiles flash a growing pattern to repeat back,
-  each tile with its own synthesised tone. Chosen over bubble wrap and the
-  Schulte table.
 - **[not wanted]** Bubble wrap, Schulte table.
 - **First game: a Wordle clone.** Random word every game rather than one word
   per day, which is simpler than the real thing and better for a study break

@@ -196,6 +196,10 @@
             <span class="game-card-name">Minesweeper</span>
             <span class="game-card-desc">Nine by nine, ten mines</span>
           </button>
+          <button class="game-card" type="button" data-game="sequence">
+            <span class="game-card-name">Sequence</span>
+            <span class="game-card-desc">Watch the pattern, repeat it back</span>
+          </button>
           <button class="game-card" type="button" data-game="squish">
             <span class="game-card-name">Squish 2048</span>
             <span class="game-card-desc">Merge the blobs, chase 2048</span>
@@ -299,6 +303,23 @@
               Click to start · right-click to flag
             </p>
             <button id="ms-new" class="fl-new" type="button">New board</button>
+          </div>
+
+          <div class="game-pane" data-game="sequence" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Round</span>
+                <span id="sm-round" class="sq-stat-value">0</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Best</span>
+                <span id="sm-best" class="sq-stat-value">0</span>
+              </div>
+            </div>
+
+            <div id="sm-pads" class="sm-pads"></div>
+            <p id="sm-message" class="sq-message">Press start and watch</p>
+            <button id="sm-new" class="fl-new" type="button">Start</button>
           </div>
         </div>   </section>
 

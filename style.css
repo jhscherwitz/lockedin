@@ -1845,3 +1845,58 @@ body.pip-open main {
 .music-remove:hover {
   color: var(--text);
 }
+
+/* ==========================================================================
+   Sequence
+   ========================================================================== */
+
+.sm-pads {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 286px;
+  margin: 0 auto;
+}
+
+.sm-pad {
+  height: 100px;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+  opacity: 0.42;
+  transition: opacity 0.12s, transform 0.12s;
+}
+
+/* Lit, whether by the game showing you the pattern or by your own press. */
+.sm-pad.is-lit {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+/* While the pattern is playing, the pads are not yours to press. */
+.sm-pads.is-watching .sm-pad {
+  cursor: default;
+}
+
+.sm-pad-0 { background: #22c55e; }
+.sm-pad-1 { background: #ef4444; }
+.sm-pad-2 { background: #eab308; }
+.sm-pad-3 { background: #3b82f6; }
+
+.sm-pads.is-wrong .sm-pad {
+  animation: sm-wrong 0.4s;
+}
+
+@keyframes sm-wrong {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  75% { transform: translateX(7px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sm-pad,
+  .sm-pads.is-wrong .sm-pad {
+    transition: none;
+    animation: none;
+  }
+}
