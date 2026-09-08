@@ -6,40 +6,10 @@
    without hand-writing conversion logic.
    ========================================================================== */
 
-const greetingEl = document.getElementById("greeting");
-
 const clockSettings = {
   hour12: true,
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
-
-function greetingFor(hour) {
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
-
-/* Intl.DateTimeFormat is expensive to construct - it loads locale data - so
-   this is built once and rebuilt only when the timezone changes. */
-let hourFormatter = null;
-let hourFormatterZone = null;
-
-function updateGreeting() {
-  if (clockSettings.timeZone !== hourFormatterZone) {
-    hourFormatterZone = clockSettings.timeZone;
-    hourFormatter = new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      hourCycle: "h23",
-      timeZone: clockSettings.timeZone,
-    });
-  }
-
-  const greeting = greetingFor(Number(hourFormatter.format(new Date())));
-  if (greetingEl.textContent !== greeting) greetingEl.textContent = greeting;
-}
-
-updateGreeting();
-setInterval(updateGreeting, 30000);
 
 /* ==========================================================================
    Live clock, top right
@@ -810,7 +780,6 @@ function buildZoneSelect() {
 
   zoneSelect.addEventListener("change", () => {
     clockSettings.timeZone = zoneSelect.value;
-    updateGreeting();
     updateNow();
   });
 }
@@ -1010,7 +979,6 @@ function applySavedState(data) {
         clockSettings.timeZone = data.clock.timeZone;
       }
     }
-    updateGreeting();
     updateNow();
   }
 
