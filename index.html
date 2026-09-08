@@ -115,6 +115,14 @@
          ==================================================================== -->
 
     <nav class="dock dock-left" aria-label="Panels">
+      <button class="dock-btn" data-panel="games" aria-expanded="false" aria-label="Games">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17.5 6.5h-11A4.5 4.5 0 0 0 2 11v2.5A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5V11a4.5 4.5 0 0 0-4.5-4.5z" />
+          <path d="M6 12.2h3.4M7.7 10.5v3.4" />
+          <circle cx="15.6" cy="11.1" r="0.9" fill="currentColor" stroke="none" />
+          <circle cx="18.1" cy="13.5" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
       <button class="dock-btn" data-panel="tasks" aria-expanded="false" aria-label="Tasks and notes">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
@@ -164,6 +172,34 @@
     <!-- ====================================================================
          Panels. One markup shape, reused. Content arrives in later steps.
          ==================================================================== -->
+
+    <section class="panel panel-games" data-panel="games" aria-label="Games">
+      <header class="panel-head">
+        <h2>Games</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+
+      <div class="panel-body">
+        <!-- The picker. A second game is another card here, nothing more. -->
+        <div id="games-menu" class="games-menu">
+          <button class="game-card" type="button" data-game="fiveletters">
+            <span class="game-card-name">Five Letters</span>
+            <span class="game-card-desc">Guess the word in six tries</span>
+          </button>
+        </div>
+
+        <div id="game-view" class="game-view" hidden>
+          <button id="games-back" class="games-back" type="button">
+            &larr; All games
+          </button>
+
+          <div id="fl-board" class="fl-board"></div>
+          <p id="fl-message" class="fl-message" role="status">&nbsp;</p>
+          <div id="fl-keyboard" class="fl-keyboard"></div>
+          <button id="fl-new" class="fl-new" type="button" hidden>New word</button>
+        </div>
+      </div>
+    </section>
 
     <section class="panel" data-panel="tasks" aria-label="Tasks and notes">
       <header class="panel-head">

@@ -17,6 +17,8 @@ dependencies. Open the folder, run one command, and it works.
 - **Ambient sound mixer** — seven recordings, any number playing at once,
   each with its own volume plus a master
 - **Tasks and a notepad** — edited in place, saved automatically
+- **Five Letters** — a word game for breaks, with a fresh random word each
+  round drawn from a 1,300-word answer list and 15,900 accepted guesses
 - **Themes, fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
@@ -69,3 +71,6 @@ IDEAS.md       requirements and decisions, including what was ruled out
 
 In progress. Still to come: Spotify playlist embeds, and a Google Calendar
 widget for the day's events.
+
+The games panel holds a picker, so a second game is a new card and its own
+module rather than a restructure.

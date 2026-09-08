@@ -1416,6 +1416,11 @@ function shortcutSummary() {
 document.addEventListener("keydown", (event) => {
   if (isTyping(event.target)) return;
 
+  // While a word game is in play, letters belong to the game. Without this,
+  // spelling a word containing S, M, T, R, F or P would fire the panel
+  // shortcuts instead of typing.
+  if (flActive() && fl.status === "playing") return;
+
   // Leave browser combinations alone: Ctrl+R should still reload the page.
   if (event.ctrlKey || event.metaKey || event.altKey) return;
 
@@ -1432,3 +1437,348 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
   shortcut.run();
 });
+
+/* ==========================================================================
+   Games
+
+   The panel holds a picker and one game view, so adding a second game means
+   adding a card and its own module - not restructuring anything.
+   ========================================================================== */
+
+const gamesMenu = document.getElementById("games-menu");
+const gameView = document.getElementById("game-view");
+const gamesBack = document.getElementById("games-back");
+
+/* ---- Five Letters ---- */
+
+const flBoard = document.getElementById("fl-board");
+const flMessage = document.getElementById("fl-message");
+const flKeyboard = document.getElementById("fl-keyboard");
+const flNewBtn = document.getElementById("fl-new");
+
+const FL_ROWS = 6;
+const FL_LEN = 5;
+const FL_RECENT_KEY = "focus-app-fl-recent";
+
+let flWords = null; // { answers: [...], guesses: Set }
+let flLoading = null; // in-flight fetch, so two clicks don't load twice
+
+const fl = {
+  answer: "",
+  submitted: [],
+  current: "",
+  status: "idle", // idle | playing | won | lost
+  keyState: {}, // letter -> correct | present | absent
+};
+
+function flActive() {
+  return openPanel === "games" && !gameView.hidden;
+}
+
+/* Fetched the first time the game is opened rather than on page load, so
+   104KB of word lists never delays the timer appearing. */
+function loadWordLists() {
+  if (flWords) return Promise.resolve(flWords);
+  if (flLoading) return flLoading;
+
+  flLoading = Promise.all([
+    fetch("assets/words/answers.txt").then((r) => r.text()),
+    fetch("assets/words/guesses.txt").then((r) => r.text()),
+  ]).then(([answersText, guessesText]) => {
+    flWords = {
+      answers: answersText.trim().split("\n"),
+      guesses: new Set(guessesText.trim().split("\n")),
+    };
+    return flWords;
+  });
+
+  return flLoading;
+}
+
+/* ---- Choosing a word ---- */
+
+function flRecent() {
+  try {
+    const list = JSON.parse(localStorage.getItem(FL_RECENT_KEY));
+    return Array.isArray(list) ? list : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function flRememberAnswer(word) {
+  const recent = [word, ...flRecent().filter((w) => w !== word)].slice(0, 40);
+  try {
+    localStorage.setItem(FL_RECENT_KEY, JSON.stringify(recent));
+  } catch (error) {
+    // Storage blocked. Occasional repeats are not worth failing over.
+  }
+}
+
+function flPickAnswer(answers) {
+  const recent = new Set(flRecent());
+  const fresh = answers.filter((word) => !recent.has(word));
+  const pool = fresh.length ? fresh : answers;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* ---- Scoring ----------------------------------------------------------------
+
+   Two passes, and the order is the whole point. Greens are assigned first and
+   consume from a tally of the answer's letters; only then are yellows handed
+   out, and only while that letter still has some left in the tally.
+
+   Answer SPEED, guess ERASE. A single pass asking "is this letter somewhere in
+   the answer?" lights up both E's in the guess. That is wrong: SPEED has two
+   E's, and the guess's second E already claimed one of them as a green, so the
+   first E has exactly one left to match against - not two.
+   -------------------------------------------------------------------------- */
+
+function flScore(guess, answer) {
+  const result = new Array(FL_LEN).fill("absent");
+  const remaining = {};
+
+  for (const letter of answer) {
+    remaining[letter] = (remaining[letter] || 0) + 1;
+  }
+
+  for (let i = 0; i < FL_LEN; i++) {
+    if (guess[i] === answer[i]) {
+      result[i] = "correct";
+      remaining[guess[i]] -= 1;
+    }
+  }
+
+  for (let i = 0; i < FL_LEN; i++) {
+    if (result[i] === "correct") continue;
+    const letter = guess[i];
+    if (remaining[letter] > 0) {
+      result[i] = "present";
+      remaining[letter] -= 1;
+    }
+  }
+
+  return result;
+}
+
+// A key never downgrades: once green it stays green.
+const FL_RANK = { absent: 0, present: 1, correct: 2 };
+
+function flMergeKeyStates(guess, scores) {
+  for (let i = 0; i < FL_LEN; i++) {
+    const letter = guess[i];
+    const current = fl.keyState[letter];
+    if (!current || FL_RANK[scores[i]] > FL_RANK[current]) {
+      fl.keyState[letter] = scores[i];
+    }
+  }
+}
+
+/* ---- Drawing ---- */
+
+function flRenderBoard() {
+  flBoard.innerHTML = "";
+
+  for (let row = 0; row < FL_ROWS; row++) {
+    const rowEl = document.createElement("div");
+    rowEl.className = "fl-row";
+
+    const guess = fl.submitted[row];
+    const isCurrentRow = row === fl.submitted.length;
+    const scores = guess ? flScore(guess, fl.answer) : null;
+
+    for (let i = 0; i < FL_LEN; i++) {
+      const tile = document.createElement("div");
+      tile.className = "fl-tile";
+
+      if (guess) {
+        tile.textContent = guess[i];
+        tile.classList.add("is-" + scores[i]);
+      } else if (isCurrentRow && fl.current[i]) {
+        tile.textContent = fl.current[i];
+        tile.classList.add("is-filled");
+      }
+
+      rowEl.append(tile);
+    }
+
+    flBoard.append(rowEl);
+  }
+}
+
+const FL_KEYS = [
+  ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+  ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+  ["Enter", "z", "x", "c", "v", "b", "n", "m", "Back"],
+];
+
+function flBuildKeyboard() {
+  flKeyboard.innerHTML = "";
+
+  FL_KEYS.forEach((row) => {
+    const rowEl = document.createElement("div");
+    rowEl.className = "fl-krow";
+
+    row.forEach((key) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "fl-key" + (key.length > 1 ? " fl-key-wide" : "");
+      button.textContent = key === "Back" ? "⌫" : key;
+      button.dataset.key = key;
+      button.addEventListener("click", () => flPress(key));
+      rowEl.append(button);
+    });
+
+    flKeyboard.append(rowEl);
+  });
+}
+
+function flRenderKeyboard() {
+  flKeyboard.querySelectorAll(".fl-key").forEach((button) => {
+    button.classList.remove("is-correct", "is-present", "is-absent");
+    const state = fl.keyState[button.dataset.key];
+    if (state) button.classList.add("is-" + state);
+  });
+}
+
+function flSay(text) {
+  flMessage.textContent = text || " ";
+}
+
+function flShakeCurrentRow() {
+  const rowEl = flBoard.querySelectorAll(".fl-row")[fl.submitted.length];
+  if (!rowEl) return;
+  rowEl.classList.remove("is-invalid");
+  // Reading a layout property forces the removal to take effect before the
+  // class goes back on. Without it the animation does not restart.
+  void rowEl.offsetWidth;
+  rowEl.classList.add("is-invalid");
+}
+
+/* ---- Playing ---- */
+
+const FL_PRAISE = [
+  "Genius",
+  "Magnificent",
+  "Impressive",
+  "Splendid",
+  "Great",
+  "Phew",
+];
+
+function flPress(key) {
+  if (fl.status !== "playing") return;
+
+  if (key === "Back") {
+    fl.current = fl.current.slice(0, -1);
+    flSay("");
+    flRenderBoard();
+    return;
+  }
+
+  if (key === "Enter") {
+    flSubmit();
+    return;
+  }
+
+  if (!/^[a-z]$/.test(key)) return;
+  if (fl.current.length >= FL_LEN) return;
+
+  fl.current += key;
+  flSay("");
+  flRenderBoard();
+}
+
+function flSubmit() {
+  if (fl.current.length < FL_LEN) {
+    flSay("Not enough letters");
+    flShakeCurrentRow();
+    return;
+  }
+
+  if (!flWords || !flWords.guesses.has(fl.current)) {
+    flSay("Not in word list");
+    flShakeCurrentRow();
+    return;
+  }
+
+  const guess = fl.current;
+  fl.submitted.push(guess);
+  fl.current = "";
+  flMergeKeyStates(guess, flScore(guess, fl.answer));
+
+  if (guess === fl.answer) {
+    fl.status = "won";
+    flSay(FL_PRAISE[fl.submitted.length - 1]);
+  } else if (fl.submitted.length >= FL_ROWS) {
+    fl.status = "lost";
+    flSay("It was " + fl.answer.toUpperCase());
+  } else {
+    flSay("");
+  }
+
+  flNewBtn.hidden = fl.status === "playing";
+  flRenderBoard();
+  flRenderKeyboard();
+}
+
+function flNewGame() {
+  return loadWordLists().then((words) => {
+    fl.answer = flPickAnswer(words.answers);
+    fl.submitted = [];
+    fl.current = "";
+    fl.status = "playing";
+    fl.keyState = {};
+    flRememberAnswer(fl.answer);
+    flNewBtn.hidden = true;
+    flSay("");
+    flRenderBoard();
+    flRenderKeyboard();
+  });
+}
+
+/* ---- Wiring ---- */
+
+gamesMenu.querySelectorAll(".game-card").forEach((card) => {
+  card.addEventListener("click", () => {
+    gamesMenu.hidden = true;
+    gameView.hidden = false;
+    flSay("Loading words…");
+    flNewGame().catch(() => flSay("Could not load the word list"));
+  });
+});
+
+gamesBack.addEventListener("click", () => {
+  gameView.hidden = true;
+  gamesMenu.hidden = false;
+});
+
+flNewBtn.addEventListener("click", () => flNewGame());
+
+// A real keyboard should work, not just the on-screen one.
+document.addEventListener("keydown", (event) => {
+  if (!flActive() || fl.status !== "playing") return;
+  if (isTyping(event.target)) return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    flPress("Enter");
+    return;
+  }
+
+  if (event.key === "Backspace") {
+    event.preventDefault();
+    flPress("Back");
+    return;
+  }
+
+  const letter = event.key.toLowerCase();
+  if (/^[a-z]$/.test(letter)) {
+    event.preventDefault();
+    flPress(letter);
+  }
+});
+
+flBuildKeyboard();
+flRenderBoard();
