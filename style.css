@@ -750,3 +750,127 @@ main {
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.45);
 }
+
+/* ==========================================================================
+   Tasks and notepad
+   ========================================================================== */
+
+.panel[data-panel="tasks"] {
+  width: min(380px, calc(100vw - 3rem));
+}
+
+.task-form {
+  display: flex;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+}
+
+.task-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-family: var(--display-font);
+  font-size: 0.85rem;
+}
+
+.task-form input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.task-add {
+  flex-shrink: 0;
+  width: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.task-check {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.task.is-done .task-check {
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.task-text {
+  flex: 1;
+  font-family: var(--display-font);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.task.is-done .task-text {
+  color: var(--text-dim);
+  text-decoration: line-through;
+}
+
+.task-delete {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.task-delete:hover {
+  color: var(--text);
+}
+
+.notepad {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-family: var(--display-font);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.notepad::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+}

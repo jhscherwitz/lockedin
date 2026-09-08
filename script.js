@@ -278,9 +278,6 @@ const shortInput = document.getElementById("short-minutes");
 const longInput = document.getElementById("long-minutes");
 const roundsInput = document.getElementById("rounds");
 const modeControl = document.getElementById("timer-mode-control");
-const tabButtons = document.querySelectorAll(".tab");
-const tabPanels = document.querySelectorAll(".tab-panel");
-
 function syncSettingInputs() {
   focusInput.value = settings.focusMinutes;
   shortInput.value = settings.shortBreakMinutes;
@@ -356,20 +353,31 @@ function positionAllThumbs() {
   segmentedControls.forEach(positionThumb);
 }
 
-tabButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    tabButtons.forEach((other) => {
-      other.classList.toggle("is-active", other === button);
+/* Wires one tab strip. Scoped to its container so several panels can each
+   have their own tabs without interfering. */
+function initTabs(container) {
+  const buttons = container.querySelectorAll(".tab");
+  const panels = container.querySelectorAll(".tab-panel");
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      buttons.forEach((other) => {
+        other.classList.toggle("is-active", other === button);
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle(
+          "is-active",
+          panel.dataset.tab === button.dataset.tab
+        );
+      });
+      // Widths are only measurable once the panel is displayed.
+      positionAllThumbs();
     });
-    tabPanels.forEach((panel) => {
-      panel.classList.toggle(
-        "is-active",
-        panel.dataset.tab === button.dataset.tab
-      );
-    });
-    // Widths are only measurable once the panel is displayed.
-    positionAllThumbs();
   });
+}
+
+document.querySelectorAll(".panel").forEach((panel) => {
+  if (panel.querySelector(".tab")) initTabs(panel);
 });
 
 window.addEventListener("resize", positionAllThumbs);
@@ -764,3 +772,225 @@ applyTheme(activeTheme);
 buildFontSelect();
 buildZoneSelect();
 initSegmented(hourFormatControl, setHourFormat);
+
+/* ==========================================================================
+   Tasks and notepad
+   ========================================================================== */
+
+const taskForm = document.getElementById("task-form");
+const taskInput = document.getElementById("task-input");
+const taskList = document.getElementById("task-list");
+const taskEmpty = document.getElementById("task-empty");
+const notepad = document.getElementById("notepad");
+
+// { id, text, done }
+let tasks = [];
+
+/* This one rebuilds its DOM on every render, unlike the sound tiles. That's
+   fine here because nothing in a task is mid-drag - but it's the reason the
+   sounds panel had to be written the other way. */
+function renderTasks() {
+  taskList.innerHTML = "";
+
+  tasks.forEach((task) => {
+    const item = document.createElement("li");
+    item.className = "task";
+    item.classList.toggle("is-done", task.done);
+
+    const check = document.createElement("button");
+    check.className = "task-check";
+    check.setAttribute("aria-pressed", String(task.done));
+    check.setAttribute("aria-label", "Mark complete");
+    check.addEventListener("click", () => toggleTask(task.id));
+
+    const text = document.createElement("span");
+    text.className = "task-text";
+    // textContent, not innerHTML: whatever is typed stays text and can
+    // never be interpreted as markup.
+    text.textContent = task.text;
+
+    const remove = document.createElement("button");
+    remove.className = "task-delete";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", "Delete task");
+    remove.addEventListener("click", () => deleteTask(task.id));
+
+    item.append(check, text, remove);
+    taskList.append(item);
+  });
+
+  taskEmpty.hidden = tasks.length > 0;
+}
+
+function addTask(text) {
+  tasks.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    text,
+    done: false,
+  });
+  renderTasks();
+}
+
+function toggleTask(id) {
+  const task = tasks.find((t) => t.id === id);
+  if (!task) return;
+  task.done = !task.done;
+  renderTasks();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter((t) => t.id !== id);
+  renderTasks();
+}
+
+taskForm.addEventListener("submit", (event) => {
+  // Without this the browser reloads the page, which is a form's default
+  // behaviour and would wipe everything.
+  event.preventDefault();
+
+  const text = taskInput.value.trim();
+  if (!text) return;
+
+  addTask(text);
+  taskInput.value = "";
+  taskInput.focus();
+});
+
+renderTasks();
+
+/* ==========================================================================
+   Saving
+
+   Everything lives in localStorage: a small key/value store the browser
+   keeps per site, on this device, with no server involved. It survives
+   refreshes and reboots, but does not follow you to another computer -
+   that would need accounts, which this project deliberately doesn't have.
+   ========================================================================== */
+
+const STORAGE_KEY = "focus-app-v1";
+
+function collectState() {
+  const volumes = {};
+  SOUNDS.forEach((sound) => {
+    volumes[sound.id] = soundState[sound.id].volume;
+  });
+
+  return {
+    theme: activeTheme,
+    font: fontSelect.value,
+    clock: { hour12: clockSettings.hour12, timeZone: clockSettings.timeZone },
+    timer: Object.assign({}, settings),
+    master: masterVolume,
+    volumes,
+    tasks,
+    notes: notepad.value,
+  };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+  } catch (error) {
+    // Private browsing and some privacy settings block storage entirely.
+    // Losing settings is not worth breaking the page over.
+  }
+}
+
+// Writing on every keystroke would be wasteful, so wait for a pause first.
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 300);
+}
+
+// Rather than remembering to call save from twenty different places, listen
+// once at the document level. Every control here is driven by one of these
+// three events, so this catches all of them.
+document.addEventListener("input", scheduleSave);
+document.addEventListener("change", scheduleSave);
+document.addEventListener("click", scheduleSave);
+window.addEventListener("beforeunload", saveState);
+
+function applySavedState(data) {
+  if (data.theme) applyTheme(data.theme);
+
+  // Guard every field: a saved font or timezone might not exist any more,
+  // and a <select> silently refuses values that aren't in its list.
+  if (data.font) {
+    fontSelect.value = data.font;
+    if (fontSelect.value === data.font) {
+      document.documentElement.style.setProperty("--timer-font", data.font);
+    }
+  }
+
+  if (data.clock) {
+    if (typeof data.clock.hour12 === "boolean") {
+      clockSettings.hour12 = data.clock.hour12;
+      const value = data.clock.hour12 ? "12" : "24";
+      hourFormatControl.querySelectorAll(".segment").forEach((segment) => {
+        segment.classList.toggle("is-active", segment.dataset.value === value);
+      });
+      positionThumb(hourFormatControl);
+    }
+    if (data.clock.timeZone) {
+      zoneSelect.value = data.clock.timeZone;
+      if (zoneSelect.value === data.clock.timeZone) {
+        clockSettings.timeZone = data.clock.timeZone;
+      }
+    }
+    updateClock();
+  }
+
+  if (data.timer) {
+    Object.keys(settings).forEach((key) => {
+      if (data.timer[key] !== undefined) settings[key] = data.timer[key];
+    });
+    syncSettingInputs();
+    modeControl.querySelectorAll(".segment").forEach((segment) => {
+      segment.classList.toggle(
+        "is-active",
+        segment.dataset.value === settings.mode
+      );
+    });
+    positionThumb(modeControl);
+    updateConditionalFields();
+    resetTimer();
+  }
+
+  if (typeof data.master === "number") {
+    masterVolume = data.master;
+    masterSlider.value = Math.round(masterVolume * 100);
+  }
+
+  if (data.volumes) {
+    SOUNDS.forEach((sound) => {
+      const value = data.volumes[sound.id];
+      if (typeof value !== "number") return;
+      soundState[sound.id].volume = value;
+      const slider = tiles[sound.id].tile.querySelector(".sound-volume");
+      if (slider) slider.value = Math.round(value * 100);
+    });
+  }
+
+  if (Array.isArray(data.tasks)) {
+    tasks = data.tasks.filter(
+      (task) => task && typeof task.text === "string" && task.id
+    );
+    renderTasks();
+  }
+
+  if (typeof data.notes === "string") notepad.value = data.notes;
+}
+
+function loadState() {
+  let data = null;
+  try {
+    data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  } catch (error) {
+    // Corrupt or blocked storage: start fresh rather than crash.
+    return;
+  }
+  if (data && typeof data === "object") applySavedState(data);
+}
+
+loadState();

@@ -61,7 +61,7 @@
          ==================================================================== -->
 
     <nav class="dock dock-left" aria-label="Panels">
-      <button class="dock-btn" data-panel="tasks" aria-expanded="false" aria-label="Tasks">
+      <button class="dock-btn" data-panel="tasks" aria-expanded="false" aria-label="Tasks and notes">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
         </svg>
@@ -97,13 +97,44 @@
          Panels. One markup shape, reused. Content arrives in later steps.
          ==================================================================== -->
 
-    <section class="panel" data-panel="tasks" aria-label="Tasks">
+    <section class="panel" data-panel="tasks" aria-label="Tasks and notes">
       <header class="panel-head">
-        <h2>Tasks</h2>
+        <h2>Notes &amp; Tasks</h2>
         <button class="panel-close" aria-label="Close">&times;</button>
       </header>
+
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab is-active" data-tab="tasks">Tasks</button>
+        <button class="tab" data-tab="notes">Notes</button>
+      </nav>
+
       <div class="panel-body">
-        <p class="placeholder">Your task list lands here in Step 6.</p>
+        <div class="tab-panel is-active" data-tab="tasks">
+          <form id="task-form" class="task-form">
+            <input
+              id="task-input"
+              type="text"
+              placeholder="Add a task"
+              autocomplete="off"
+              aria-label="New task"
+            />
+            <button type="submit" class="task-add" aria-label="Add task">+</button>
+          </form>
+
+          <ul id="task-list" class="task-list"></ul>
+          <p id="task-empty" class="placeholder">
+            Nothing yet. Add your first task above.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-tab="notes">
+          <textarea
+            id="notepad"
+            class="notepad"
+            placeholder="Scratch space. Anything you type stays here."
+            aria-label="Notepad"
+          ></textarea>
+        </div>
       </div>
     </section>
 
