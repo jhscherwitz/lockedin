@@ -97,9 +97,9 @@ main {
 .timer {
   font-family: var(--timer-font);
   cursor: default;
-  font-size: clamp(4.5rem, 18vw, 13rem);
+  font-size: clamp(3.6rem, 14vw, 10rem);
   font-weight: 600;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.005em;
   line-height: 0.92;
   margin: 0.5rem 0 0;
   font-variant-numeric: tabular-nums;
@@ -815,11 +815,11 @@ main {
 
 .wordmark {
   position: fixed;
-  top: 1.6rem;
-  left: 1.8rem;
+  top: 2.1rem;
+  left: 2.5rem;
   z-index: 5;
   font-family: var(--display-font);
-  font-size: clamp(1.95rem, 4.1vw, 2.9rem);
+  font-size: clamp(2.15rem, 4.5vw, 3.2rem);
   font-weight: 700;
   letter-spacing: -0.035em;
   color: var(--text);
@@ -829,11 +829,11 @@ main {
 
 .now {
   position: fixed;
-  top: 1.75rem;
-  right: 1.8rem;
+  top: 2.1rem;
+  right: 2.5rem;
   z-index: 5;
   font-family: var(--display-font);
-  font-size: clamp(1.5rem, 3.2vw, 2.2rem);
+  font-size: clamp(1.7rem, 3.6vw, 2.5rem);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: rgba(255, 255, 255, 0.85);
@@ -888,22 +888,22 @@ main {
    ========================================================================== */
 
 .focus-prompt {
-  margin-top: 1.4rem;
-  padding: 0.35rem 0.6rem;
+  margin-top: 1.1rem;
+  padding: 0.35rem 0.7rem;
   border: 0;
   border-radius: 9px;
   background: transparent;
   font-family: var(--display-font);
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(1.3rem, 3.1vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
 }
 
 .focus-prompt:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ==========================================================================

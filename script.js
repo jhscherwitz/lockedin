@@ -489,7 +489,6 @@ const SOUNDS = [
   { id: "heavy-rain", name: "Heavy Rain", icon: "\u{1F327}\u{FE0F}" },
   { id: "ocean-waves", name: "Ocean Waves", icon: "\u{1F30A}" },
   { id: "river", name: "River", icon: "\u{1F3DE}\u{FE0F}", doubleTrack: true },
-  { id: "underwater", name: "Underwater", icon: "\u{1FAE7}", doubleTrack: true },
   { id: "forest-ambience", name: "Forest", icon: "\u{1F332}" },
   { id: "campfire", name: "Campfire", icon: "\u{1F525}" },
 ];
