@@ -470,11 +470,26 @@ document.addEventListener("keydown", (event) => {
 // Click anywhere that isn't inside a panel or on a dock button, and we close.
 // .closest() walks up from the clicked element looking for a match, so this
 // works even when you click the text inside a panel rather than the panel.
+const PANEL_SAFE = ["panel", "dock-btn", "focus-prompt"];
+
 document.addEventListener("click", (event) => {
   if (!openPanel) return;
-  if (event.target.closest(".panel")) return;
-  if (event.target.closest(".dock-btn")) return;
-  if (event.target.closest(".focus-prompt")) return;
+
+  /* composedPath() is captured when the event is dispatched, so it survives
+     the clicked element being removed from the DOM before the event reaches
+     here. That is exactly what happens with a task checkbox: toggling it
+     re-renders the task list, so by the time this handler runs the button
+     that was clicked is detached, event.target.closest(".panel") returns
+     null, and the panel would close itself mid-use. */
+  const insidePanel = event
+    .composedPath()
+    .some(
+      (node) =>
+        node instanceof Element &&
+        PANEL_SAFE.some((name) => node.classList.contains(name))
+    );
+
+  if (insidePanel) return;
   closePanels();
 });
 
@@ -599,6 +614,21 @@ function createFilePlayer(id, doubleTrack) {
 
 /* ---- Behaviour ---- */
 
+/* Range inputs give you no way to colour the portion you have passed, so the
+   filled part is a gradient and this keeps its stop in sync with the value. */
+function paintSlider(input) {
+  const min = Number(input.min || 0);
+  const max = Number(input.max || 100);
+  const span = max - min || 1;
+  const pct = ((Number(input.value) - min) / span) * 100;
+  input.style.setProperty("--fill", pct + "%");
+}
+
+function initSlider(input) {
+  paintSlider(input);
+  input.addEventListener("input", () => paintSlider(input));
+}
+
 function applyVolumes() {
   Object.keys(players).forEach((id) => {
     players[id].setVolume(soundState[id].volume * masterVolume);
@@ -650,6 +680,7 @@ function buildSoundTiles() {
       soundState[sound.id].volume = volume.value / 100;
       applyVolumes();
     });
+    initSlider(volume);
 
     tile.append(toggle, volume);
     soundGrid.append(tile);
@@ -701,6 +732,7 @@ masterSlider.addEventListener("input", () => {
   masterVolume = masterSlider.value / 100;
   applyVolumes();
 });
+initSlider(masterSlider);
 
 buildSoundTiles();
 renderSounds();
@@ -736,6 +768,9 @@ const FONTS = [
   { label: "Gabarito", stack: '"Gabarito", system-ui, sans-serif' },
   { label: "Onest", stack: '"Onest", system-ui, sans-serif' },
   { label: "Bricolage Grotesque", stack: '"Bricolage Grotesque", system-ui, sans-serif' },
+  { label: "Archivo", stack: '"Archivo", system-ui, sans-serif' },
+  { label: "Chivo", stack: '"Chivo", system-ui, sans-serif' },
+  { label: "Rubik", stack: '"Rubik", system-ui, sans-serif' },
   { label: "Figtree", stack: '"Figtree", system-ui, sans-serif' },
   { label: "Plus Jakarta Sans", stack: '"Plus Jakarta Sans", system-ui, sans-serif' },
   { label: "Poppins", stack: '"Poppins", system-ui, sans-serif' },
@@ -1066,6 +1101,7 @@ function applySavedState(data) {
   if (typeof data.master === "number") {
     masterVolume = data.master;
     masterSlider.value = Math.round(masterVolume * 100);
+    paintSlider(masterSlider);
   }
 
   if (data.volumes) {
@@ -1074,7 +1110,10 @@ function applySavedState(data) {
       if (typeof value !== "number") return;
       soundState[sound.id].volume = value;
       const slider = tiles[sound.id].tile.querySelector(".sound-volume");
-      if (slider) slider.value = Math.round(value * 100);
+      if (slider) {
+        slider.value = Math.round(value * 100);
+        paintSlider(slider);
+      }
     });
   }
 

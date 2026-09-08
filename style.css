@@ -129,7 +129,7 @@ main {
 }
 
 .btn {
-  border-radius: 12px;
+  border-radius: 7px;
   padding: 0.85rem 2.75rem;
   font-family: var(--display-font);
   font-size: 0.98rem;
@@ -316,33 +316,56 @@ main {
    Sliders (shared)
    ========================================================================== */
 
+/* The filled portion is a gradient whose stop is driven by --fill, which
+   JavaScript sets from the value on every input. A plain range input gives
+   you no way to colour the part you have already passed. */
 .slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    to right,
+    var(--accent) 0 var(--fill, 60%),
+    rgba(255, 255, 255, 0.16) var(--fill, 60%) 100%
+  );
   cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.slider:hover {
+  filter: brightness(1.15);
 }
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   border: 0;
   border-radius: 50%;
   background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
   cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.slider:active::-webkit-slider-thumb {
+  transform: scale(1.15);
 }
 
 .slider::-moz-range-thumb {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   border: 0;
   border-radius: 50%;
   background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
   cursor: pointer;
+}
+
+.slider::-moz-range-track {
+  background: transparent;
 }
 
 /* ==========================================================================
@@ -431,7 +454,7 @@ main {
 /* The per-sound volume slider only appears once that sound is playing. */
 .sound-volume {
   width: 100%;
-  height: 3px;
+  height: 5px;
   visibility: hidden;
   opacity: 0;
   transition: opacity 0.18s;
@@ -893,7 +916,7 @@ main {
   border: 0;
   border-radius: 9px;
   background: transparent;
-  font-family: var(--display-font);
+  font-family: var(--timer-font);
   font-size: clamp(1.4rem, 3.4vw, 2.5rem);
   font-weight: 600;
   letter-spacing: normal;
