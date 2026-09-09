@@ -4084,7 +4084,7 @@ function smLight(index, seconds) {
 
 function smRender() {
   smRoundEl.textContent = smSequence.length;
-  smBestEl.textContent = smReadBest();
+  smBestEl.textContent = Math.max(smReadBest(), smSequence.length);
   smPads.classList.toggle("is-watching", smStatus === "watching");
 }
 
@@ -4206,6 +4206,8 @@ let snDir = { x: 1, y: 0 };
 let snQueued = [];
 let snFood = 0;
 let snStatus = "idle"; // idle | playing | over | won
+// Cached per run, so snRender is not reading storage on every tick.
+let snBest = 0;
 let snTimer = null;
 
 function snReadBest() {
@@ -4243,7 +4245,8 @@ function snRender() {
     if (cell.className !== className) cell.className = className;
   });
   snScoreEl.textContent = snBody.length;
-  snBestEl.textContent = snReadBest();
+  // Rises with the run once it is ahead. See the note in dnStep.
+  snBestEl.textContent = Math.max(snBest, snBody.length);
 }
 
 function snStop() {
@@ -4265,6 +4268,7 @@ function snWin() {
   } catch (error) {
     // Storage blocked.
   }
+  snBest = Math.max(snBest, snBody.length);
 
   snMessageEl.textContent = "Perfect - all " + snBody.length + " cells";
   snNewBtn.textContent = "Play again";
@@ -4276,6 +4280,7 @@ function snGameOver() {
   snStop();
   snStatus = "over";
   const best = snReadBest();
+  snBest = Math.max(best, snBody.length);
   if (snBody.length > best) {
     try {
       localStorage.setItem(SN_BEST_KEY, String(snBody.length));
@@ -4345,6 +4350,7 @@ function snNewGame() {
   snDir = { x: 1, y: 0 };
   snQueued = [];
   snStatus = "playing";
+  snBest = snReadBest();
   snMessageEl.textContent = "Arrow keys, WASD or swipe";
   snNewBtn.hidden = true;
   snPlaceFood();
@@ -4467,6 +4473,10 @@ let dnScore = 0;
 let dnStatus = "idle"; // idle | playing | over
 let dnFrame = null;
 let dnSinceSpawn = 0; // pixels travelled since the last obstacle
+/* Read once per run rather than per frame. The draw loop runs 60 times a
+   second and localStorage is synchronous. */
+let dnBest = 0;
+let dnShownBest = -1;
 let dnNextGap = DN_GAP_START;
 let dnLast = 0;
 
@@ -4648,7 +4658,16 @@ function dnStep(now) {
   });
 
   dnScore += dt;
-  dnScoreEl.textContent = Math.floor(dnScore / 6);
+  const shown = Math.floor(dnScore / 6);
+  if (dnScoreEl.textContent !== String(shown)) dnScoreEl.textContent = shown;
+
+  /* Once you are past your best, the best rises with you instead of sitting
+     there stale until the run ends. */
+  const best = Math.max(dnBest, shown);
+  if (best !== dnShownBest) {
+    dnShownBest = best;
+    dnBestEl.textContent = best;
+  }
 
   dnDraw();
 
@@ -4672,7 +4691,9 @@ function dnNewGame() {
   dnLast = 0;
   dnStatus = "playing";
   dnScoreEl.textContent = 0;
-  dnBestEl.textContent = dnReadBest();
+  dnBest = dnReadBest();
+  dnShownBest = dnBest;
+  dnBestEl.textContent = dnBest;
   dnMessageEl.textContent = "Space to jump · down to duck";
   dnNewBtn.hidden = true;
   dnFrame = requestAnimationFrame(dnStep);
