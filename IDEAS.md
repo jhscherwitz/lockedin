@@ -121,6 +121,28 @@ Right-side panel, organised into tabs.
   there is no shuffle. Shuffling needs the Web Playback SDK, which means
   OAuth, a token backend, and Spotify Premium for every listener.
 - **[not wanted]** Bubble wrap, Schulte table.
+
+### Geometry Dash levels - [later]
+
+Wanted eventually: a Geometry Dash style precision platformer with designed
+levels rather than procedural obstacles.
+
+- **The Dino Run work carries straight over**: canvas rendering, an obstacle
+  list, collision, and - importantly - physics scaled by elapsed time rather
+  than per frame. A precision platformer where players memorise a jump arc is
+  exactly the case where frame-rate-dependent physics is fatal.
+- **Level design is the actual work, not the engine.** Dino generates its
+  obstacles; Geometry Dash levels are hand-placed object by object. One
+  finished level is a lot of authoring.
+- **Worth considering a level editor** rather than hand-writing arrays. More
+  work up front, but then levels become data made in the app, and other
+  people could build them too.
+- **[watch out]** Real Geometry Dash levels, songs and artwork belong to
+  RobTop and the individual artists. Original levels and CC-licensed or
+  public-domain music only - the same rule the ambient sounds follow.
+- The genre's appeal is obstacles landing on the beat, so level data needs
+  timing against a specific track, which makes the music choice a design
+  decision rather than a detail.
 - **First game: a Wordle clone.** Random word every game rather than one word
   per day, which is simpler than the real thing and better for a study break
   since it can be replayed.
