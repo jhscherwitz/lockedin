@@ -472,18 +472,12 @@ main {
   opacity: 1;
 }
 
+/* Small print at the foot of a panel. The music panel uses it too. */
 .sound-hint {
   margin: 0.9rem 0 0;
   font-size: 0.7rem;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.45);
-}
-
-.sound-hint code {
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-  font-size: 0.68rem;
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* The <input> that replaces the timer while you're editing its length. */

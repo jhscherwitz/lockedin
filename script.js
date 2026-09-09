@@ -326,31 +326,44 @@ function setTimerMode(mode) {
    sounds exactly on time whatever the tab is doing.
    ========================================================================== */
 
-// A5 then D6: two soft notes a fourth apart, rising.
+/* A rising A major triad - A5, C sharp 6, E6. Three notes because two can
+   pass for a stray interface blip; three read as something deliberate. */
 const CHIME_NOTES = [
   { freq: 880.0, delay: 0 },
-  { freq: 1174.66, delay: 0.13 },
+  { freq: 1108.73, delay: 0.15 },
+  { freq: 1318.51, delay: 0.3 },
 ];
-const CHIME_TAIL = 1.6; // seconds a note takes to fade away
+const CHIME_TAIL = 2.2; // seconds a note takes to fade away
+/* Peaks around 0.73, which leaves headroom for ambient sound playing
+   underneath - the destination hard-clips anything past 1.0 and that
+   crackles. */
+const CHIME_LEVEL = 0.42;
+
+/* A pure sine has no harmonics at all, which is exactly what you do not want
+   from an alarm competing with rain and a Spotify playlist - it disappears
+   underneath them. A triangle fundamental plus an octave and a twelfth above
+   gives it enough edge to stay audible without turning shrill. */
+const CHIME_PARTIALS = [
+  { ratio: 1, level: 1, type: "triangle" },
+  { ratio: 2, level: 0.34, type: "sine" },
+  { ratio: 3, level: 0.12, type: "sine" },
+];
 
 let chimeVoices = []; // every oscillator booked but not yet finished
 let chimeAt = 0; // audio-clock time the first note is booked for
 
-/* One note: a sine plus a quieter octave above it, struck hard and left to
-   ring, which is roughly what a small bell does. */
+/* One note: struck hard and left to ring, which is roughly what a small bell
+   does. Deliberately not scaled by masterVolume - that slider lives in the
+   Sounds panel and reads as the ambient mixer's volume, so letting it silence
+   the alarm would be a trap. The chime has its own switch instead. */
 function chimeNote(ctx, at, freq) {
-  const partials = [
-    { ratio: 1, level: 1 },
-    { ratio: 2, level: 0.3 },
-  ];
-
-  partials.forEach((partial) => {
+  CHIME_PARTIALS.forEach((partial) => {
     const osc = ctx.createOscillator();
-    osc.type = "sine";
+    osc.type = partial.type;
     osc.frequency.value = freq * partial.ratio;
 
     const gain = ctx.createGain();
-    const peak = Math.max(0.0002, 0.22 * partial.level * masterVolume);
+    const peak = CHIME_LEVEL * partial.level;
     // An exponential ramp cannot reach zero, hence the near-silent floor.
     gain.gain.setValueAtTime(0.0001, at);
     gain.gain.exponentialRampToValueAtTime(peak, at + 0.006);
