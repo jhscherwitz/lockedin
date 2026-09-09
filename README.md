@@ -25,8 +25,11 @@ dependencies. Open the folder, run one command, and it works.
   Sequence (pattern memory), Snake, Dino Run, Sudoku with generated puzzles,
   and 2048. Sudoku, Snake, Wordle and Minesweeper can be won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
-- **Four themes that are actually different** — each one sets its own shape
-  layout, blur, grain, vignette and text warmth, not just a palette
+- **Eight themes that are actually different** — each sets its own shape
+  layout, blur, grain, vignette and text warmth, not just a palette. Noir
+  drops the blur to 26px so the shapes have visible edges; Midnight uses
+  three huge soft masses and a heavy vignette; Ember and Tide replace the
+  background composition outright
 - **Fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits

@@ -724,13 +724,13 @@ main {
 
 .theme-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
 .theme-swatch {
   position: relative;
-  height: 46px;
+  height: 62px;
   border-radius: 11px;
   border: 2px solid transparent;
   cursor: pointer;
@@ -770,6 +770,28 @@ main {
 .theme-swatch[data-theme="fog"] {
   background: radial-gradient(120% 95% at 10% 4%, #4f6a5d, transparent 82%),
     radial-gradient(120% 95% at 90% 96%, #6d7f72, transparent 82%), #1e2422;
+}
+
+.theme-swatch[data-theme="tide"] {
+  background: radial-gradient(110% 70% at 50% -14%, #22d3ee, transparent 58%),
+    radial-gradient(120% 74% at 12% -18%, #0ea5e9, transparent 56%),
+    linear-gradient(180deg, transparent 24%, #052e46 126%), #030a12;
+}
+
+.theme-swatch[data-theme="noir"] {
+  background: radial-gradient(80% 90% at 22% 10%, #52525b, transparent 50%),
+    radial-gradient(80% 90% at 82% 88%, #3f3f46, transparent 50%), #0a0a0b;
+}
+
+.theme-swatch[data-theme="blush"] {
+  background: radial-gradient(120% 95% at 8% 2%, #f472b6, transparent 74%),
+    radial-gradient(115% 90% at 84% 8%, #fb7185, transparent 74%),
+    radial-gradient(130% 100% at 40% 104%, #f0abfc, transparent 74%), #2a1522;
+}
+
+.theme-swatch[data-theme="moss"] {
+  background: radial-gradient(110% 80% at 12% 0%, #4d7c0f, transparent 72%),
+    radial-gradient(130% 95% at 70% 108%, #15803d, transparent 72%), #0c1710;
 }
 
 .theme-swatch-name {
@@ -1455,6 +1477,253 @@ body.pip-open main {
 }
 
 [data-theme="fog"] .s6 {
+  display: none;
+}
+
+/* ---- Tide: deep water, lit from above.
+
+   Ember's composition turned upside down - the light is at the top and the
+   dark collects at the bottom, which is what being under water looks like. ---- */
+
+:root[data-theme="tide"] {
+  --bg-base: #030a12;
+  --blob-a: #22d3ee;
+  --blob-b: #0ea5e9;
+  --blob-c: #0369a1;
+  --blob-d: #052e46;
+  --accent: #0891b2;
+  --shape-blur: 105px;
+  --shape-alpha: 0.85;
+  --grain-opacity: 0.05;
+  --vignette: 0.55;
+  --text: #eaf7ff;
+  --text-dim: rgba(220, 242, 255, 0.62);
+}
+
+[data-theme="tide"] .background {
+  background: radial-gradient(110% 58% at 50% -16%, var(--blob-a), transparent 58%),
+    radial-gradient(120% 66% at 14% -20%, var(--blob-b), transparent 56%),
+    radial-gradient(120% 70% at 88% -14%, var(--blob-c), transparent 56%),
+    linear-gradient(180deg, transparent 26%, var(--blob-d) 128%),
+    var(--bg-base);
+}
+
+[data-theme="tide"] .s1 {
+  width: 70vmax;
+  height: 20vmax;
+  top: -8%;
+  left: -16%;
+}
+
+[data-theme="tide"] .s2 {
+  width: 54vmax;
+  height: 16vmax;
+  top: 8%;
+  right: -12%;
+}
+
+[data-theme="tide"] .s3 {
+  width: 44vmax;
+  height: 13vmax;
+  top: 24%;
+  left: 4%;
+}
+
+[data-theme="tide"] .s4 {
+  width: 76vmax;
+  height: 26vmax;
+  bottom: -20%;
+  right: -10%;
+  background: var(--blob-d);
+}
+
+[data-theme="tide"] .s5,
+[data-theme="tide"] .s6 {
+  display: none;
+}
+
+/* ---- Noir: the only theme with edges.
+
+   Everything else here is atmosphere - shapes blurred until they are just
+   light. This one drops the blur to 26px, so the organic border-radius forms
+   actually read as forms. No hue at all in the background, heavy filmic
+   grain, and a single hard red accent. ---- */
+
+:root[data-theme="noir"] {
+  --bg-base: #0a0a0b;
+  --blob-a: #3f3f46;
+  --blob-b: #52525b;
+  --blob-c: #27272a;
+  --blob-d: #71717a;
+  --accent: #dc2626;
+  --wash: 50%;
+  --shape-blur: 26px;
+  --shape-alpha: 0.85;
+  --grain-opacity: 0.16;
+  --vignette: 0.6;
+  --text: #f5f5f5;
+  --text-dim: rgba(245, 245, 245, 0.55);
+}
+
+[data-theme="noir"] .s1 {
+  width: 30vmax;
+  height: 26vmax;
+  top: -6%;
+  left: 2%;
+}
+
+[data-theme="noir"] .s2 {
+  width: 26vmax;
+  height: 32vmax;
+  top: -10%;
+  right: 4%;
+}
+
+[data-theme="noir"] .s3 {
+  width: 22vmax;
+  height: 18vmax;
+  top: 40%;
+  left: -8%;
+}
+
+[data-theme="noir"] .s4 {
+  width: 34vmax;
+  height: 24vmax;
+  bottom: -8%;
+  right: -4%;
+}
+
+[data-theme="noir"] .s5 {
+  width: 24vmax;
+  height: 20vmax;
+  bottom: -6%;
+  left: 10%;
+}
+
+[data-theme="noir"] .s6 {
+  width: 18vmax;
+  height: 15vmax;
+  top: 12%;
+  left: 34%;
+}
+
+/* ---- Blush: the bright one.
+
+   Every other theme here is low-key - dark ground, light coming out of it.
+   This one is high-key: pastel shapes at nearly full strength, colour
+   reaching most of the way across, and the vignette almost off. The base
+   stays deep so the middle of the screen, where the timer sits, keeps enough
+   contrast for white text. ---- */
+
+:root[data-theme="blush"] {
+  --bg-base: #2a1522;
+  --blob-a: #f472b6;
+  --blob-b: #fb7185;
+  --blob-c: #f0abfc;
+  --blob-d: #a855f7;
+  --accent: #db2777;
+  --wash: 74%;
+  --shape-blur: 100px;
+  --shape-alpha: 0.95;
+  --grain-opacity: 0.06;
+  --vignette: 0.12;
+  --text: #fff7fb;
+  --text-dim: rgba(255, 245, 250, 0.7);
+}
+
+[data-theme="blush"] .s1 {
+  width: 58vmax;
+  height: 44vmax;
+  top: -16%;
+  left: -12%;
+}
+
+[data-theme="blush"] .s2 {
+  width: 50vmax;
+  height: 52vmax;
+  top: -12%;
+  right: -14%;
+}
+
+[data-theme="blush"] .s3 {
+  width: 40vmax;
+  height: 30vmax;
+  top: 30%;
+  left: -10%;
+}
+
+[data-theme="blush"] .s4 {
+  width: 62vmax;
+  height: 42vmax;
+  bottom: -18%;
+  right: -12%;
+}
+
+[data-theme="blush"] .s5 {
+  width: 44vmax;
+  height: 32vmax;
+  bottom: -14%;
+  left: 2%;
+}
+
+[data-theme="blush"] .s6 {
+  width: 30vmax;
+  height: 24vmax;
+  top: -8%;
+  left: 26%;
+}
+
+/* ---- Moss: deep warm green.
+
+   Where Fog is desaturated and flat on purpose, this one is saturated and has
+   depth - bottom-heavy masses, like ground below and canopy above. ---- */
+
+:root[data-theme="moss"] {
+  --bg-base: #0c1710;
+  --blob-a: #15803d;
+  --blob-b: #4d7c0f;
+  --blob-c: #0f766e;
+  --blob-d: #166534;
+  --accent: #16a34a;
+  --wash: 72%;
+  --shape-blur: 88px;
+  --shape-alpha: 0.82;
+  --grain-opacity: 0.08;
+  --vignette: 0.32;
+  --text: #f2fbf4;
+  --text-dim: rgba(235, 250, 240, 0.66);
+}
+
+[data-theme="moss"] .s1 {
+  width: 46vmax;
+  height: 26vmax;
+  top: -12%;
+  left: -10%;
+}
+
+[data-theme="moss"] .s2 {
+  width: 38vmax;
+  height: 24vmax;
+  top: -14%;
+  right: -8%;
+}
+
+[data-theme="moss"] .s4 {
+  width: 72vmax;
+  height: 44vmax;
+  bottom: -20%;
+  right: -14%;
+}
+
+[data-theme="moss"] .s5 {
+  width: 56vmax;
+  height: 36vmax;
+  bottom: -16%;
+  left: -8%;
+}
+
+[data-theme="moss"] .s3,
+[data-theme="moss"] .s6 {
   display: none;
 }
 

@@ -1201,7 +1201,11 @@ const THEMES = [
   { id: "aurora", name: "Aurora" },
   { id: "midnight", name: "Midnight" },
   { id: "ember", name: "Ember" },
+  { id: "tide", name: "Tide" },
+  { id: "blush", name: "Blush" },
+  { id: "moss", name: "Moss" },
   { id: "fog", name: "Fog" },
+  { id: "noir", name: "Noir" },
 ];
 
 const DEFAULT_THEME = "aurora";
