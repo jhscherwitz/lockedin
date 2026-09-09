@@ -3915,6 +3915,8 @@ function suRender() {
     let className = "su-cell";
     if (col === 2 || col === 5) className += " box-right";
     if (row === 2 || row === 5) className += " box-bottom";
+    if (col === 8) className += " edge-right";
+    if (row === 8) className += " edge-bottom";
     if (suPuzzle[index]) className += " is-given";
     if (index === suSelected) className += " is-selected";
     else if (peers.has(index)) className += " is-peer";

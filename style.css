@@ -1961,34 +1961,52 @@ body.pip-open main {
    Sudoku
    ========================================================================== */
 
+/* Lines are drawn as cell borders, not as gaps with a background showing
+   through. Gaps give you one colour at two widths, which reads as pale bands
+   rather than rules; borders give two genuine weights - hairlines inside a
+   box, heavier ones between boxes. */
 .su-board {
   display: grid;
-  grid-template-columns: repeat(9, 30px);
-  gap: 1px;
+  grid-template-columns: repeat(9, 32px);
   justify-content: center;
   margin: 0 auto;
-  padding: 3px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.34);
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .su-cell {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 0;
-  background: rgba(20, 16, 38, 0.9);
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: transparent;
   font-family: var(--display-font);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--accent);
   cursor: pointer;
 }
 
-/* The heavier lines marking the three-by-three boxes. The board's background
-   shows through these gaps, so widening them is what draws the lines. */
-.su-cell.box-right { margin-right: 4px; }
-.su-cell.box-bottom { margin-bottom: 4px; }
+.su-cell.box-right {
+  border-right: 2px solid rgba(255, 255, 255, 0.34);
+}
+
+.su-cell.box-bottom {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.34);
+}
+
+/* The board's own border closes the last column and row. */
+.su-cell.edge-right {
+  border-right: 0;
+}
+
+.su-cell.edge-bottom {
+  border-bottom: 0;
+}
 
 .su-cell.is-given {
   color: var(--text);
@@ -1997,16 +2015,16 @@ body.pip-open main {
 }
 
 .su-cell.is-selected {
-  background: rgba(124, 92, 255, 0.45);
+  background: rgba(124, 92, 255, 0.5);
 }
 
 /* Same row, column or box as the selection. */
 .su-cell.is-peer {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .su-cell.is-same {
-  background: rgba(124, 92, 255, 0.24);
+  background: rgba(124, 92, 255, 0.2);
 }
 
 .su-cell.is-wrong {
