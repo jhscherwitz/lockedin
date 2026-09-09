@@ -100,13 +100,25 @@
       <div class="controls">
         <button id="start-btn" class="btn btn-primary">Start</button>
         <button id="reset-btn" class="icon-btn" aria-label="Reset timer" title="Reset">
-          <!-- Two arcs, each with its own arrowhead, chasing each other
-               round a circle. -->
+          <!-- One arc that most of the way round, with an arrowhead. -->
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 4v6h-6" />
-            <path d="M3 20v-6h6" />
-            <path d="M4.2 9.2A8 8 0 0 1 17.4 6.2L21 9.6" />
-            <path d="M19.8 14.8A8 8 0 0 1 6.6 17.8L3 14.4" />
+            <path d="M2.5 5.5v6h6" />
+            <path d="M4.6 15.5a9 9 0 1 0 2.1-9.4L2.5 11.5" />
+          </svg>
+        </button>
+
+        <button id="pip-btn" class="icon-btn" aria-label="Pop out mini timer">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
+            <rect
+              x="12"
+              y="11.5"
+              width="8"
+              height="6"
+              rx="1.5"
+              fill="currentColor"
+              stroke="none"
+            />
           </svg>
         </button>
       </div>
@@ -145,20 +157,6 @@
     </nav>
 
     <nav class="dock dock-right" aria-label="Tools">
-      <button class="dock-btn" id="pip-btn" aria-label="Pop out mini timer">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
-          <rect
-            x="12"
-            y="11.5"
-            width="8"
-            height="6"
-            rx="1.5"
-            fill="currentColor"
-            stroke="none"
-          />
-        </svg>
-      </button>
       <button class="dock-btn" id="fullscreen-btn" aria-label="Toggle fullscreen">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />

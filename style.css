@@ -856,7 +856,8 @@ main {
   top: 2.1rem;
   right: 2.5rem;
   z-index: 5;
-  font-family: var(--display-font);
+  /* Follows the timer font, so the clock and the prompt read as a set. */
+  font-family: var(--timer-font);
   font-size: clamp(1.7rem, 3.6vw, 2.5rem);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -951,9 +952,20 @@ main {
   color: var(--text);
 }
 
-/* The arrows spin when you press it, so the reset reads as a reset. */
-.icon-btn:active {
+/* The arrow spins when pressed, so the reset reads as a reset. Scoped to
+   reset: spinning the mini player's icon would mean nothing. */
+#reset-btn:active {
   transform: rotate(-180deg) scale(0.94);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+/* The mini player used to live in the dock and borrowed .dock-btn.is-active
+   for its open state. It needs its own now. */
+.icon-btn.is-active {
+  color: var(--accent);
 }
 
 .icon-btn svg {
