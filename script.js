@@ -1971,6 +1971,325 @@ document.addEventListener("keydown", (event) => {
   shortcut.run();
 });
 
+
+/* ==========================================================================
+   Google Calendar - today's events
+
+   Read-only, browser-only, no backend. Google Identity Services hands the
+   page an access token; the page calls the Calendar REST API with it.
+
+   The client ID below is public on purpose. An OAuth *client ID* is an
+   identifier, not a secret - it is safe in a public repository, which is why
+   this works with no server. What protects the account is the authorised
+   origin list on the client (localhost:8000 and jhscherwitz.github.io) plus
+   the consent screen. The client *secret* is the sensitive half, and a
+   browser app never uses it.
+
+   The app is in Google's "Testing" publishing status, which caps it at 100
+   hand-added test users and shows them an "unverified app" warning. That is
+   a deliberate trade: verification means a review process, and this is a
+   personal project.
+   ========================================================================== */
+
+const CAL_CLIENT_ID =
+  "338831087614-9apur9f4o4krq8o737nl0ntjffte9l5a.apps.googleusercontent.com";
+const CAL_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+const CAL_API = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+
+const calBody = document.getElementById("calendar-body");
+
+/* The token is held in memory and nowhere else. It is a credential, so it
+   does not go in localStorage - anything with access to the page could read
+   it there, and it would outlive the session for no benefit. Losing it on
+   reload costs one click. */
+let calToken = null;
+let calTokenExpires = 0;
+let calTokenClient = null;
+
+let calEvents = null; // null = never loaded, [] = loaded and empty
+let calLoadedAt = 0; // for the staleness check when the tab is reopened
+let calStatus = "idle"; // idle | loading | ready | error
+let calError = "";
+
+function calTokenValid() {
+  // 30s of slack, so a request cannot start with a token that expires mid-flight.
+  return calToken !== null && Date.now() < calTokenExpires - 30000;
+}
+
+/* Midnight to midnight in the clock's timezone, not the browser's. Someone
+   who has set the clock to another zone means it. */
+function calDayBounds() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: clockSettings.timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const get = (type) => parts.find((p) => p.type === type).value;
+  const today = get("year") + "-" + get("month") + "-" + get("day");
+
+  /* Handing the API a date and a timezone rather than a UTC instant means
+     Google does the offset arithmetic, including whatever DST is doing. */
+  return {
+    timeMin: today + "T00:00:00",
+    timeMax: today + "T23:59:59",
+  };
+}
+
+function calFormatTime(iso) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: clockSettings.hour12,
+    hourCycle: clockSettings.hour12 ? undefined : "h23",
+    timeZone: clockSettings.timeZone,
+  });
+  return formatter.format(new Date(iso));
+}
+
+/* ---- Connecting ---- */
+
+function calGisReady() {
+  return typeof google !== "undefined" && google.accounts && google.accounts.oauth2;
+}
+
+function calEnsureTokenClient() {
+  if (calTokenClient || !calGisReady()) return calTokenClient;
+
+  calTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CAL_CLIENT_ID,
+    scope: CAL_SCOPE,
+    callback: (response) => {
+      if (response.error || !response.access_token) {
+        calStatus = "error";
+        calError =
+          response.error === "access_denied"
+            ? "Access was declined, so there is nothing to show."
+            : "Google would not hand over a token. Try connecting again.";
+        renderCalendar();
+        return;
+      }
+      calToken = response.access_token;
+      // expires_in is seconds; Google's is typically 3600.
+      calTokenExpires = Date.now() + (Number(response.expires_in) || 3600) * 1000;
+      loadCalendar();
+    },
+
+    /* Separate from `callback` on purpose, and easy to miss: the callback
+       above never fires if the popup is closed or blocked. Without this the
+       panel sits on "Loading today's events..." forever, and the only way out
+       is a reload. */
+    error_callback: (error) => {
+      calStatus = "idle";
+      calError = "";
+      if (error && error.type === "popup_failed_to_open") {
+        calStatus = "error";
+        calError = "The browser blocked Google's sign-in popup. Allow popups for this site, then try again.";
+      }
+      renderCalendar();
+    },
+  });
+  return calTokenClient;
+}
+
+function connectCalendar() {
+  const client = calEnsureTokenClient();
+  if (!client) {
+    calStatus = "error";
+    calError = "Google's sign-in script did not load. Check the connection and reload.";
+    renderCalendar();
+    return;
+  }
+  calStatus = "loading";
+  renderCalendar();
+  // Must be called from a click - it opens a popup, and browsers block
+  // popups that no gesture asked for.
+  client.requestAccessToken();
+}
+
+function disconnectCalendar() {
+  /* Revoking matters. Without it the grant stays on the Google account even
+     though the page has forgotten the token, so "Disconnect" would be a lie -
+     one click would silently reconnect with no consent screen. */
+  if (calToken && calGisReady() && google.accounts.oauth2.revoke) {
+    google.accounts.oauth2.revoke(calToken, () => {});
+  }
+  calToken = null;
+  calTokenExpires = 0;
+  calEvents = null;
+  calStatus = "idle";
+  calError = "";
+  renderCalendar();
+}
+
+/* ---- Loading ---- */
+
+async function loadCalendar() {
+  if (!calTokenValid()) {
+    connectCalendar();
+    return;
+  }
+
+  calStatus = "loading";
+  renderCalendar();
+
+  const bounds = calDayBounds();
+  const url =
+    CAL_API +
+    "?" +
+    new URLSearchParams({
+      timeMin: bounds.timeMin,
+      timeMax: bounds.timeMax,
+      timeZone: clockSettings.timeZone,
+      // Expands recurring events into their individual occurrences, which is
+      // the only way "today" means anything.
+      singleEvents: "true",
+      orderBy: "startTime",
+      maxResults: "20",
+    });
+
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: "Bearer " + calToken },
+    });
+
+    if (response.status === 401) {
+      // Token died early. Drop it and ask for another.
+      calToken = null;
+      calTokenExpires = 0;
+      connectCalendar();
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Calendar API returned " + response.status);
+    }
+
+    const data = await response.json();
+    calEvents = (data.items || []).filter((item) => item.status !== "cancelled");
+    calStatus = "ready";
+    calError = "";
+    calLoadedAt = Date.now();
+  } catch (error) {
+    calStatus = "error";
+    calError = "Could not reach Google Calendar. " + error.message;
+  }
+
+  renderCalendar();
+}
+
+/* ---- Drawing ----
+
+   Same state-then-redraw shape as every other feature here: change calStatus
+   or calEvents, then call renderCalendar() and let it work out the markup.
+
+   Every piece of event text goes in with textContent, never innerHTML. Event
+   titles come from other people - anyone who can put an event on your
+   calendar writes that string - so treating it as markup would be handing
+   them a script tag on your page. Same rule the task list follows. */
+
+function calRow(event) {
+  const row = document.createElement("li");
+  row.className = "cal-event";
+
+  const when = document.createElement("span");
+  when.className = "cal-when";
+
+  // An all-day event has `date` instead of `dateTime`.
+  if (event.start && event.start.dateTime) {
+    when.textContent = calFormatTime(event.start.dateTime);
+  } else {
+    when.textContent = "All day";
+    row.classList.add("is-allday");
+  }
+
+  const title = document.createElement("span");
+  title.className = "cal-title";
+  title.textContent = event.summary || "(no title)";
+
+  row.append(when, title);
+
+  if (event.location) {
+    const where = document.createElement("span");
+    where.className = "cal-where";
+    where.textContent = event.location;
+    row.append(where);
+  }
+
+  return row;
+}
+
+function calButton(label, onClick, primary) {
+  const button = document.createElement("button");
+  button.type = "button";
+  // A bare .btn has no surface of its own; ghost is the secondary style.
+  button.className = primary ? "btn btn-primary" : "btn btn-ghost";
+  button.textContent = label;
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function calNote(text) {
+  const note = document.createElement("p");
+  note.className = "cal-note";
+  note.textContent = text;
+  return note;
+}
+
+function renderCalendar() {
+  if (!calBody) return;
+  calBody.innerHTML = "";
+
+  if (calStatus === "loading") {
+    calBody.append(calNote("Loading today's events..."));
+    return;
+  }
+
+  if (calStatus === "error") {
+    calBody.append(calNote(calError));
+    calBody.append(calButton("Try again", connectCalendar, true));
+    return;
+  }
+
+  if (calStatus === "idle" || calEvents === null) {
+    calBody.append(
+      calNote(
+        "Connect your Google Calendar to see today's events here. Read-only, and nothing is stored."
+      )
+    );
+    calBody.append(calButton("Connect Google Calendar", connectCalendar, true));
+    return;
+  }
+
+  if (calEvents.length === 0) {
+    calBody.append(calNote("Nothing on the calendar today."));
+  } else {
+    const list = document.createElement("ul");
+    list.className = "cal-list";
+    calEvents.forEach((event) => list.append(calRow(event)));
+    calBody.append(list);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "cal-actions";
+  actions.append(calButton("Refresh", loadCalendar));
+  actions.append(calButton("Disconnect", disconnectCalendar));
+  calBody.append(actions);
+}
+
+renderCalendar();
+
+/* Refresh on opening the tab, but only if what is shown has gone stale -
+   reopening the panel twice in a minute should not re-hit the API. */
+const CAL_STALE_MS = 5 * MINUTE;
+
+document.addEventListener("click", (event) => {
+  const tab = event.target.closest && event.target.closest('.tab[data-tab="today"]');
+  if (!tab) return;
+  if (calStatus === "ready" && Date.now() - calLoadedAt > CAL_STALE_MS) loadCalendar();
+});
+
 /* ==========================================================================
    Games
 

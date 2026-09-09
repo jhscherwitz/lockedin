@@ -42,6 +42,7 @@
     />
 
     <link rel="stylesheet" href="style.css" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
 
   <body>
@@ -392,6 +393,7 @@
       <nav class="tabs" role="tablist" aria-label="Sections">
         <button class="tab is-active" data-tab="tasks">Tasks</button>
         <button class="tab" data-tab="notes">Notes</button>
+        <button class="tab" data-tab="today">Today</button>
       </nav>
 
       <div class="panel-body">
@@ -411,6 +413,12 @@
             placeholder="Scratch space. Anything you type stays here."
             aria-label="Notepad"
           ></textarea>
+        </div>
+
+        <!-- Today's Google Calendar events. Everything in here is drawn by
+             script.js; the container starts empty. -->
+        <div class="tab-panel" data-tab="today">
+          <div id="calendar-body" class="cal-body"></div>
         </div>
       </div>
     </section>

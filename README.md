@@ -25,6 +25,8 @@ dependencies. Open the folder, run one command, and it works.
   Sequence (pattern memory), Snake, Dino Run, Sudoku with generated puzzles,
   and 2048. Sudoku, Snake, Wordle and Minesweeper can be won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
+- **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
+  browser-only, no backend and no server to trust
 - **Eight themes that are actually different** — each sets its own shape
   layout, blur, grain, vignette and text warmth, not just a palette. Noir
   drops the blur to 26px so the shapes have visible edges; Midnight uses
@@ -81,6 +83,13 @@ A few decisions worth calling out:
 - **All colour and typography lives in CSS custom properties**, so the font
   picker is a few lines that rewrite variables rather than reaching into
   individual rules.
+- **The Google Calendar widget has no backend, and the client ID in the
+  source is not a leak.** An OAuth *client* ID is an identifier, not a
+  secret; what protects the account is the authorised-origin list on the
+  client plus the consent screen. The client *secret* is the sensitive half,
+  and a browser app never uses one. The access token lives in a variable and
+  never touches localStorage — it is a credential, and storing it would only
+  make it outlive the session for no benefit.
 - **A theme is one attribute on `<html>`.** `applyTheme()` sets
   `data-theme="midnight"` and stops; every rule that cares keys off it in CSS.
   No JavaScript knows what a theme looks like, which is why adding one means

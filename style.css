@@ -1831,6 +1831,83 @@ body.pip-open main {
 }
 
 /* ==========================================================================
+   Google Calendar - today's events
+   ========================================================================== */
+
+.cal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.cal-note {
+  margin: 0;
+  font-family: var(--display-font);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.cal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Two columns: the time in a fixed gutter so every title starts at the same
+   x, whatever the times happen to be. */
+.cal-event {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr;
+  gap: 0.1rem 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cal-when {
+  font-family: var(--display-font);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  padding-top: 0.08rem;
+}
+
+.cal-event.is-allday .cal-when {
+  font-style: italic;
+}
+
+.cal-title {
+  font-family: var(--display-font);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--text);
+  /* A long title wraps rather than stretching the panel. */
+  overflow-wrap: anywhere;
+}
+
+.cal-where {
+  grid-column: 2;
+  font-family: var(--display-font);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.cal-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.cal-body .btn {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.7rem;
+}
+
+/* ==========================================================================
    The boxed colon
 
    Degular's colon is two squares rather than two dots, which is a big part
