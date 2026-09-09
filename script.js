@@ -1202,8 +1202,8 @@ const THEMES = [
   { id: "midnight", name: "Midnight" },
   { id: "ember", name: "Ember" },
   { id: "tide", name: "Tide" },
-  { id: "blush", name: "Blush" },
-  { id: "moss", name: "Moss" },
+  { id: "dawn", name: "Dawn" },
+  { id: "canopy", name: "Canopy" },
   { id: "fog", name: "Fog" },
   { id: "noir", name: "Noir" },
 ];
