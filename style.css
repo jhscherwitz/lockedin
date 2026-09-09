@@ -1969,7 +1969,7 @@ body.pip-open main {
   margin: 0 auto;
   padding: 3px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .su-cell {
@@ -1985,9 +1985,10 @@ body.pip-open main {
   cursor: pointer;
 }
 
-/* The heavier lines that mark the three-by-three boxes. */
-.su-cell.box-right { margin-right: 2px; }
-.su-cell.box-bottom { margin-bottom: 2px; }
+/* The heavier lines marking the three-by-three boxes. The board's background
+   shows through these gaps, so widening them is what draws the lines. */
+.su-cell.box-right { margin-right: 4px; }
+.su-cell.box-bottom { margin-bottom: 4px; }
 
 .su-cell.is-given {
   color: var(--text);

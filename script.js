@@ -3501,6 +3501,10 @@ snBoard.addEventListener("pointerup", (e) => {
 
    Canvas rather than DOM: this scrolls continuously, and moving dozens of
    elements every frame is exactly what canvas is for.
+
+   Speed follows Chrome's own numbers - start at 6, add 0.001 per frame, stop
+   at 13. The cap is the part that matters: an uncapped ramp eventually
+   outruns the jump arc and the game becomes unwinnable rather than hard.
    ========================================================================== */
 
 const dnCanvas = document.getElementById("dn-canvas");
@@ -3517,9 +3521,25 @@ const DN_GROUND = 240;
 const DN_GRAVITY = 0.9;
 const DN_JUMP = -17;
 
-let dnRunner = { y: DN_GROUND, vy: 0, size: 34 };
+const DN_SPEED_START = 6;
+const DN_SPEED_MAX = 13;
+const DN_ACCEL = 0.001;
+
+const DN_TALL = 34;
+const DN_SHORT = 18;
+
+// Birds fly at three heights: one you must jump, one you must duck, and one
+// you can simply run beneath.
+const DN_BIRD_Y = [216, 194, 160];
+const DN_BIRD_H = 26;
+const DN_BIRD_W = 34;
+// Birds are held back until the run has had time to settle.
+const DN_BIRD_AFTER = 480;
+
+let dnRunner = { y: DN_GROUND, vy: 0, h: DN_TALL };
+let dnDucking = false;
 let dnObstacles = [];
-let dnSpeed = 6;
+let dnSpeed = DN_SPEED_START;
 let dnScore = 0;
 let dnStatus = "idle"; // idle | playing | over
 let dnFrame = null;
@@ -3533,21 +3553,31 @@ function dnReadBest() {
   }
 }
 
+function dnAirborne() {
+  return dnRunner.y < DN_GROUND;
+}
+
 function dnJump() {
   if (dnStatus !== "playing") return;
-  // Only from the ground: no double jumps.
-  if (dnRunner.y < DN_GROUND) return;
+  if (dnAirborne()) return; // no double jumps
   dnRunner.vy = DN_JUMP;
+}
+
+function dnDuck(on) {
+  if (dnStatus !== "playing") return;
+  dnDucking = on;
+  // Pressing down mid-air drops you faster, as in the original.
+  if (on && dnAirborne() && dnRunner.vy < 0) dnRunner.vy = 2;
 }
 
 function dnDraw() {
   const accent =
-    getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() ||
-    "#7c5cff";
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent")
+      .trim() || "#7c5cff";
 
   dnCtx.clearRect(0, 0, DN_W, DN_H);
 
-  // Ground line.
   dnCtx.strokeStyle = "rgba(255,255,255,0.28)";
   dnCtx.lineWidth = 3;
   dnCtx.beginPath();
@@ -3558,15 +3588,28 @@ function dnDraw() {
   // Runner.
   dnCtx.fillStyle = "#ffffff";
   dnCtx.beginPath();
-  dnCtx.roundRect(60, dnRunner.y - dnRunner.size, dnRunner.size, dnRunner.size, 8);
+  dnCtx.roundRect(60, dnRunner.y - dnRunner.h, DN_TALL, dnRunner.h, 8);
   dnCtx.fill();
 
-  // Obstacles.
-  dnCtx.fillStyle = accent;
   dnObstacles.forEach((ob) => {
-    dnCtx.beginPath();
-    dnCtx.roundRect(ob.x, DN_GROUND - ob.h, ob.w, ob.h, 5);
-    dnCtx.fill();
+    dnCtx.fillStyle = accent;
+    if (ob.type === "bird") {
+      // Body plus a wing that flips with distance, so it appears to flap.
+      const up = Math.floor(dnScore / 7) % 2 === 0;
+      dnCtx.beginPath();
+      dnCtx.roundRect(ob.x, ob.y + 9, ob.w, 9, 4);
+      dnCtx.fill();
+      dnCtx.beginPath();
+      dnCtx.moveTo(ob.x + 8, ob.y + 12);
+      dnCtx.lineTo(ob.x + 22, ob.y + 12);
+      dnCtx.lineTo(ob.x + 15, ob.y + (up ? -1 : 25));
+      dnCtx.closePath();
+      dnCtx.fill();
+    } else {
+      dnCtx.beginPath();
+      dnCtx.roundRect(ob.x, DN_GROUND - ob.h, ob.w, ob.h, 5);
+      dnCtx.fill();
+    }
   });
 }
 
@@ -3575,53 +3618,77 @@ function dnEnd() {
   cancelAnimationFrame(dnFrame);
   dnFrame = null;
 
-  const best = dnReadBest();
-  if (dnScore > best) {
+  const shown = Math.floor(dnScore / 6);
+  if (shown > dnReadBest()) {
     try {
-      localStorage.setItem(DN_BEST_KEY, String(dnScore));
+      localStorage.setItem(DN_BEST_KEY, String(shown));
     } catch (error) {
       // Storage blocked.
     }
   }
 
   dnBestEl.textContent = dnReadBest();
-  dnMessageEl.textContent = "Score " + dnScore;
+  dnMessageEl.textContent = "Score " + shown;
   dnNewBtn.textContent = "Play again";
   dnNewBtn.hidden = false;
 }
 
+function dnSpawn() {
+  const birdsAllowed = dnScore > DN_BIRD_AFTER;
+
+  if (birdsAllowed && Math.random() < 0.32) {
+    dnObstacles.push({
+      type: "bird",
+      x: DN_W + 20,
+      y: DN_BIRD_Y[Math.floor(Math.random() * DN_BIRD_Y.length)],
+      w: DN_BIRD_W,
+      h: DN_BIRD_H,
+      // Birds fly towards you, so they close slightly faster than the ground.
+      extra: 1.6,
+    });
+    return;
+  }
+
+  dnObstacles.push({
+    type: "cactus",
+    x: DN_W + 20,
+    w: 16 + Math.random() * 12,
+    h: 30 + Math.random() * 34,
+    extra: 0,
+  });
+}
+
 function dnStep() {
+  dnRunner.h = dnDucking && !dnAirborne() ? DN_SHORT : DN_TALL;
+
   dnRunner.vy += DN_GRAVITY;
   dnRunner.y = Math.min(DN_GROUND, dnRunner.y + dnRunner.vy);
   if (dnRunner.y === DN_GROUND) dnRunner.vy = 0;
 
-  dnSpeed += 0.0016;
+  if (dnSpeed < DN_SPEED_MAX) dnSpeed += DN_ACCEL;
   dnSinceSpawn += 1;
 
   /* Spacing is randomised but floored at a distance the runner can clear at
-     the current speed - otherwise late-game spawns become unjumpable and the
-     game stops being about skill. */
-  const minGap = Math.max(48, 150 - dnSpeed * 6);
+     the current speed, so late spawns stay jumpable. */
+  const minGap = Math.max(58, 150 - dnSpeed * 5);
   if (dnSinceSpawn > minGap && Math.random() < 0.035) {
-    const height = 30 + Math.random() * 34;
-    dnObstacles.push({ x: DN_W + 20, w: 16 + Math.random() * 12, h: height });
+    dnSpawn();
     dnSinceSpawn = 0;
   }
 
   dnObstacles.forEach((ob) => {
-    ob.x -= dnSpeed;
+    ob.x -= dnSpeed + ob.extra;
   });
-  dnObstacles = dnObstacles.filter((ob) => ob.x + ob.w > -30);
+  dnObstacles = dnObstacles.filter((ob) => ob.x + ob.w > -40);
 
   const rx = 60;
-  const rTop = dnRunner.y - dnRunner.size;
-  const hit = dnObstacles.some(
-    (ob) =>
-      rx + dnRunner.size > ob.x + 3 &&
-      rx < ob.x + ob.w - 3 &&
-      dnRunner.y > DN_GROUND - ob.h + 3 &&
-      rTop < DN_GROUND
-  );
+  const rTop = dnRunner.y - dnRunner.h;
+  const hit = dnObstacles.some((ob) => {
+    if (rx + DN_TALL <= ob.x + 3 || rx >= ob.x + ob.w - 3) return false;
+    const obTop = ob.type === "bird" ? ob.y : DN_GROUND - ob.h;
+    const obBottom = ob.type === "bird" ? ob.y + ob.h : DN_GROUND;
+    return rTop < obBottom && dnRunner.y > obTop;
+  });
 
   dnScore += 1;
   dnScoreEl.textContent = Math.floor(dnScore / 6);
@@ -3629,7 +3696,6 @@ function dnStep() {
   dnDraw();
 
   if (hit) {
-    dnScore = Math.floor(dnScore / 6);
     dnEnd();
     return;
   }
@@ -3639,15 +3705,16 @@ function dnStep() {
 
 function dnNewGame() {
   cancelAnimationFrame(dnFrame);
-  dnRunner = { y: DN_GROUND, vy: 0, size: 34 };
+  dnRunner = { y: DN_GROUND, vy: 0, h: DN_TALL };
+  dnDucking = false;
   dnObstacles = [];
-  dnSpeed = 6;
+  dnSpeed = DN_SPEED_START;
   dnScore = 0;
   dnSinceSpawn = 0;
   dnStatus = "playing";
   dnScoreEl.textContent = 0;
   dnBestEl.textContent = dnReadBest();
-  dnMessageEl.textContent = "Space, up arrow or tap to jump";
+  dnMessageEl.textContent = "Space to jump · down to duck";
   dnNewBtn.hidden = true;
   dnFrame = requestAnimationFrame(dnStep);
 }
@@ -3659,10 +3726,23 @@ document.addEventListener("keydown", (event) => {
   if (openPanel !== "games" || activeGame !== "dino") return;
   if (isTyping(event.target)) return;
   if (event.ctrlKey || event.metaKey || event.altKey) return;
-  if (event.key !== " " && event.key !== "ArrowUp" && event.key !== "w") return;
-  event.preventDefault();
-  if (dnStatus === "playing") dnJump();
-  else dnNewGame();
+
+  const key = event.key;
+  if (key === " " || key === "ArrowUp" || key === "w") {
+    event.preventDefault();
+    if (dnStatus === "playing") dnJump();
+    else dnNewGame();
+    return;
+  }
+
+  if (key === "ArrowDown" || key === "s") {
+    event.preventDefault();
+    dnDuck(true);
+  }
+});
+
+document.addEventListener("keyup", (event) => {
+  if (event.key === "ArrowDown" || event.key === "s") dnDuck(false);
 });
 
 /* ==========================================================================

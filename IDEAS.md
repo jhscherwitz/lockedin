@@ -111,7 +111,7 @@ Right-side panel, organised into tabs.
 - **[planned]** A "mind games" dock button opening a panel with a game
   picker, so a second game later is a drop-in rather than a restructure -
   same shape as the sounds/music and tasks/notes panels.
-- **[done]** Wordie, Squish 2048, Blackjack, Minesweeper, Sequence, Snake,
+- **[done]** Wordle, 2048, Blackjack, Minesweeper, Sequence, Snake,
   Dino Run, Sudoku.
 - 2048's "best" is the highest tile reached, not accumulated points.
 - **[open]** Piano playlist still needs a real link; the one supplied was the
