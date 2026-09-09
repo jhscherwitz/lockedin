@@ -13,11 +13,12 @@ you want to keep some other filename, say so — it is one line to add.
 
 Both are optional and independent:
 
-- Without `alarm-sound.mp3` the timer falls back to its built-in synthesised
-  chime, and a **Chime sound** dropdown appears in Settings → Timer only once
-  the file exists, so you can switch between them.
+- `alarm-sound.mp3` is *the* end-of-session sound whenever it is present.
+  There is no picker — the built-in synthesised chime is only the fallback
+  for when the file is missing, so a renamed or deleted MP3 means a quieter
+  alarm rather than no alarm.
 - Without `game-achievement.mp3` winning a game is simply silent. There is no
-  built-in fallback for it.
+  built-in fallback for that one.
 
 Delete either file and the page copes on its own — nothing breaks.
 

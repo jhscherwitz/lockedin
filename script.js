@@ -104,7 +104,6 @@ const settings = {
   roundsBeforeLongBreak: 4,
   chime: true,
   notify: false,
-  chimeSound: "file", // "file" falls back to the built-in one if none exists
 };
 
 let isRunning = false;
@@ -423,8 +422,12 @@ function timerFileReady() {
   return ALERT_SOUNDS.timer.buffer !== null;
 }
 
+/* Your file is the chime, full stop. The synthesised one is no longer an
+   alternative, only the fallback for when the file is missing - without that
+   a renamed or deleted MP3 would mean no alarm at all, which is the one
+   failure this whole feature exists to prevent. */
 function usingAlertFile() {
-  return settings.chimeSound !== "builtin" && timerFileReady();
+  return timerFileReady();
 }
 
 /* The loudest sample in the file. An alarm you cannot hear is not an alarm,
@@ -477,8 +480,6 @@ async function loadAlertSounds() {
   await Promise.all(
     Object.values(ALERT_SOUNDS).map((sound) => loadAlertSound(sound, ctx))
   );
-
-  syncChimeSourceField();
 
   // A session already running was booked with the built-in chime, so re-book
   // it now that the file is here.
@@ -667,12 +668,9 @@ const longInput = document.getElementById("long-minutes");
 const roundsInput = document.getElementById("rounds");
 const chimeToggle = document.getElementById("chime-toggle");
 const notifyToggle = document.getElementById("notify-toggle");
-const chimeSourceField = document.getElementById("chime-source-field");
-const chimeSourceSelect = document.getElementById("chime-source");
 const modeControl = document.getElementById("timer-mode-control");
 function syncSettingInputs() {
   chimeToggle.checked = settings.chime;
-  syncChimeSourceField();
 
   /* Permission can be revoked in the browser's settings between visits, so a
      saved "on" only counts if the browser still agrees. */
@@ -702,12 +700,6 @@ bindNumberInput(focusInput, "focusMinutes", 1, 600);
 bindNumberInput(shortInput, "shortBreakMinutes", 1, 60);
 bindNumberInput(longInput, "longBreakMinutes", 1, 60);
 bindNumberInput(roundsInput, "roundsBeforeLongBreak", 2, 10);
-
-chimeSourceSelect.addEventListener("change", () => {
-  settings.chimeSound = chimeSourceSelect.value;
-  syncAlarm(); // re-book a running session with the newly chosen sound
-  if (settings.chime) bookChime(0); // and let them hear what they picked
-});
 
 chimeToggle.addEventListener("change", () => {
   settings.chime = chimeToggle.checked;
@@ -763,20 +755,6 @@ function updateConditionalFields() {
   document.querySelectorAll("[data-show-for]").forEach((field) => {
     field.hidden = !field.dataset.showFor.split(" ").includes(settings.mode);
   });
-  syncChimeSourceField();
-}
-
-/* There is nothing to choose between until a file exists, so the picker stays
-   out of the way until one does. */
-function syncChimeSourceField() {
-  if (!timerFileReady()) {
-    chimeSourceField.hidden = true;
-    return;
-  }
-  chimeSourceField.hidden = !["countdown", "pomodoro"].includes(settings.mode);
-  chimeSourceSelect.options[0].textContent =
-    "Your file (" + ALERT_SOUNDS.timer.name + ")";
-  chimeSourceSelect.value = settings.chimeSound === "builtin" ? "builtin" : "file";
 }
 
 /* The sliding pill. Its width and position are copied from whichever segment
@@ -4437,9 +4415,38 @@ const DN_GROUND = 240;
 const DN_GRAVITY = 0.9;
 const DN_JUMP = -17;
 
+/* The ramp. DN_ACCEL is per 60fps-normalised frame, so the gain per second is
+   ACCEL * 60 - which is the number worth reasoning about.
+
+   It used to be 0.0006, or 0.036 a second: eight tenths of one percent of the
+   starting speed, needing 136 seconds to reach a max that was itself only
+   twice the start. It did accelerate. You simply could not feel it, and most
+   runs ended before anything changed. Now 0.12 a second, reaching a higher
+   max in about a minute. */
 const DN_SPEED_START = 4.6;
-const DN_SPEED_MAX = 9.5;
-const DN_ACCEL = 0.0006;
+const DN_SPEED_MAX = 12.5;
+const DN_ACCEL = 0.002;
+
+/* Spacing, in PIXELS - which is the whole point.
+
+   It used to be counted in frames, and that quietly cancelled the difficulty
+   curve: a fixed frame gap at a higher speed is a *longer* distance, so
+   obstacles drifted further apart as the run sped up. Measured out, the gap
+   went from 716px at the starting speed to 1245px at the old maximum, on a
+   572px-wide canvas. The game got emptier the faster it went.
+
+   Distance is the honest unit, because what makes a runner hard is how far
+   apart the obstacles are on screen, not how many frames passed. */
+const DN_GAP_START = 560; // floor at the starting speed
+const DN_GAP_RANDOM = 260; // variation on top, so it is not metronomic
+
+/* The floor at full speed is derived, not guessed. A jump lasts
+   2 * |DN_JUMP| / DN_GRAVITY frames, so at DN_SPEED_MAX it covers that many
+   pixels of ground. Any gap shorter than that can produce a pair the runner
+   physically cannot clear however well it times the jump - an unwinnable
+   spawn, which is a worse sin than being easy. The margin is the landing. */
+const DN_JUMP_FRAMES = (2 * Math.abs(DN_JUMP)) / DN_GRAVITY;
+const DN_GAP_MIN = Math.ceil(DN_JUMP_FRAMES * DN_SPEED_MAX) + 30;
 
 const DN_TALL = 34;
 const DN_SHORT = 18;
@@ -4459,8 +4466,18 @@ let dnSpeed = DN_SPEED_START;
 let dnScore = 0;
 let dnStatus = "idle"; // idle | playing | over
 let dnFrame = null;
-let dnSinceSpawn = 0;
+let dnSinceSpawn = 0; // pixels travelled since the last obstacle
+let dnNextGap = DN_GAP_START;
 let dnLast = 0;
+
+/* The gap floor slides from DN_GAP_START down to DN_GAP_MIN as the run speeds
+   up, so obstacles close in rather than drifting apart. */
+function dnPickGap() {
+  const span = DN_SPEED_MAX - DN_SPEED_START;
+  const through = span > 0 ? (dnSpeed - DN_SPEED_START) / span : 1;
+  const floor = DN_GAP_START + (DN_GAP_MIN - DN_GAP_START) * through;
+  return floor + Math.random() * DN_GAP_RANDOM;
+}
 
 function dnReadBest() {
   try {
@@ -4487,15 +4504,27 @@ function dnDuck(on) {
   if (on && dnAirborne() && dnRunner.vy < 0) dnRunner.vy = 2;
 }
 
+/* A canvas cannot use a CSS variable, so the tokens have to be read out and
+   handed to the context. Worth doing rather than hardcoding: the runner and
+   the ground line were "#ffffff" and white-alpha, which is invisible on the
+   Paper theme's pale board - a light theme breaks canvas drawing silently,
+   because none of it lives in the stylesheet the token audit swept. */
+function dnColours() {
+  const root = getComputedStyle(document.documentElement);
+  const get = (name, fallback) => root.getPropertyValue(name).trim() || fallback;
+  return {
+    accent: get("--accent", "#7c5cff"),
+    runner: get("--text", "#ffffff"),
+    ground: get("--line-strong", "rgba(255,255,255,0.34)"),
+  };
+}
+
 function dnDraw() {
-  const accent =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--accent")
-      .trim() || "#7c5cff";
+  const paint = dnColours();
 
   dnCtx.clearRect(0, 0, DN_W, DN_H);
 
-  dnCtx.strokeStyle = "rgba(255,255,255,0.28)";
+  dnCtx.strokeStyle = paint.ground;
   dnCtx.lineWidth = 3;
   dnCtx.beginPath();
   dnCtx.moveTo(0, DN_GROUND + 2);
@@ -4503,13 +4532,13 @@ function dnDraw() {
   dnCtx.stroke();
 
   // Runner.
-  dnCtx.fillStyle = "#ffffff";
+  dnCtx.fillStyle = paint.runner;
   dnCtx.beginPath();
   dnCtx.roundRect(60, dnRunner.y - dnRunner.h, DN_TALL, dnRunner.h, 8);
   dnCtx.fill();
 
   dnObstacles.forEach((ob) => {
-    dnCtx.fillStyle = accent;
+    dnCtx.fillStyle = paint.accent;
     if (ob.type === "bird") {
       // Body plus a wing that flips with distance, so it appears to flap.
       const up = Math.floor(dnScore / 7) % 2 === 0;
@@ -4595,14 +4624,13 @@ function dnStep(now) {
   if (dnRunner.y === DN_GROUND) dnRunner.vy = 0;
 
   if (dnSpeed < DN_SPEED_MAX) dnSpeed += DN_ACCEL * dt;
-  dnSinceSpawn += dt;
 
-  /* Spacing is randomised but floored at a distance the runner can clear at
-     the current speed, so late spawns stay jumpable. */
-  const minGap = Math.max(58, 150 - dnSpeed * 5);
-  if (dnSinceSpawn > minGap && Math.random() < 0.035) {
+  // Pixels, not frames. See the note on DN_GAP_START.
+  dnSinceSpawn += dnSpeed * dt;
+  if (dnSinceSpawn > dnNextGap) {
     dnSpawn();
     dnSinceSpawn = 0;
+    dnNextGap = dnPickGap();
   }
 
   dnObstacles.forEach((ob) => {
@@ -4638,6 +4666,7 @@ function dnNewGame() {
   dnDucking = false;
   dnObstacles = [];
   dnSpeed = DN_SPEED_START;
+  dnNextGap = dnPickGap();
   dnScore = 0;
   dnSinceSpawn = 0;
   dnLast = 0;
