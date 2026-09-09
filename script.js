@@ -1206,6 +1206,7 @@ const THEMES = [
   { id: "canopy", name: "Canopy" },
   { id: "fog", name: "Fog" },
   { id: "noir", name: "Noir" },
+  { id: "paper", name: "Paper" },
 ];
 
 const DEFAULT_THEME = "aurora";

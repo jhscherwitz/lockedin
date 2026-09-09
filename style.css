@@ -26,14 +26,67 @@
   /* Text. Warm themes want warm white - pure #fff over orange is the single
      biggest thing that makes a warm palette look cheap. */
   --text: #ffffff;
+  --text-soft: rgba(255, 255, 255, 0.85);
   --text-dim: rgba(255, 255, 255, 0.7);
+  --ink-faint: rgba(255, 255, 255, 0.4);
 
-  /* Frosted-glass surfaces */
-  --glass: rgba(255, 255, 255, 0.12);
-  --chip: rgba(0, 0, 0, 0.3);
-  --chip-hover: rgba(0, 0, 0, 0.42);
-  --glass-hover: rgba(255, 255, 255, 0.2);
-  --glass-border: rgba(255, 255, 255, 0.18);
+  /* ---- The surface scale ----
+
+     Every translucent layer in the app comes from these six values, and this
+     is the whole reason a light theme is possible.
+
+     It was not always so. Before this there were 72 hardcoded rgba() values
+     scattered through the file, and the same "faintest lift" appeared as
+     0.05, 0.06, 0.065, 0.07, 0.08 and 0.085 in different places - six
+     spellings of one intention. Nothing central existed to flip, so a light
+     theme meant editing 72 lines and hoping.
+
+     They are named by role rather than by colour on purpose. "surface" and
+     "line" still mean something when a theme inverts them; "white-10" does
+     not, because in the light theme these are black. */
+
+  --surface-1: rgba(255, 255, 255, 0.06); /* faintest: rows, tiles */
+  --surface-2: rgba(255, 255, 255, 0.1); /* inputs, gentle hover */
+  --surface-3: rgba(255, 255, 255, 0.16); /* raised: active chips */
+  --surface-4: rgba(255, 255, 255, 0.26); /* prominent */
+
+  /* Recesses - darker than whatever they sit on, not lighter. */
+  --sunk-1: rgba(0, 0, 0, 0.3);
+  --sunk-2: rgba(0, 0, 0, 0.45);
+
+  /* Hairlines. */
+  --line-soft: rgba(255, 255, 255, 0.09);
+  --line: rgba(255, 255, 255, 0.18);
+  --line-strong: rgba(255, 255, 255, 0.34);
+
+  --shadow-soft: rgba(0, 0, 0, 0.24);
+  --shadow: rgba(0, 0, 0, 0.35);
+
+  /* Panels are a tinted sheet rather than a value from the scale above -
+     they sit over the background, not over another surface. */
+  --panel-bg: rgba(18, 14, 34, 0.7);
+  --panel-solid: rgba(18, 14, 34, 0.92);
+
+  /* A native <option> list is drawn by the OS, so it needs real opaque
+     colours; alpha over a background it cannot see would be unreadable. */
+  --menu-bg: #17132b;
+  --menu-text: #ffffff;
+
+  --knob: #ffffff; /* slider thumbs and the text caret */
+  --danger: #ff7b7b;
+
+  /* Accent at two strengths, for a selection and the wash behind one. */
+  --accent-soft: rgba(124, 92, 255, 0.5);
+  --accent-wash: rgba(124, 92, 255, 0.22);
+
+  /* The older names, kept because they are used everywhere, but now derived
+     so the scale above is the single source of truth. */
+  --glass: var(--surface-2);
+  --glass-hover: var(--surface-4);
+  --glass-border: var(--line);
+  --chip: var(--sunk-1);
+  --chip-hover: var(--sunk-2);
+
   --accent: #7c5cff;
 
   /* Fonts. --timer-font follows --display-font unless set on its own,
@@ -89,7 +142,7 @@ main {
   font-weight: 300;
   letter-spacing: -0.02em;
   line-height: 1;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.28);
+  text-shadow: 0 2px 24px var(--shadow-soft);
 }
 
 
@@ -123,7 +176,7 @@ main {
   line-height: 0.95;
   margin: 0.15rem 0 0;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 4px 44px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 4px 44px var(--shadow);
   transition: opacity 0.3s;
 }
 
@@ -261,9 +314,9 @@ main {
   max-height: min(58vh, 480px);
   border-radius: 20px;
   border: 1px solid var(--glass-border);
-  background: rgba(18, 14, 34, 0.7);
+  background: var(--panel-bg);
   backdrop-filter: blur(18px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  box-shadow: 0 24px 60px var(--shadow);
 
   /* Closed state. visibility (not display) so it can animate. */
   opacity: 0;
@@ -288,7 +341,7 @@ main {
   align-items: center;
   justify-content: space-between;
   padding: 1.1rem 1.25rem 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .panel-head h2 {
@@ -362,8 +415,8 @@ main {
   height: 15px;
   border: 0;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  background: var(--knob);
+  box-shadow: 0 1px 5px var(--shadow);
   cursor: pointer;
   transition: transform 0.12s;
 }
@@ -377,8 +430,8 @@ main {
   height: 15px;
   border: 0;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  background: var(--knob);
+  box-shadow: 0 1px 5px var(--shadow);
   cursor: pointer;
 }
 
@@ -422,13 +475,13 @@ main {
   padding: 0.7rem 0.4rem 0.6rem;
   border-radius: 14px;
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
   transition: background 0.2s, border-color 0.2s;
 }
 
 .sound-tile.is-on {
-  background: rgba(124, 92, 255, 0.28);
-  border-color: rgba(124, 92, 255, 0.6);
+  background: var(--accent-wash);
+  border-color: var(--accent-soft);
 }
 
 .sound-tile.is-unavailable {
@@ -488,7 +541,7 @@ main {
   margin: 0.9rem 0 0;
   font-size: 0.7rem;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--ink-faint);
 }
 
 /* The <input> that replaces the timer while you're editing its length. */
@@ -515,7 +568,7 @@ main {
   display: flex;
   gap: 0.15rem;
   padding: 0 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .tab {
@@ -578,7 +631,7 @@ main {
   padding: 0.45rem 0.6rem;
   border-radius: 9px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
   color: var(--text);
   font-family: var(--display-font);
   font-size: 0.9rem;
@@ -623,7 +676,7 @@ main {
   margin: 0;
   border: 1px solid var(--glass-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
 }
@@ -643,7 +696,7 @@ main {
 }
 
 .switch:hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--line-strong);
 }
 
 .switch:checked {
@@ -676,7 +729,7 @@ main {
   display: flex;
   padding: 0.25rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.28);
+  background: var(--sunk-1);
   box-shadow: inset 0 0 0 1px var(--glass-border);
 }
 
@@ -797,6 +850,12 @@ main {
     linear-gradient(198deg, #6d4bc4 -12%, transparent 58%), #2b1b2e;
 }
 
+.theme-swatch[data-theme="paper"] {
+  background: radial-gradient(74% 56% at 6% 4%, #f0c9a8, transparent 78%),
+    radial-gradient(88% 62% at 92% 10%, #cfd9ea, transparent 78%),
+    radial-gradient(90% 66% at 40% 104%, #e3d3e6, transparent 78%), #eee9e0;
+}
+
 .theme-swatch[data-theme="canopy"] {
   background: radial-gradient(26% 40% at 20% 22%, #a3e635, transparent 62%),
     radial-gradient(20% 32% at 62% 12%, #4ade80, transparent 60%),
@@ -823,7 +882,7 @@ main {
   padding: 0.5rem 0.6rem;
   border-radius: 9px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
   color: var(--text);
   font-family: var(--display-font);
   font-size: 0.85rem;
@@ -833,15 +892,15 @@ main {
 /* The dropdown list itself is drawn by the OS, so it needs a readable
    background rather than the panel's translucent one. */
 .select option {
-  background: #17132b;
-  color: #fff;
+  background: var(--menu-bg);
+  color: var(--menu-text);
 }
 
 .field-hint {
   margin: 0.45rem 0 0;
   font-size: 0.68rem;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--ink-faint);
 }
 
 /* ==========================================================================
@@ -867,7 +926,7 @@ main {
   gap: 0.6rem;
   padding: 0.45rem 0.5rem;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 
 .task-check {
@@ -876,7 +935,7 @@ main {
   height: 17px;
   padding: 0;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border: 1.5px solid var(--line-strong);
   background: transparent;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
@@ -900,7 +959,7 @@ main {
 }
 
 .task-text::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--ink-faint);
 }
 
 .task-text:focus {
@@ -916,7 +975,7 @@ main {
   flex-shrink: 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--ink-faint);
   font-size: 1.1rem;
   line-height: 1;
   padding: 0 0.15rem;
@@ -935,7 +994,7 @@ main {
   padding: 0.7rem 0.8rem;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
   color: var(--text);
   font-family: var(--display-font);
   font-size: 0.85rem;
@@ -943,7 +1002,7 @@ main {
 }
 
 .notepad::placeholder {
-  color: rgba(255, 255, 255, 0.32);
+  color: var(--ink-faint);
 }
 
 /* ==========================================================================
@@ -981,7 +1040,7 @@ main {
   font-weight: 700;
   letter-spacing: -0.035em;
   color: var(--text);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 2px 18px var(--shadow);
   user-select: none;
 }
 
@@ -995,8 +1054,8 @@ main {
   font-size: clamp(1.7rem, 3.6vw, 2.5rem);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+  color: var(--text-soft);
+  text-shadow: 0 2px 18px var(--shadow);
   user-select: none;
 }
 
@@ -1016,13 +1075,13 @@ main {
   padding: 0.7rem 1.1rem;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(18, 14, 34, 0.92);
+  background: var(--panel-solid);
   color: var(--text);
   font-family: var(--display-font);
   font-size: 0.82rem;
   line-height: 1.45;
   text-align: center;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 18px 44px var(--shadow);
 }
 
 /* ==========================================================================
@@ -1030,11 +1089,11 @@ main {
    ========================================================================== */
 
 .dock-btn {
-  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 14px -4px var(--shadow);
 }
 
 .panel {
-  box-shadow: 0 26px 70px -12px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 26px 70px -12px var(--shadow);
 }
 
 .panel-head h2 {
@@ -1062,7 +1121,7 @@ main {
 }
 
 .focus-prompt:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
 }
 
 /* ==========================================================================
@@ -1077,7 +1136,7 @@ main {
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-soft);
   cursor: pointer;
   transition: color 0.2s, transform 0.25s;
 }
@@ -1120,7 +1179,7 @@ main {
    ========================================================================== */
 
 ::selection {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--surface-4);
 }
 
 .timer:focus,
@@ -1138,7 +1197,7 @@ main {
 }
 
 .timer-edit {
-  caret-color: #fff;
+  caret-color: var(--knob);
 }
 
 .timer.is-editable:hover {
@@ -1173,7 +1232,7 @@ body.pip-open main {
 }
 
 .task-add-row:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
   color: var(--text);
 }
 
@@ -1830,6 +1889,111 @@ body.pip-open main {
   filter: blur(38px);
 }
 
+/* ---- Paper: the daylight theme.
+
+   The only theme that inverts rather than recolours, and the reason the
+   surface scale above had to exist first.
+
+   The inversion is not uniform, which is the interesting part. On a dark
+   ground every layer lifts *towards* white and hairlines are white too, so
+   one white-alpha scale did both jobs. On a light ground those two jobs part
+   company: a surface still has to separate itself from its parent, but doing
+   that by adding white to something already near-white is invisible - so
+   surfaces become black-alpha here, while panels go the other way and become
+   near-opaque white sheets. Same token names, opposite signs.
+
+   Text goes to a dark warm grey rather than black. Pure #000 on off-white is
+   harsh and looks unfinished for the same reason pure #fff over orange does.
+   ---- */
+
+:root[data-theme="paper"] {
+  --bg-base: #eee9e0;
+  --blob-a: #f0c9a8;
+  --blob-b: #cfd9ea;
+  --blob-c: #e3d3e6;
+  --blob-d: #cfdcd0;
+  --accent: #6d4bc4;
+
+  --wash: 78%;
+  --shape-blur: 100px;
+  --shape-alpha: 0.72;
+  --grain-opacity: 0.045;
+  --vignette: 0;
+
+  /* Ink, not black. */
+  --text: #23212b;
+  --text-soft: rgba(35, 33, 43, 0.8);
+  --text-dim: rgba(35, 33, 43, 0.6);
+  --ink-faint: rgba(35, 33, 43, 0.42);
+
+  /* Surfaces darken instead of lightening - see the note above. */
+  --surface-1: rgba(35, 33, 43, 0.05);
+  --surface-2: rgba(35, 33, 43, 0.08);
+  --surface-3: rgba(35, 33, 43, 0.13);
+  --surface-4: rgba(35, 33, 43, 0.2);
+
+  /* A recess on paper is barely darker; the shadow does the work. */
+  --sunk-1: rgba(35, 33, 43, 0.1);
+  --sunk-2: rgba(35, 33, 43, 0.16);
+
+  --line-soft: rgba(35, 33, 43, 0.1);
+  --line: rgba(35, 33, 43, 0.16);
+  --line-strong: rgba(35, 33, 43, 0.36);
+
+  /* Softer than the dark themes'. A heavy drop shadow on a light ground
+     reads as grubby rather than as depth. */
+  --shadow-soft: rgba(35, 33, 43, 0.08);
+  --shadow: rgba(35, 33, 43, 0.16);
+
+  /* Panels go the opposite way from surfaces: a near-opaque white sheet. */
+  --panel-bg: rgba(255, 253, 250, 0.82);
+  --panel-solid: rgba(255, 253, 250, 0.96);
+
+  --menu-bg: #fffdfa;
+  --menu-text: #23212b;
+
+  --knob: #ffffff;
+  --danger: #c0263c;
+
+  --accent-soft: rgba(109, 75, 196, 0.42);
+  --accent-wash: rgba(109, 75, 196, 0.16);
+}
+
+/* The dock and control chips use --chip, which is a *recess* everywhere else.
+   On paper they need to read as raised buttons on a pale ground, so they get
+   the white sheet treatment and a hairline instead. */
+[data-theme="paper"] .dock-btn,
+[data-theme="paper"] .icon-btn {
+  border: 1px solid var(--line);
+}
+
+/* The timer and prompt are the one place paper needs help: large light text
+   was carrying a dark-theme shadow that now shows as a smudge. */
+[data-theme="paper"] .timer,
+[data-theme="paper"] .focus-prompt,
+[data-theme="paper"] .wordmark,
+[data-theme="paper"] .now {
+  text-shadow: none;
+}
+
+/* Minesweeper's digit palette was picked to glow on near-black. On paper the
+   pastels vanish, so the same eight take a darker, more saturated set. */
+[data-theme="paper"] .ms-1 { color: #1d4ed8; }
+[data-theme="paper"] .ms-2 { color: #15803d; }
+[data-theme="paper"] .ms-3 { color: #b91c1c; }
+[data-theme="paper"] .ms-4 { color: #6d28d9; }
+[data-theme="paper"] .ms-5 { color: #b45309; }
+[data-theme="paper"] .ms-6 { color: #0f766e; }
+[data-theme="paper"] .ms-7 { color: #a21caf; }
+[data-theme="paper"] .ms-8 { color: #44403c; }
+
+/* 2048's tile numerals are dark by design, which is right on its light tiles
+   in every theme - but the board behind them is a surface, and on paper that
+   surface is now light too, so the low tiles need their text back. */
+[data-theme="paper"] .sq-tile {
+  color: #1b1033;
+}
+
 /* ==========================================================================
    Google Calendar - today's events
    ========================================================================== */
@@ -1880,7 +2044,7 @@ body.pip-open main {
   gap: 0.1rem 0.6rem;
   padding: 0.5rem 0.6rem;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
 }
 
 .cal-when {
@@ -1973,14 +2137,14 @@ body.pip-open main {
   padding: 0.8rem 0.9rem;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
   text-align: left;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .game-card:hover {
-  background: rgba(255, 255, 255, 0.11);
+  background: var(--surface-2);
 }
 
 .game-card-name {
@@ -2032,7 +2196,7 @@ body.pip-open main {
   display: grid;
   place-items: center;
   height: 56px;
-  border: 2px solid rgba(255, 255, 255, 0.16);
+  border: 2px solid var(--line);
   border-radius: 7px;
   font-family: var(--display-font);
   font-size: 1.7rem;
@@ -2045,7 +2209,7 @@ body.pip-open main {
 
 /* A letter typed but not yet submitted. */
 .fl-tile.is-filled {
-  border-color: rgba(255, 255, 255, 0.42);
+  border-color: var(--line-strong);
 }
 
 .fl-tile.is-correct {
@@ -2059,7 +2223,7 @@ body.pip-open main {
 }
 
 .fl-tile.is-absent {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--surface-2);
   border-color: transparent;
   color: var(--text-dim);
 }
@@ -2090,7 +2254,7 @@ body.pip-open main {
   padding: 0 0.35rem;
   border: 0;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--surface-3);
   font-family: var(--display-font);
   font-size: 0.78rem;
   font-weight: 600;
@@ -2101,7 +2265,7 @@ body.pip-open main {
 }
 
 .fl-key:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--surface-4);
 }
 
 .fl-key:active {
@@ -2122,8 +2286,8 @@ body.pip-open main {
 }
 
 .fl-key.is-absent {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.32);
+  background: var(--surface-1);
+  color: var(--ink-faint);
 }
 
 .fl-new {
@@ -2210,7 +2374,7 @@ body.pip-open main {
   align-items: center;
   padding: 0.4rem;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
 }
 
 .sq-stat-label {
@@ -2236,7 +2400,7 @@ body.pip-open main {
   height: 360px;
   margin: 0 auto;
   border-radius: 14px;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--sunk-1);
   touch-action: none;
 }
 
@@ -2245,7 +2409,7 @@ body.pip-open main {
   width: 80px;
   height: 80px;
   border-radius: 19px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 
 .sq-tile {
@@ -2355,7 +2519,7 @@ body.pip-open main {
   font-family: var(--display-font);
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 8px var(--shadow);
   animation: bj-deal 0.22s ease-out;
 }
 
@@ -2372,7 +2536,7 @@ body.pip-open main {
     #3d3273 4px,
     #3d3273 8px
   );
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 2px #f6f3ef;
+  box-shadow: 0 2px 8px var(--shadow), inset 0 0 0 2px #f6f3ef;
 }
 
 .bj-rank {
@@ -2407,7 +2571,7 @@ body.pip-open main {
   padding: 0.5rem 0.4rem;
   border: 1px solid var(--glass-border);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--surface-2);
   font-family: var(--display-font);
   font-size: 0.8rem;
   font-weight: 600;
@@ -2418,7 +2582,7 @@ body.pip-open main {
 
 .bj-chip:hover,
 .bj-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--surface-3);
 }
 
 .bj-btn-primary {
@@ -2465,7 +2629,7 @@ body.pip-open main {
   padding: 0;
   border: 0;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface-3);
   font-family: var(--display-font);
   font-size: 1.02rem;
   font-weight: 700;
@@ -2476,16 +2640,16 @@ body.pip-open main {
 }
 
 .ms-cell:hover:not(.is-open) {
-  background: rgba(255, 255, 255, 0.26);
+  background: var(--surface-4);
 }
 
 .ms-cell.is-open {
-  background: rgba(0, 0, 0, 0.26);
+  background: var(--sunk-1);
   cursor: default;
 }
 
 .ms-cell.is-flagged {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface-3);
 }
 
 .ms-cell.is-mine {
@@ -2527,7 +2691,7 @@ body.pip-open main {
   padding: 0.42rem 0.55rem;
   border: 1px solid var(--glass-border);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
   font-family: var(--display-font);
   font-size: 0.78rem;
   font-weight: 500;
@@ -2538,7 +2702,7 @@ body.pip-open main {
 }
 
 .music-chip:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface-3);
   color: var(--text);
 }
 
@@ -2583,21 +2747,21 @@ body.pip-open main {
   padding: 0.45rem 0.55rem;
   border: 1px solid var(--glass-border);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
   color: var(--text);
   font-family: var(--display-font);
   font-size: 0.76rem;
 }
 
 .music-add input::placeholder {
-  color: rgba(255, 255, 255, 0.32);
+  color: var(--ink-faint);
 }
 
 .music-error {
   margin: 0 0 0.6rem;
   font-family: var(--display-font);
   font-size: 0.72rem;
-  color: #ff9c9c;
+  color: var(--danger);
 }
 
 /* A chip you added, with room for its remove button. */
@@ -2613,7 +2777,7 @@ body.pip-open main {
   border: 0;
   padding: 0 0.15rem;
   background: transparent;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--ink-faint);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
@@ -2690,7 +2854,7 @@ body.pip-open main {
   margin: 0 auto;
   padding: 4px;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--sunk-1);
   touch-action: none;
 }
 
@@ -2698,7 +2862,7 @@ body.pip-open main {
   width: 25px;
   height: 25px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 
 .sn-cell.is-snake {
@@ -2724,7 +2888,7 @@ body.pip-open main {
   height: 189px;
   margin: 0 auto;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--sunk-1);
   touch-action: manipulation;
 }
 
@@ -2744,10 +2908,10 @@ body.pip-open main {
   box-sizing: content-box;
   width: max-content;
   margin: 0 auto;
-  border: 2px solid rgba(255, 255, 255, 0.34);
+  border: 2px solid var(--line-strong);
   border-radius: 7px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--sunk-1);
 }
 
 .su-cell {
@@ -2755,8 +2919,8 @@ body.pip-open main {
   height: 40px;
   padding: 0;
   border: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.09);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
   background: transparent;
   font-family: var(--display-font);
   font-size: 1.2rem;
@@ -2766,11 +2930,11 @@ body.pip-open main {
 }
 
 .su-cell.box-right {
-  border-right: 2px solid rgba(255, 255, 255, 0.34);
+  border-right: 2px solid var(--line-strong);
 }
 
 .su-cell.box-bottom {
-  border-bottom: 2px solid rgba(255, 255, 255, 0.34);
+  border-bottom: 2px solid var(--line-strong);
 }
 
 /* The board's own border closes the last column and row. */
@@ -2789,20 +2953,20 @@ body.pip-open main {
 }
 
 .su-cell.is-selected {
-  background: rgba(124, 92, 255, 0.5);
+  background: var(--accent-soft);
 }
 
 /* Same row, column or box as the selection. */
 .su-cell.is-peer {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
 }
 
 .su-cell.is-same {
-  background: rgba(124, 92, 255, 0.2);
+  background: var(--accent-wash);
 }
 
 .su-cell.is-wrong {
-  color: #ff7b7b;
+  color: var(--danger);
 }
 
 .su-pad {
@@ -2816,7 +2980,7 @@ body.pip-open main {
   padding: 0.6rem 0;
   border: 0;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.13);
+  background: var(--surface-3);
   font-family: var(--display-font);
   font-size: 0.8rem;
   font-weight: 600;
@@ -2825,7 +2989,7 @@ body.pip-open main {
 }
 
 .su-key:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--surface-4);
 }
 
 /* ==========================================================================
@@ -2843,7 +3007,7 @@ body.pip-open main {
 .panel,
 .panel * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.26) transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .panel *::-webkit-scrollbar,
@@ -2863,13 +3027,13 @@ body.pip-open main {
 .panel::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.22);
+  background-color: var(--surface-4);
   background-clip: padding-box;
 }
 
 .panel *::-webkit-scrollbar-thumb:hover,
 .panel::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--surface-4);
 }
 
 .panel *::-webkit-scrollbar-corner,

@@ -27,11 +27,11 @@ dependencies. Open the folder, run one command, and it works.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
   browser-only, no backend and no server to trust
-- **Eight themes that are actually different** — each sets its own shape
+- **Nine themes that are actually different** — each sets its own shape
   layout, blur, grain, vignette and text warmth, not just a palette. Noir
   drops the blur to 26px so the shapes have visible edges; Midnight uses
   three huge soft masses and a heavy vignette; Ember and Tide replace the
-  background composition outright
+  background composition outright; Paper is a full daylight inversion
 - **Fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
@@ -90,6 +90,14 @@ A few decisions worth calling out:
   and a browser app never uses one. The access token lives in a variable and
   never touches localStorage — it is a credential, and storing it would only
   make it outlive the session for no benefit.
+- **One surface scale, and it is what made a light theme possible.** Every
+  translucent layer resolves from `--surface-1..4`, `--sunk-1..2`,
+  `--line-soft/--line/--line-strong` and two shadows. Before that there were
+  72 hardcoded `rgba()` values in the stylesheet, with the same "faintest
+  lift" written as 0.05, 0.06, 0.065, 0.07, 0.08 *and* 0.085 — six spellings
+  of one intention, and nothing central to flip. The tokens are named by role
+  rather than by colour, because "surface" still means something when a theme
+  inverts it and "white-10" does not: in Paper those values are black.
 - **A theme is one attribute on `<html>`.** `applyTheme()` sets
   `data-theme="midnight"` and stops; every rule that cares keys off it in CSS.
   No JavaScript knows what a theme looks like, which is why adding one means
