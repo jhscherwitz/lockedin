@@ -2016,24 +2016,52 @@ function calTokenValid() {
   return calToken !== null && Date.now() < calTokenExpires - 30000;
 }
 
+/* A zone's current distance from UTC, as "-05:00" or "Z", read out of Intl
+   rather than hardcoded anywhere. */
+function calZoneOffset(instant, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timeZone,
+    timeZoneName: "longOffset",
+  }).formatToParts(instant);
+  const name = parts.find((part) => part.type === "timeZoneName").value;
+
+  // "GMT-05:00", or a bare "GMT" for UTC itself.
+  const match = /GMT([+-])(\d{2}):?(\d{2})?/.exec(name);
+  if (!match) return "Z";
+  return match[1] + match[2] + ":" + (match[3] || "00");
+}
+
 /* Midnight to midnight in the clock's timezone, not the browser's. Someone
-   who has set the clock to another zone means it. */
+   who has set the clock to another zone means it.
+
+   The bounds must be complete RFC3339 instants - "2026-09-09T00:00:00" on its
+   own is rejected with a flat 400. The `timeZone` parameter does NOT rescue
+   it: that only controls the zone times are returned in, not the zone timeMin
+   is read in. So the offset is derived and appended.
+
+   It is read at midday rather than at midnight or right now, because on the
+   one day a year a zone shifts, midday falls after the changeover in every
+   zone that has one - so this is the offset covering most of the day. On that
+   single day the window edge can be an hour out, which for a study dashboard
+   beats re-deriving the offset per boundary. */
 function calDayBounds() {
-  const now = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: clockSettings.timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(now);
-  const get = (type) => parts.find((p) => p.type === type).value;
+  }).formatToParts(new Date());
+  const get = (type) => parts.find((part) => part.type === type).value;
   const today = get("year") + "-" + get("month") + "-" + get("day");
 
-  /* Handing the API a date and a timezone rather than a UTC instant means
-     Google does the offset arithmetic, including whatever DST is doing. */
+  const offset = calZoneOffset(
+    new Date(today + "T12:00:00Z"),
+    clockSettings.timeZone
+  );
+
   return {
-    timeMin: today + "T00:00:00",
-    timeMax: today + "T23:59:59",
+    timeMin: today + "T00:00:00" + offset,
+    timeMax: today + "T23:59:59" + offset,
   };
 }
 
