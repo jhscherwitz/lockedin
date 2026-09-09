@@ -498,12 +498,6 @@ main {
   appearance: textfield;
 }
 
-.timer-edit::-webkit-outer-spin-button,
-.timer-edit::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
 [hidden] {
   display: none !important;
 }
@@ -2076,4 +2070,24 @@ body.pip-open main {
 .panel *::-webkit-scrollbar-corner,
 .panel::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ==========================================================================
+   Number inputs
+
+   The browser's spin buttons appear on hover and focus and cannot be styled,
+   only removed. Chrome and Safari draw them as pseudo-elements; Firefox
+   needs appearance: textfield instead. Both, again.
+   ========================================================================== */
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
 }
