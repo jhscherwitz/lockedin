@@ -3521,9 +3521,9 @@ const DN_GROUND = 240;
 const DN_GRAVITY = 0.9;
 const DN_JUMP = -17;
 
-const DN_SPEED_START = 6;
-const DN_SPEED_MAX = 13;
-const DN_ACCEL = 0.001;
+const DN_SPEED_START = 4.6;
+const DN_SPEED_MAX = 9.5;
+const DN_ACCEL = 0.0006;
 
 const DN_TALL = 34;
 const DN_SHORT = 18;
@@ -3544,6 +3544,7 @@ let dnScore = 0;
 let dnStatus = "idle"; // idle | playing | over
 let dnFrame = null;
 let dnSinceSpawn = 0;
+let dnLast = 0;
 
 function dnReadBest() {
   try {
@@ -3658,15 +3659,27 @@ function dnSpawn() {
   });
 }
 
-function dnStep() {
+/* Everything below is scaled by elapsed time rather than counted per frame.
+   Without this the game runs as fast as the monitor refreshes - the same
+   constants give a 144Hz display a game 2.4x faster than a 60Hz one, which
+   is why "matching Chrome's numbers" meant nothing on its own. */
+function dnStep(now) {
+  if (typeof now !== "number") now = dnLast + 1000 / 60;
+  if (!dnLast) dnLast = now;
+
+  // Normalised so dt is 1 at 60fps. Clamped, so a dropped frame or a tab
+  // returning from the background cannot teleport the runner through a cactus.
+  const dt = Math.min(3, (now - dnLast) / (1000 / 60)) || 1;
+  dnLast = now;
+
   dnRunner.h = dnDucking && !dnAirborne() ? DN_SHORT : DN_TALL;
 
-  dnRunner.vy += DN_GRAVITY;
-  dnRunner.y = Math.min(DN_GROUND, dnRunner.y + dnRunner.vy);
+  dnRunner.vy += DN_GRAVITY * dt;
+  dnRunner.y = Math.min(DN_GROUND, dnRunner.y + dnRunner.vy * dt);
   if (dnRunner.y === DN_GROUND) dnRunner.vy = 0;
 
-  if (dnSpeed < DN_SPEED_MAX) dnSpeed += DN_ACCEL;
-  dnSinceSpawn += 1;
+  if (dnSpeed < DN_SPEED_MAX) dnSpeed += DN_ACCEL * dt;
+  dnSinceSpawn += dt;
 
   /* Spacing is randomised but floored at a distance the runner can clear at
      the current speed, so late spawns stay jumpable. */
@@ -3677,7 +3690,7 @@ function dnStep() {
   }
 
   dnObstacles.forEach((ob) => {
-    ob.x -= dnSpeed + ob.extra;
+    ob.x -= (dnSpeed + ob.extra) * dt;
   });
   dnObstacles = dnObstacles.filter((ob) => ob.x + ob.w > -40);
 
@@ -3690,7 +3703,7 @@ function dnStep() {
     return rTop < obBottom && dnRunner.y > obTop;
   });
 
-  dnScore += 1;
+  dnScore += dt;
   dnScoreEl.textContent = Math.floor(dnScore / 6);
 
   dnDraw();
@@ -3711,6 +3724,7 @@ function dnNewGame() {
   dnSpeed = DN_SPEED_START;
   dnScore = 0;
   dnSinceSpawn = 0;
+  dnLast = 0;
   dnStatus = "playing";
   dnScoreEl.textContent = 0;
   dnBestEl.textContent = dnReadBest();
