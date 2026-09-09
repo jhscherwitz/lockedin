@@ -1210,7 +1210,7 @@ function pipStyles() {
 
   const base = get("--bg-base", "#241a3d");
   const accent = get("--accent", "#7c5cff");
-  const font = get("--timer-font", "system-ui, sans-serif");
+  const font = get("--timer-font", '"Outfit", system-ui, sans-serif');
   const a = get("--blob-a", "#7c3aed");
   const b = get("--blob-b", "#ec4899");
   const c = get("--blob-c", "#f43f5e");
@@ -1317,6 +1317,16 @@ async function openPip() {
   pipWindow = await documentPictureInPicture.requestWindow({
     width: 300,
     height: 170,
+  });
+
+  /* The pop-out is a separate document with its own empty head, so it does
+     not inherit the page's webfonts. Passing it the font *name* is not
+     enough - without the @font-face rules that family does not exist there
+     and it silently falls back to a system face. The font links have to be
+     cloned in. */
+  document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+    if (!/font/i.test(link.href)) return;
+    pipWindow.document.head.append(link.cloneNode(true));
   });
 
   pipStyleEl = pipWindow.document.createElement("style");
