@@ -200,6 +200,18 @@
             <span class="game-card-name">Sequence</span>
             <span class="game-card-desc">Watch the pattern, repeat it back</span>
           </button>
+          <button class="game-card" type="button" data-game="snake">
+            <span class="game-card-name">Snake</span>
+            <span class="game-card-desc">Eat, grow, don't bite yourself</span>
+          </button>
+          <button class="game-card" type="button" data-game="dino">
+            <span class="game-card-name">Dino Run</span>
+            <span class="game-card-desc">Jump the cacti</span>
+          </button>
+          <button class="game-card" type="button" data-game="sudoku">
+            <span class="game-card-name">Sudoku</span>
+            <span class="game-card-desc">Fill the grid, one of each</span>
+          </button>
           <button class="game-card" type="button" data-game="squish">
             <span class="game-card-name">Squish 2048</span>
             <span class="game-card-desc">Merge the blobs, chase 2048</span>
@@ -225,7 +237,7 @@
                 <span id="sq-score" class="sq-stat-value">0</span>
               </div>
               <div class="sq-stat">
-                <span class="sq-stat-label">Best</span>
+                <span class="sq-stat-label">Best tile</span>
                 <span id="sq-best" class="sq-stat-value">0</span>
               </div>
             </div>
@@ -320,6 +332,55 @@
             <div id="sm-pads" class="sm-pads"></div>
             <p id="sm-message" class="sq-message">Press start and watch</p>
             <button id="sm-new" class="fl-new" type="button">Start</button>
+          </div>
+
+          <div class="game-pane" data-game="snake" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Length</span>
+                <span id="sn-score" class="sq-stat-value">1</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Best</span>
+                <span id="sn-best" class="sq-stat-value">0</span>
+              </div>
+            </div>
+            <div id="sn-board" class="sn-board"></div>
+            <p id="sn-message" class="sq-message">Arrow keys, WASD or swipe</p>
+            <button id="sn-new" class="fl-new" type="button">Start</button>
+          </div>
+
+          <div class="game-pane" data-game="dino" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Score</span>
+                <span id="dn-score" class="sq-stat-value">0</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Best</span>
+                <span id="dn-best" class="sq-stat-value">0</span>
+              </div>
+            </div>
+            <canvas id="dn-canvas" class="dn-canvas" width="572" height="300"></canvas>
+            <p id="dn-message" class="sq-message">Space, up arrow or tap to jump</p>
+            <button id="dn-new" class="fl-new" type="button">Start</button>
+          </div>
+
+          <div class="game-pane" data-game="sudoku" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Time</span>
+                <span id="su-time" class="sq-stat-value">0</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Empty</span>
+                <span id="su-left" class="sq-stat-value">0</span>
+              </div>
+            </div>
+            <div id="su-board" class="su-board"></div>
+            <div id="su-pad" class="su-pad"></div>
+            <p id="su-message" class="sq-message">&nbsp;</p>
+            <button id="su-new" class="fl-new" type="button">New puzzle</button>
           </div>
         </div>   </section>
 

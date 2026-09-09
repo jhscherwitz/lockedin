@@ -1900,3 +1900,131 @@ body.pip-open main {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Snake
+   ========================================================================== */
+
+.sn-board {
+  display: grid;
+  grid-template-columns: repeat(13, 20px);
+  gap: 1px;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  touch-action: none;
+}
+
+.sn-cell {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sn-cell.is-snake {
+  background: #34d399;
+}
+
+.sn-cell.is-head {
+  background: #a7f3d0;
+}
+
+.sn-cell.is-food {
+  background: #fb7185;
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   Dino Run
+   ========================================================================== */
+
+.dn-canvas {
+  display: block;
+  width: 286px;
+  height: 150px;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  touch-action: manipulation;
+}
+
+/* ==========================================================================
+   Sudoku
+   ========================================================================== */
+
+.su-board {
+  display: grid;
+  grid-template-columns: repeat(9, 30px);
+  gap: 1px;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.su-cell {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: rgba(20, 16, 38, 0.9);
+  font-family: var(--display-font);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* The heavier lines that mark the three-by-three boxes. */
+.su-cell.box-right { margin-right: 2px; }
+.su-cell.box-bottom { margin-bottom: 2px; }
+
+.su-cell.is-given {
+  color: var(--text);
+  font-weight: 700;
+  cursor: default;
+}
+
+.su-cell.is-selected {
+  background: rgba(124, 92, 255, 0.45);
+}
+
+/* Same row, column or box as the selection. */
+.su-cell.is-peer {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.su-cell.is-same {
+  background: rgba(124, 92, 255, 0.24);
+}
+
+.su-cell.is-wrong {
+  color: #ff7b7b;
+}
+
+.su-pad {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  margin-top: 0.6rem;
+}
+
+.su-key {
+  padding: 0.45rem 0;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.13);
+  font-family: var(--display-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.su-key:hover {
+  background: rgba(255, 255, 255, 0.24);
+}

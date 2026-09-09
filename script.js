@@ -1865,6 +1865,26 @@ const GAMES = {
       msNewGame();
     },
   },
+  snake: {
+    inProgress: () => snStatus !== "idle",
+    start() {
+      if (!snCells.length) snBuild();
+      snRender();
+    },
+  },
+  dino: {
+    inProgress: () => dnStatus !== "idle",
+    start() {
+      dnBestEl.textContent = dnReadBest();
+      dnDraw();
+    },
+  },
+  sudoku: {
+    inProgress: () => suStatus !== "idle",
+    start() {
+      suNewGame();
+    },
+  },
   sequence: {
     inProgress: () => smSequence.length > 0,
     start() {
@@ -1953,7 +1973,7 @@ const sqNewBtn = document.getElementById("sq-new");
 const SQ_N = 4;
 const SQ_TILE = 64;
 const SQ_GAP = 6;
-const SQ_BEST_KEY = "focus-app-sq-best";
+const SQ_BEST_KEY = "focus-app-sq-best-tile";
 
 // Warm at the low end, cool and deeper as the numbers climb.
 const SQ_COLOURS = {
@@ -2234,8 +2254,12 @@ function sqMove(dir) {
     });
 
     sqScore += gained;
-    if (sqScore > sqBest) {
-      sqBest = sqScore;
+
+    // "Best" is the biggest tile ever reached, not accumulated points - that
+    // is the number people actually care about in 2048.
+    const highest = sqTiles.reduce((max, tile) => Math.max(max, tile.value), 0);
+    if (highest > sqBest) {
+      sqBest = highest;
       sqWriteBest(sqBest);
     }
 
@@ -3295,3 +3319,633 @@ function smNewGame() {
 }
 
 smNewBtn.addEventListener("click", smNewGame);
+
+/* ==========================================================================
+   Snake
+   ========================================================================== */
+
+const snBoard = document.getElementById("sn-board");
+const snScoreEl = document.getElementById("sn-score");
+const snBestEl = document.getElementById("sn-best");
+const snMessageEl = document.getElementById("sn-message");
+const snNewBtn = document.getElementById("sn-new");
+
+const SN_N = 13;
+const SN_BEST_KEY = "focus-app-sn-best";
+
+let snCells = [];
+let snBody = [];
+let snDir = { x: 1, y: 0 };
+let snQueued = [];
+let snFood = 0;
+let snStatus = "idle"; // idle | playing | over
+let snTimer = null;
+
+function snReadBest() {
+  try {
+    return Number(localStorage.getItem(SN_BEST_KEY)) || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+function snBuild() {
+  snBoard.innerHTML = "";
+  snCells = [];
+  for (let i = 0; i < SN_N * SN_N; i++) {
+    const cell = document.createElement("div");
+    cell.className = "sn-cell";
+    snBoard.append(cell);
+    snCells.push(cell);
+  }
+}
+
+function snPlaceFood() {
+  const taken = new Set(snBody);
+  const free = [];
+  for (let i = 0; i < SN_N * SN_N; i++) if (!taken.has(i)) free.push(i);
+  snFood = free.length ? free[Math.floor(Math.random() * free.length)] : -1;
+}
+
+function snRender() {
+  snCells.forEach((cell, i) => {
+    let className = "sn-cell";
+    if (i === snBody[0]) className += " is-snake is-head";
+    else if (snBody.includes(i)) className += " is-snake";
+    else if (i === snFood) className += " is-food";
+    if (cell.className !== className) cell.className = className;
+  });
+  snScoreEl.textContent = snBody.length;
+  snBestEl.textContent = snReadBest();
+}
+
+function snStop() {
+  clearInterval(snTimer);
+  snTimer = null;
+}
+
+function snGameOver() {
+  snStop();
+  snStatus = "over";
+  const best = snReadBest();
+  if (snBody.length > best) {
+    try {
+      localStorage.setItem(SN_BEST_KEY, String(snBody.length));
+    } catch (error) {
+      // Storage blocked.
+    }
+  }
+  snMessageEl.textContent = "Length " + snBody.length;
+  snNewBtn.textContent = "Play again";
+  snNewBtn.hidden = false;
+  snRender();
+}
+
+function snTick() {
+  /* Turns are queued rather than applied instantly. Two quick presses inside
+     one tick could otherwise reverse the snake into itself - press up then
+     left while moving right, and without the queue the second press wins
+     against a direction that was never actually travelled. */
+  if (snQueued.length) {
+    const next = snQueued.shift();
+    if (next.x !== -snDir.x || next.y !== -snDir.y) snDir = next;
+  }
+
+  const head = snBody[0];
+  const x = (head % SN_N) + snDir.x;
+  const y = Math.floor(head / SN_N) + snDir.y;
+
+  if (x < 0 || x >= SN_N || y < 0 || y >= SN_N) {
+    snGameOver();
+    return;
+  }
+
+  const target = y * SN_N + x;
+
+  // Biting yourself ends it - except the tail tip, which is about to move.
+  if (snBody.indexOf(target) !== -1 && target !== snBody[snBody.length - 1]) {
+    snGameOver();
+    return;
+  }
+
+  snBody.unshift(target);
+
+  if (target === snFood) {
+    snPlaceFood();
+    // A little faster with every meal.
+    const speed = Math.max(70, 190 - snBody.length * 4);
+    snStop();
+    snTimer = setInterval(snTick, speed);
+  } else {
+    snBody.pop();
+  }
+
+  snRender();
+}
+
+function snNewGame() {
+  snStop();
+  if (!snCells.length) snBuild();
+  const mid = Math.floor(SN_N / 2);
+  snBody = [mid * SN_N + mid, mid * SN_N + mid - 1, mid * SN_N + mid - 2];
+  snDir = { x: 1, y: 0 };
+  snQueued = [];
+  snStatus = "playing";
+  snMessageEl.textContent = "Arrow keys, WASD or swipe";
+  snNewBtn.hidden = true;
+  snPlaceFood();
+  snRender();
+  snTimer = setInterval(snTick, 190);
+}
+
+function snTurn(x, y) {
+  if (snStatus !== "playing") return;
+  if (snQueued.length < 2) snQueued.push({ x, y });
+}
+
+snNewBtn.addEventListener("click", snNewGame);
+
+const SN_KEYS = {
+  arrowleft: [-1, 0], a: [-1, 0],
+  arrowright: [1, 0], d: [1, 0],
+  arrowup: [0, -1], w: [0, -1],
+  arrowdown: [0, 1], s: [0, 1],
+};
+
+document.addEventListener("keydown", (event) => {
+  if (openPanel !== "games" || activeGame !== "snake") return;
+  if (isTyping(event.target)) return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const dir = SN_KEYS[event.key.toLowerCase()];
+  if (!dir) return;
+  event.preventDefault();
+  snTurn(dir[0], dir[1]);
+});
+
+let snSwipeFrom = null;
+snBoard.addEventListener("pointerdown", (e) => {
+  snSwipeFrom = { x: e.clientX, y: e.clientY };
+});
+snBoard.addEventListener("pointerup", (e) => {
+  if (!snSwipeFrom) return;
+  const dx = e.clientX - snSwipeFrom.x;
+  const dy = e.clientY - snSwipeFrom.y;
+  snSwipeFrom = null;
+  if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+  if (Math.abs(dx) > Math.abs(dy)) snTurn(dx > 0 ? 1 : -1, 0);
+  else snTurn(0, dy > 0 ? 1 : -1);
+});
+
+/* ==========================================================================
+   Dino Run
+
+   Canvas rather than DOM: this scrolls continuously, and moving dozens of
+   elements every frame is exactly what canvas is for.
+   ========================================================================== */
+
+const dnCanvas = document.getElementById("dn-canvas");
+const dnScoreEl = document.getElementById("dn-score");
+const dnBestEl = document.getElementById("dn-best");
+const dnMessageEl = document.getElementById("dn-message");
+const dnNewBtn = document.getElementById("dn-new");
+const dnCtx = dnCanvas.getContext("2d");
+
+const DN_BEST_KEY = "focus-app-dn-best";
+const DN_W = 572;
+const DN_H = 300;
+const DN_GROUND = 240;
+const DN_GRAVITY = 0.9;
+const DN_JUMP = -17;
+
+let dnRunner = { y: DN_GROUND, vy: 0, size: 34 };
+let dnObstacles = [];
+let dnSpeed = 6;
+let dnScore = 0;
+let dnStatus = "idle"; // idle | playing | over
+let dnFrame = null;
+let dnSinceSpawn = 0;
+
+function dnReadBest() {
+  try {
+    return Number(localStorage.getItem(DN_BEST_KEY)) || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+function dnJump() {
+  if (dnStatus !== "playing") return;
+  // Only from the ground: no double jumps.
+  if (dnRunner.y < DN_GROUND) return;
+  dnRunner.vy = DN_JUMP;
+}
+
+function dnDraw() {
+  const accent =
+    getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() ||
+    "#7c5cff";
+
+  dnCtx.clearRect(0, 0, DN_W, DN_H);
+
+  // Ground line.
+  dnCtx.strokeStyle = "rgba(255,255,255,0.28)";
+  dnCtx.lineWidth = 3;
+  dnCtx.beginPath();
+  dnCtx.moveTo(0, DN_GROUND + 2);
+  dnCtx.lineTo(DN_W, DN_GROUND + 2);
+  dnCtx.stroke();
+
+  // Runner.
+  dnCtx.fillStyle = "#ffffff";
+  dnCtx.beginPath();
+  dnCtx.roundRect(60, dnRunner.y - dnRunner.size, dnRunner.size, dnRunner.size, 8);
+  dnCtx.fill();
+
+  // Obstacles.
+  dnCtx.fillStyle = accent;
+  dnObstacles.forEach((ob) => {
+    dnCtx.beginPath();
+    dnCtx.roundRect(ob.x, DN_GROUND - ob.h, ob.w, ob.h, 5);
+    dnCtx.fill();
+  });
+}
+
+function dnEnd() {
+  dnStatus = "over";
+  cancelAnimationFrame(dnFrame);
+  dnFrame = null;
+
+  const best = dnReadBest();
+  if (dnScore > best) {
+    try {
+      localStorage.setItem(DN_BEST_KEY, String(dnScore));
+    } catch (error) {
+      // Storage blocked.
+    }
+  }
+
+  dnBestEl.textContent = dnReadBest();
+  dnMessageEl.textContent = "Score " + dnScore;
+  dnNewBtn.textContent = "Play again";
+  dnNewBtn.hidden = false;
+}
+
+function dnStep() {
+  dnRunner.vy += DN_GRAVITY;
+  dnRunner.y = Math.min(DN_GROUND, dnRunner.y + dnRunner.vy);
+  if (dnRunner.y === DN_GROUND) dnRunner.vy = 0;
+
+  dnSpeed += 0.0016;
+  dnSinceSpawn += 1;
+
+  /* Spacing is randomised but floored at a distance the runner can clear at
+     the current speed - otherwise late-game spawns become unjumpable and the
+     game stops being about skill. */
+  const minGap = Math.max(48, 150 - dnSpeed * 6);
+  if (dnSinceSpawn > minGap && Math.random() < 0.035) {
+    const height = 30 + Math.random() * 34;
+    dnObstacles.push({ x: DN_W + 20, w: 16 + Math.random() * 12, h: height });
+    dnSinceSpawn = 0;
+  }
+
+  dnObstacles.forEach((ob) => {
+    ob.x -= dnSpeed;
+  });
+  dnObstacles = dnObstacles.filter((ob) => ob.x + ob.w > -30);
+
+  const rx = 60;
+  const rTop = dnRunner.y - dnRunner.size;
+  const hit = dnObstacles.some(
+    (ob) =>
+      rx + dnRunner.size > ob.x + 3 &&
+      rx < ob.x + ob.w - 3 &&
+      dnRunner.y > DN_GROUND - ob.h + 3 &&
+      rTop < DN_GROUND
+  );
+
+  dnScore += 1;
+  dnScoreEl.textContent = Math.floor(dnScore / 6);
+
+  dnDraw();
+
+  if (hit) {
+    dnScore = Math.floor(dnScore / 6);
+    dnEnd();
+    return;
+  }
+
+  dnFrame = requestAnimationFrame(dnStep);
+}
+
+function dnNewGame() {
+  cancelAnimationFrame(dnFrame);
+  dnRunner = { y: DN_GROUND, vy: 0, size: 34 };
+  dnObstacles = [];
+  dnSpeed = 6;
+  dnScore = 0;
+  dnSinceSpawn = 0;
+  dnStatus = "playing";
+  dnScoreEl.textContent = 0;
+  dnBestEl.textContent = dnReadBest();
+  dnMessageEl.textContent = "Space, up arrow or tap to jump";
+  dnNewBtn.hidden = true;
+  dnFrame = requestAnimationFrame(dnStep);
+}
+
+dnNewBtn.addEventListener("click", dnNewGame);
+dnCanvas.addEventListener("pointerdown", dnJump);
+
+document.addEventListener("keydown", (event) => {
+  if (openPanel !== "games" || activeGame !== "dino") return;
+  if (isTyping(event.target)) return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.key !== " " && event.key !== "ArrowUp" && event.key !== "w") return;
+  event.preventDefault();
+  if (dnStatus === "playing") dnJump();
+  else dnNewGame();
+});
+
+/* ==========================================================================
+   Sudoku
+
+   Puzzles are generated rather than shipped: fill a grid at random, then
+   remove clues one at a time, keeping a removal only while exactly one
+   solution remains. A puzzle with two solutions is not a puzzle - you would
+   reach a point where logic runs out and guessing takes over.
+   ========================================================================== */
+
+const suBoard = document.getElementById("su-board");
+const suPad = document.getElementById("su-pad");
+const suTimeEl = document.getElementById("su-time");
+const suLeftEl = document.getElementById("su-left");
+const suMessageEl = document.getElementById("su-message");
+const suNewBtn = document.getElementById("su-new");
+
+const SU_GIVENS = 36;
+
+let suPuzzle = [];
+let suGrid = [];
+let suSolution = [];
+let suCellEls = [];
+let suSelected = -1;
+let suStatus = "idle"; // idle | playing | done
+let suStartedAt = 0;
+let suTicker = null;
+
+function suAllowed(grid, index, value) {
+  const row = Math.floor(index / 9);
+  const col = index % 9;
+
+  for (let i = 0; i < 9; i++) {
+    if (grid[row * 9 + i] === value) return false;
+    if (grid[i * 9 + col] === value) return false;
+  }
+
+  const boxRow = Math.floor(row / 3) * 3;
+  const boxCol = Math.floor(col / 3) * 3;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      if (grid[(boxRow + r) * 9 + boxCol + c] === value) return false;
+    }
+  }
+
+  return true;
+}
+
+function suShuffled(list) {
+  const out = list.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const swap = out[i];
+    out[i] = out[j];
+    out[j] = swap;
+  }
+  return out;
+}
+
+function suFill(grid) {
+  const index = grid.indexOf(0);
+  if (index === -1) return true;
+
+  for (const value of suShuffled([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+    if (!suAllowed(grid, index, value)) continue;
+    grid[index] = value;
+    if (suFill(grid)) return true;
+    grid[index] = 0;
+  }
+
+  return false;
+}
+
+/* Counts solutions, stopping as soon as `limit` are found. Only ever called
+   with limit 2, because the single question that matters is "is there more
+   than one?" - counting them all would be far slower for no benefit. */
+function suCountSolutions(grid, limit) {
+  const index = grid.indexOf(0);
+  if (index === -1) return 1;
+
+  let found = 0;
+  for (let value = 1; value <= 9; value++) {
+    if (!suAllowed(grid, index, value)) continue;
+    grid[index] = value;
+    found += suCountSolutions(grid, limit - found);
+    grid[index] = 0;
+    if (found >= limit) break;
+  }
+
+  return found;
+}
+
+function suGenerate(givens) {
+  const solution = new Array(81).fill(0);
+  suFill(solution);
+
+  const puzzle = solution.slice();
+  let remaining = 81;
+
+  for (const index of suShuffled([...Array(81).keys()])) {
+    if (remaining <= givens) break;
+    const saved = puzzle[index];
+    puzzle[index] = 0;
+    if (suCountSolutions(puzzle.slice(), 2) === 1) {
+      remaining -= 1;
+    } else {
+      puzzle[index] = saved; // removing it left the puzzle ambiguous
+    }
+  }
+
+  return { puzzle, solution };
+}
+
+/* ---- Board ---- */
+
+function suPeers(index) {
+  const row = Math.floor(index / 9);
+  const col = index % 9;
+  const boxRow = Math.floor(row / 3) * 3;
+  const boxCol = Math.floor(col / 3) * 3;
+  const out = new Set();
+  for (let i = 0; i < 9; i++) {
+    out.add(row * 9 + i);
+    out.add(i * 9 + col);
+  }
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) out.add((boxRow + r) * 9 + boxCol + c);
+  }
+  out.delete(index);
+  return out;
+}
+
+function suConflicts(index) {
+  const value = suGrid[index];
+  if (!value) return false;
+  for (const peer of suPeers(index)) {
+    if (suGrid[peer] === value) return true;
+  }
+  return false;
+}
+
+function suElapsed() {
+  return suStartedAt ? Math.floor((Date.now() - suStartedAt) / 1000) : 0;
+}
+
+function suRender() {
+  const selectedValue = suSelected >= 0 ? suGrid[suSelected] : 0;
+  const peers = suSelected >= 0 ? suPeers(suSelected) : new Set();
+
+  suGrid.forEach((value, index) => {
+    const cell = suCellEls[index];
+    const col = index % 9;
+    const row = Math.floor(index / 9);
+
+    let className = "su-cell";
+    if (col === 2 || col === 5) className += " box-right";
+    if (row === 2 || row === 5) className += " box-bottom";
+    if (suPuzzle[index]) className += " is-given";
+    if (index === suSelected) className += " is-selected";
+    else if (peers.has(index)) className += " is-peer";
+    else if (selectedValue && value === selectedValue) className += " is-same";
+    if (value && suConflicts(index)) className += " is-wrong";
+
+    if (cell.className !== className) cell.className = className;
+    const label = value ? String(value) : "";
+    if (cell.textContent !== label) cell.textContent = label;
+  });
+
+  suLeftEl.textContent = suGrid.filter((v) => !v).length;
+  suTimeEl.textContent = suElapsed();
+}
+
+function suCheckDone() {
+  if (suGrid.some((v) => !v)) return;
+  if (suGrid.some((_, i) => suConflicts(i))) return;
+
+  suStatus = "done";
+  clearInterval(suTicker);
+  suTicker = null;
+  suSelected = -1;
+  suMessageEl.textContent = "Solved in " + suElapsed() + "s";
+  suRender();
+}
+
+function suSet(value) {
+  if (suStatus !== "playing") return;
+  if (suSelected < 0) return;
+  if (suPuzzle[suSelected]) return; // a given, not yours to change
+
+  suGrid[suSelected] = value;
+  suRender();
+  suCheckDone();
+}
+
+function suBuildBoard() {
+  suBoard.innerHTML = "";
+  suCellEls = [];
+
+  for (let i = 0; i < 81; i++) {
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "su-cell";
+    cell.addEventListener("click", () => {
+      if (suStatus !== "playing") return;
+      suSelected = i;
+      suRender();
+    });
+    suBoard.append(cell);
+    suCellEls.push(cell);
+  }
+
+  suPad.innerHTML = "";
+  for (let n = 1; n <= 9; n++) {
+    const key = document.createElement("button");
+    key.type = "button";
+    key.className = "su-key";
+    key.textContent = n;
+    key.addEventListener("click", () => suSet(n));
+    suPad.append(key);
+  }
+  const erase = document.createElement("button");
+  erase.type = "button";
+  erase.className = "su-key";
+  erase.textContent = "⌫";
+  erase.addEventListener("click", () => suSet(0));
+  suPad.append(erase);
+}
+
+function suNewGame() {
+  clearInterval(suTicker);
+  if (!suCellEls.length) suBuildBoard();
+
+  suMessageEl.textContent = "Generating…";
+  suStatus = "idle";
+
+  /* Generation blocks for a moment, so yield a frame first - otherwise the
+     "Generating" message never gets painted before the work starts. */
+  requestAnimationFrame(() => {
+    const made = suGenerate(SU_GIVENS);
+    suPuzzle = made.puzzle;
+    suSolution = made.solution;
+    suGrid = made.puzzle.slice();
+    suSelected = -1;
+    suStatus = "playing";
+    suStartedAt = Date.now();
+    suMessageEl.textContent = " ";
+    suTicker = setInterval(() => {
+      suTimeEl.textContent = suElapsed();
+    }, 1000);
+    suRender();
+  });
+}
+
+suNewBtn.addEventListener("click", suNewGame);
+
+document.addEventListener("keydown", (event) => {
+  if (openPanel !== "games" || activeGame !== "sudoku") return;
+  if (isTyping(event.target)) return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+  if (/^[1-9]$/.test(event.key)) {
+    event.preventDefault();
+    suSet(Number(event.key));
+    return;
+  }
+
+  if (event.key === "Backspace" || event.key === "Delete" || event.key === "0") {
+    event.preventDefault();
+    suSet(0);
+    return;
+  }
+
+  // Arrow keys move the selection around the grid.
+  const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -9, ArrowDown: 9 };
+  if (moves[event.key] === undefined) return;
+  event.preventDefault();
+  if (suSelected < 0) suSelected = 0;
+  else {
+    const next = suSelected + moves[event.key];
+    const sameRow = Math.floor(next / 9) === Math.floor(suSelected / 9);
+    const horizontal = Math.abs(moves[event.key]) === 1;
+    if (next >= 0 && next < 81 && (!horizontal || sameRow)) suSelected = next;
+  }
+  suRender();
+});
