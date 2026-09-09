@@ -104,6 +104,7 @@ const settings = {
   roundsBeforeLongBreak: 4,
   chime: true,
   notify: false,
+  chimeSound: "file", // "file" falls back to the built-in one if none exists
 };
 
 let isRunning = false;
@@ -377,11 +378,154 @@ function chimeNote(ctx, at, freq) {
   });
 }
 
+
+/* ---- Sound files in assets/alerts/ ----
+
+   Two of them: one for the end of a timer session, one for beating a game.
+   See the README in that folder.
+
+   They are decoded into audio buffers rather than played through <audio>
+   elements, because a buffer can be *scheduled* - source.start(t) takes the
+   same audio-clock time the oscillators do, so the timer sound gets exactly
+   the same punctuality in a throttled background tab. An <audio> element
+   cannot be told to start in an hour.
+
+   Each file is scanned for its loudest sample and gained so its peak matches
+   the built-in chime, which is why it does not matter that free sound
+   libraries vary wildly in level. */
+
+const ALERT_PEAK = 0.75; // matched to the built-in chime's peak
+const ALERT_MAX_GAIN = 8; // so a near-silent file is not amplified into hiss
+
+const ALERT_SOUNDS = {
+  timer: {
+    paths: ["assets/alerts/alarm-sound.mp3", "assets/alerts/chime.mp3"],
+    // An alarm ignores the ambient mixer's volume. See chimeNote().
+    scaleByMaster: false,
+    buffer: null,
+    gain: 1,
+    name: "",
+  },
+  win: {
+    paths: ["assets/alerts/game-achievement.mp3", "assets/alerts/win.mp3"],
+    // A win sound is incidental, like the other game sounds, so it follows
+    // the master volume the way they do - that is how you turn it off.
+    scaleByMaster: true,
+    buffer: null,
+    gain: 1,
+    name: "",
+  },
+};
+
+let alertsLoading = false;
+
+function timerFileReady() {
+  return ALERT_SOUNDS.timer.buffer !== null;
+}
+
+function usingAlertFile() {
+  return settings.chimeSound !== "builtin" && timerFileReady();
+}
+
+/* The loudest sample in the file. An alarm you cannot hear is not an alarm,
+   and a win sound that blows your headphones off is worse. */
+function bufferPeak(buffer) {
+  let peak = 0;
+  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+    const data = buffer.getChannelData(channel);
+    for (let i = 0; i < data.length; i++) {
+      const value = Math.abs(data[i]);
+      if (value > peak) peak = value;
+    }
+  }
+  return peak;
+}
+
+async function loadAlertSound(sound, ctx) {
+  for (const path of sound.paths) {
+    try {
+      // HEAD first: a 404 here costs nothing, where fetching the file to
+      // find out it is missing would download it.
+      const head = await fetch(path, { method: "HEAD" });
+      if (!head.ok) continue;
+
+      const bytes = await (await fetch(path)).arrayBuffer();
+      const buffer = await ctx.decodeAudioData(bytes);
+      const peak = bufferPeak(buffer);
+
+      sound.buffer = buffer;
+      sound.gain = peak > 0 ? Math.min(ALERT_MAX_GAIN, ALERT_PEAK / peak) : 1;
+      sound.name = path.split("/").pop();
+      return;
+    } catch (error) {
+      // Missing, offline, or not audio this browser can decode. The timer
+      // still has its built-in chime; a game just stays quiet.
+    }
+  }
+}
+
+/* Runs once, on the first click or keypress anywhere on the page. Waiting for
+   a gesture is not politeness - an AudioContext created before one is
+   suspended, and Chrome logs a warning about it. */
+async function loadAlertSounds() {
+  if (alertsLoading) return;
+  alertsLoading = true;
+
+  const ctx = audioContext();
+  if (!ctx) return;
+
+  await Promise.all(
+    Object.values(ALERT_SOUNDS).map((sound) => loadAlertSound(sound, ctx))
+  );
+
+  syncChimeSourceField();
+
+  // A session already running was booked with the built-in chime, so re-book
+  // it now that the file is here.
+  if (isRunning) syncAlarm();
+}
+
+document.addEventListener("pointerdown", loadAlertSounds, { once: true });
+document.addEventListener("keydown", loadAlertSounds, { once: true });
+
+/* Plays one of them. `at` is an audio-clock time; leave it out for now-ish.
+   Returns the node so the timer can cancel a booking it no longer wants. */
+function playAlert(id, at) {
+  const sound = ALERT_SOUNDS[id];
+  const ctx = audioContext();
+  if (!ctx || !sound || !sound.buffer) return null;
+
+  const source = ctx.createBufferSource();
+  source.buffer = sound.buffer;
+
+  const gain = ctx.createGain();
+  gain.gain.value = sound.scaleByMaster ? sound.gain * masterVolume : sound.gain;
+
+  source.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(at === undefined ? ctx.currentTime + 0.02 : at);
+  return source;
+}
+
+// Beating Sudoku, Snake, Wordle or Minesweeper. Silent if the file is absent.
+function playWinSound() {
+  playAlert("win");
+}
+
 // Zero means now, which is what the settings preview passes.
 function bookChime(msFromNow) {
   const ctx = audioContext();
   if (!ctx) return;
   chimeAt = ctx.currentTime + Math.max(0, msFromNow) / 1000 + 0.02;
+
+  if (usingAlertFile()) {
+    // A buffer source has stop() like an oscillator, so cancelling and the
+    // grace window need no special case for it.
+    const source = playAlert("timer", chimeAt);
+    if (source) chimeVoices.push(source);
+    return;
+  }
+
   CHIME_NOTES.forEach((note) => {
     chimeNote(ctx, chimeAt + note.delay, note.freq);
   });
@@ -523,9 +667,12 @@ const longInput = document.getElementById("long-minutes");
 const roundsInput = document.getElementById("rounds");
 const chimeToggle = document.getElementById("chime-toggle");
 const notifyToggle = document.getElementById("notify-toggle");
+const chimeSourceField = document.getElementById("chime-source-field");
+const chimeSourceSelect = document.getElementById("chime-source");
 const modeControl = document.getElementById("timer-mode-control");
 function syncSettingInputs() {
   chimeToggle.checked = settings.chime;
+  syncChimeSourceField();
 
   /* Permission can be revoked in the browser's settings between visits, so a
      saved "on" only counts if the browser still agrees. */
@@ -555,6 +702,12 @@ bindNumberInput(focusInput, "focusMinutes", 1, 600);
 bindNumberInput(shortInput, "shortBreakMinutes", 1, 60);
 bindNumberInput(longInput, "longBreakMinutes", 1, 60);
 bindNumberInput(roundsInput, "roundsBeforeLongBreak", 2, 10);
+
+chimeSourceSelect.addEventListener("change", () => {
+  settings.chimeSound = chimeSourceSelect.value;
+  syncAlarm(); // re-book a running session with the newly chosen sound
+  if (settings.chime) bookChime(0); // and let them hear what they picked
+});
 
 chimeToggle.addEventListener("change", () => {
   settings.chime = chimeToggle.checked;
@@ -610,6 +763,20 @@ function updateConditionalFields() {
   document.querySelectorAll("[data-show-for]").forEach((field) => {
     field.hidden = !field.dataset.showFor.split(" ").includes(settings.mode);
   });
+  syncChimeSourceField();
+}
+
+/* There is nothing to choose between until a file exists, so the picker stays
+   out of the way until one does. */
+function syncChimeSourceField() {
+  if (!timerFileReady()) {
+    chimeSourceField.hidden = true;
+    return;
+  }
+  chimeSourceField.hidden = !["countdown", "pomodoro"].includes(settings.mode);
+  chimeSourceSelect.options[0].textContent =
+    "Your file (" + ALERT_SOUNDS.timer.name + ")";
+  chimeSourceSelect.value = settings.chimeSound === "builtin" ? "builtin" : "file";
 }
 
 /* The sliding pill. Its width and position are copied from whichever segment
@@ -2139,6 +2306,7 @@ function flSubmit() {
 
     if (guess === fl.answer) {
       fl.status = "won";
+      playWinSound();
       flSay(FL_PRAISE[fl.submitted.length - 1]);
     } else if (fl.submitted.length >= FL_ROWS) {
       fl.status = "lost";
@@ -3312,6 +3480,7 @@ function msCheckWin() {
   if (!msCells.every((cell) => cell.mine || cell.open)) return;
 
   msStatus = "won";
+  playWinSound();
   msStopClock();
   const seconds = msElapsed();
   const best = msReadBest();
@@ -3655,7 +3824,7 @@ let snBody = [];
 let snDir = { x: 1, y: 0 };
 let snQueued = [];
 let snFood = 0;
-let snStatus = "idle"; // idle | playing | over
+let snStatus = "idle"; // idle | playing | over | won
 let snTimer = null;
 
 function snReadBest() {
@@ -3699,6 +3868,27 @@ function snRender() {
 function snStop() {
   clearInterval(snTimer);
   snTimer = null;
+}
+
+/* Filling all 169 cells is the real win, and the code was already most of the
+   way there: snPlaceFood() returns -1 when there is nowhere left to put food.
+   Until now the game just carried on with nothing left to chase. */
+function snWin() {
+  snStop();
+  snStatus = "won";
+  playWinSound();
+
+  // A full board is the longest the snake can be, so it is necessarily best.
+  try {
+    localStorage.setItem(SN_BEST_KEY, String(snBody.length));
+  } catch (error) {
+    // Storage blocked.
+  }
+
+  snMessageEl.textContent = "Perfect - all " + snBody.length + " cells";
+  snNewBtn.textContent = "Play again";
+  snNewBtn.hidden = false;
+  snRender();
 }
 
 function snGameOver() {
@@ -3749,6 +3939,12 @@ function snTick() {
 
   if (target === snFood) {
     snPlaceFood();
+
+    if (snFood === -1) {
+      snWin();
+      return;
+    }
+
     // A little faster with every meal.
     const speed = Math.max(70, 190 - snBody.length * 4);
     snStop();
@@ -4254,6 +4450,7 @@ function suCheckDone() {
   if (suGrid.some((_, i) => suConflicts(i))) return;
 
   suStatus = "done";
+  playWinSound();
   clearInterval(suTicker);
   suTicker = null;
   suSelected = -1;

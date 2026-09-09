@@ -14,6 +14,8 @@ dependencies. Open the folder, run one command, and it works.
   configurable focus and break lengths and round tracking
 - **It tells you when time is up** — a chime plus an optional browser
   notification, both scheduled so they land on time even in a background tab
+- **Your own sounds** — drop an MP3 in `assets/alerts/` for the session end
+  or for beating a game, and it is level-matched and used automatically
 - **Pop-out mini timer** — a real always-on-top window (Document
   Picture-in-Picture) so the countdown stays visible while you work elsewhere
 - **Ambient sound mixer** — seven recordings, any number playing at once,
@@ -21,7 +23,7 @@ dependencies. Open the folder, run one command, and it works.
 - **Tasks and a notepad** — edited in place, saved automatically
 - **Eight games for breaks** — Wordle (words), Blackjack, Minesweeper,
   Sequence (pattern memory), Snake, Dino Run, Sudoku with generated puzzles,
-  and 2048
+  and 2048. Sudoku, Snake, Wordle and Minesweeper can be won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Four themes that are actually different** — each one sets its own shape
   layout, blur, grain, vignette and text warmth, not just a palette
