@@ -5,15 +5,26 @@
    ========================================================================== */
 
 :root {
-  /* Background */
-  --bg-base: #241a3d;
+  /* Background. These are the Aurora theme; every other theme overrides
+     them in the Themes section further down, keyed off a data-theme
+     attribute on <html>. A theme is not just colour - it also sets how far
+     the washes reach, how soft the shapes are, how strong the grain and
+     vignette are, and how warm the text is. That is the difference between
+     a theme and a tint. */
+  --bg-base: #1c1333;
   --blob-a: #7c3aed;
   --blob-b: #d946ef;
   --blob-c: #ec4899;
   --blob-d: #4f46e5;
-  --blob-opacity: 0.38;
 
-  /* Text */
+  --wash: 66%; /* where the painted gradients fade to nothing */
+  --shape-blur: 72px;
+  --shape-alpha: 1; /* multiplies every shape's own opacity */
+  --grain-opacity: 0.055;
+  --vignette: 0.25; /* edge darkening; 0 switches it off */
+
+  /* Text. Warm themes want warm white - pure #fff over orange is the single
+     biggest thing that makes a warm palette look cheap. */
   --text: #ffffff;
   --text-dim: rgba(255, 255, 255, 0.7);
 
@@ -736,6 +747,31 @@ main {
   border-color: #fff;
 }
 
+/* Each swatch is a miniature of its theme rather than a four-stop gradient,
+   so the picker previews the actual composition - Ember's low horizon, for
+   instance, reads as a horizon at 46px tall. */
+.theme-swatch[data-theme="aurora"] {
+  background: radial-gradient(120% 95% at 6% 2%, #7c3aed, transparent 66%),
+    radial-gradient(115% 90% at 82% 8%, #d946ef, transparent 64%),
+    radial-gradient(130% 105% at 30% 104%, #ec4899, transparent 68%), #1c1333;
+}
+
+.theme-swatch[data-theme="midnight"] {
+  background: radial-gradient(110% 90% at 14% 0%, #2f2f7a, transparent 46%),
+    radial-gradient(110% 90% at 88% 100%, #3b1f6b, transparent 46%), #04040e;
+}
+
+.theme-swatch[data-theme="ember"] {
+  background: radial-gradient(105% 70% at 50% 116%, #f97316, transparent 62%),
+    radial-gradient(120% 76% at 18% 122%, #dc2626, transparent 60%),
+    linear-gradient(180deg, #4c1d95 -30%, transparent 58%), #150a11;
+}
+
+.theme-swatch[data-theme="fog"] {
+  background: radial-gradient(120% 95% at 10% 4%, #4f6a5d, transparent 82%),
+    radial-gradient(120% 95% at 90% 96%, #6d7f72, transparent 82%), #1e2422;
+}
+
 .theme-swatch-name {
   position: absolute;
   inset: auto 0 0 0;
@@ -1126,10 +1162,10 @@ body.pip-open main {
   inset: 0;
   z-index: -1;
   overflow: hidden;
-  background: radial-gradient(120% 95% at 6% 2%, var(--blob-a), transparent 66%),
-    radial-gradient(115% 90% at 82% 8%, var(--blob-b), transparent 64%),
-    radial-gradient(130% 105% at 30% 104%, var(--blob-c), transparent 68%),
-    radial-gradient(118% 95% at 102% 74%, var(--blob-d), transparent 66%),
+  background: radial-gradient(120% 95% at 6% 2%, var(--blob-a), transparent var(--wash)),
+    radial-gradient(115% 90% at 82% 8%, var(--blob-b), transparent var(--wash)),
+    radial-gradient(130% 105% at 30% 104%, var(--blob-c), transparent var(--wash)),
+    radial-gradient(118% 95% at 102% 74%, var(--blob-d), transparent var(--wash)),
     var(--bg-base);
 }
 
@@ -1137,7 +1173,7 @@ body.pip-open main {
    these read as organic forms instead of ellipses. */
 .shape {
   position: absolute;
-  filter: blur(72px);
+  filter: blur(var(--shape-blur));
 }
 
 .s1 {
@@ -1148,7 +1184,7 @@ body.pip-open main {
   background: var(--blob-a);
   border-radius: 62% 38% 46% 54% / 58% 42% 58% 42%;
   transform: rotate(-14deg);
-  opacity: 0.72;
+  opacity: calc(0.72 * var(--shape-alpha));
 }
 
 .s2 {
@@ -1159,7 +1195,7 @@ body.pip-open main {
   background: var(--blob-b);
   border-radius: 41% 59% 33% 67% / 55% 30% 70% 45%;
   transform: rotate(18deg);
-  opacity: 0.68;
+  opacity: calc(0.68 * var(--shape-alpha));
 }
 
 .s3 {
@@ -1170,7 +1206,7 @@ body.pip-open main {
   background: var(--blob-c);
   border-radius: 70% 30% 55% 45% / 35% 60% 40% 65%;
   transform: rotate(8deg);
-  opacity: 0.62;
+  opacity: calc(0.62 * var(--shape-alpha));
 }
 
 .s4 {
@@ -1181,7 +1217,7 @@ body.pip-open main {
   background: var(--blob-d);
   border-radius: 33% 67% 58% 42% / 62% 38% 62% 38%;
   transform: rotate(-8deg);
-  opacity: 0.72;
+  opacity: calc(0.72 * var(--shape-alpha));
 }
 
 .s5 {
@@ -1192,7 +1228,7 @@ body.pip-open main {
   background: var(--blob-a);
   border-radius: 55% 45% 70% 30% / 40% 65% 35% 60%;
   transform: rotate(12deg);
-  opacity: 0.62;
+  opacity: calc(0.62 * var(--shape-alpha));
 }
 
 .s6 {
@@ -1203,7 +1239,7 @@ body.pip-open main {
   background: var(--blob-d);
   border-radius: 48% 52% 36% 64% / 66% 34% 66% 34%;
   transform: rotate(-22deg);
-  opacity: 0.52;
+  opacity: calc(0.52 * var(--shape-alpha));
 }
 
 
@@ -1213,8 +1249,213 @@ body.pip-open main {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.055;
+  opacity: var(--grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Edge darkening. Sits above the shapes and the grain, so it darkens the
+   whole composition rather than one layer of it. A single opacity token
+   controls the strength, and 0 switches it off completely. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--vignette);
+  background: radial-gradient(
+    124% 92% at 50% 44%,
+    transparent 38%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+}
+
+/* Held for the instant a theme is applied. See applyTheme() in script.js. */
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}
+
+/* ==========================================================================
+   Themes
+
+   A theme is one attribute on <html> - data-theme - and everything below
+   keys off it. No JavaScript knows what a theme looks like; it only sets the
+   attribute. So adding a theme means writing a block here plus a name in the
+   THEMES list, and touching nothing else.
+
+   The point of doing it this way rather than swapping four colours is that a
+   theme gets to change the *composition*: how far the washes reach, how soft
+   and how large the shapes are, where they sit, how strong the grain and
+   vignette are, and how warm the text is. Recolouring alone is why every
+   theme used to feel like the same page under a filter.
+
+   Aurora is the default and lives in :root, so it needs no block here.
+   ========================================================================== */
+
+/* ---- Midnight: a dark room.
+
+   Three huge, very soft masses instead of six, almost no colour reaching out
+   from them, and a strong vignette - which is most of what actually makes a
+   page read as night rather than as dark blue. ---- */
+
+:root[data-theme="midnight"] {
+  --bg-base: #04040e;
+  --blob-a: #2f2f7a;
+  --blob-b: #1b2a5c;
+  --blob-c: #3b1f6b;
+  --blob-d: #0d1230;
+  --accent: #7c8cff;
+  --wash: 44%;
+  --shape-blur: 130px;
+  --shape-alpha: 0.75;
+  --grain-opacity: 0.03;
+  --vignette: 0.72;
+  --text: rgba(255, 255, 255, 0.94);
+  --text-dim: rgba(255, 255, 255, 0.52);
+}
+
+[data-theme="midnight"] .s1 {
+  width: 72vmax;
+  height: 56vmax;
+  top: -24%;
+  left: -20%;
+}
+
+[data-theme="midnight"] .s2 {
+  width: 62vmax;
+  height: 64vmax;
+  top: -20%;
+  right: -22%;
+}
+
+[data-theme="midnight"] .s4 {
+  width: 80vmax;
+  height: 52vmax;
+  bottom: -28%;
+  right: -24%;
+}
+
+/* The small accent shapes would only muddy something this quiet. */
+[data-theme="midnight"] .s3,
+[data-theme="midnight"] .s5,
+[data-theme="midnight"] .s6 {
+  display: none;
+}
+
+/* ---- Ember: dusk.
+
+   The colour sits low, like a horizon, rather than being spread around all
+   four corners - so this one replaces the wash entirely instead of just
+   recolouring it, and lays the shapes out as wide flat bands. ---- */
+
+:root[data-theme="ember"] {
+  --bg-base: #150a11;
+  --blob-a: #f97316;
+  --blob-b: #dc2626;
+  --blob-c: #b91c1c;
+  --blob-d: #4c1d95;
+  --accent: #fb7a3c;
+  --shape-blur: 95px;
+  --shape-alpha: 0.9;
+  --grain-opacity: 0.075;
+  --vignette: 0.5;
+  /* Warm white. Pure #ffffff over orange is the single biggest thing that
+     makes a warm palette look like a cheap photo filter. */
+  --text: #fff4ea;
+  --text-dim: rgba(255, 238, 224, 0.66);
+}
+
+[data-theme="ember"] .background {
+  background: radial-gradient(105% 62% at 50% 112%, var(--blob-a), transparent 62%),
+    radial-gradient(120% 70% at 22% 118%, var(--blob-b), transparent 60%),
+    radial-gradient(120% 70% at 82% 116%, var(--blob-c), transparent 58%),
+    linear-gradient(180deg, var(--blob-d) -34%, transparent 56%),
+    var(--bg-base);
+}
+
+[data-theme="ember"] .s1 {
+  width: 68vmax;
+  height: 20vmax;
+  top: auto;
+  bottom: -7%;
+  left: -14%;
+}
+
+[data-theme="ember"] .s2 {
+  width: 54vmax;
+  height: 16vmax;
+  top: auto;
+  bottom: 9%;
+  right: -12%;
+}
+
+[data-theme="ember"] .s3 {
+  width: 42vmax;
+  height: 12vmax;
+  top: auto;
+  bottom: 24%;
+  left: 6%;
+}
+
+[data-theme="ember"] .s4 {
+  width: 74vmax;
+  height: 24vmax;
+  bottom: -17%;
+  right: -8%;
+}
+
+[data-theme="ember"] .s5 {
+  display: none;
+}
+
+/* One cool mass up top, so the sky is not the same colour as the ground. */
+[data-theme="ember"] .s6 {
+  width: 46vmax;
+  height: 32vmax;
+  top: -16%;
+  left: 28%;
+  background: var(--blob-d);
+}
+
+/* ---- Fog: a library.
+
+   Muted, flat, heavily grained, no vignette at all. The one theme that is
+   deliberately undramatic - big soft washes and nothing that reads as a
+   light source. ---- */
+
+:root[data-theme="fog"] {
+  --bg-base: #1e2422;
+  --blob-a: #4f6a5d;
+  --blob-b: #5f7268;
+  --blob-c: #3f544e;
+  --blob-d: #6d7f72;
+  --accent: #8fb3a0;
+  --wash: 82%;
+  --shape-blur: 115px;
+  --shape-alpha: 0.7;
+  --grain-opacity: 0.13;
+  --vignette: 0;
+  --text: rgba(255, 255, 255, 0.93);
+  --text-dim: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="fog"] .s1 {
+  width: 64vmax;
+  height: 46vmax;
+}
+
+[data-theme="fog"] .s2 {
+  width: 56vmax;
+  height: 60vmax;
+}
+
+[data-theme="fog"] .s4 {
+  width: 68vmax;
+  height: 48vmax;
+}
+
+[data-theme="fog"] .s6 {
+  display: none;
 }
 
 /* ==========================================================================

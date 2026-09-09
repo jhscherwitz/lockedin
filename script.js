@@ -263,7 +263,7 @@ function stop() {
 
 function complete() {
   // Read before stop(), which clears the booking.
-  const chimed = chimeStarted();
+  const chimed = chimeHasBegun();
 
   stop();
   bankedMs = 0;
@@ -373,7 +373,7 @@ function chimeNote(ctx, at, freq) {
     gain.connect(ctx.destination);
     osc.start(at);
     osc.stop(at + CHIME_TAIL + 0.05);
-    chimeVoices.push({ osc: osc, at: at });
+    chimeVoices.push(osc);
   });
 }
 
@@ -387,28 +387,42 @@ function bookChime(msFromNow) {
   });
 }
 
-/* Silences notes that have not started yet. One already sounding is left to
-   ring out - cutting a bell off mid-strike sounds like a fault. */
-function cancelChime() {
-  const now = audioCtx ? audioCtx.currentTime : Infinity;
-  chimeVoices.forEach((voice) => {
-    if (voice.at <= now) return;
-    try {
-      voice.osc.stop();
-    } catch (error) {
-      // Already stopped. Nothing to do.
-    }
-  });
-  chimeVoices = [];
-  chimeAt = 0;
+/* Seconds of slack around the booked moment. The wall clock decides when the
+   session is over and the audio clock decides when the chime sounds; they
+   agree to within a few milliseconds, and this window is what stops that
+   sliver of disagreement mattering. */
+const CHIME_GRACE = 0.25;
+
+/* Has the booked chime begun, or is it about to within the grace window?
+
+   One predicate answers two questions, deliberately - if cancelChime() and
+   complete() ever disagreed about this, the chime would either be cancelled
+   and never replaced, or played twice. */
+function chimeHasBegun() {
+  if (!chimeAt || !audioCtx) return false;
+  return audioCtx.currentTime >= chimeAt - CHIME_GRACE;
 }
 
-/* Has the booked chime started? This is what separates a chime landing right
-   now from a stale one: if the machine slept through the end of a session the
-   audio clock slept with it, so the booking is minutes out of date. */
-function chimeStarted() {
-  if (!chimeAt || !audioCtx) return false;
-  return audioCtx.currentTime >= chimeAt - 0.25;
+/* All-or-nothing, because the three notes are one sound. Once the figure has
+   begun the rest of it has to be left alone to finish.
+
+   An earlier version cancelled note by note, keeping only the notes already
+   sounding. That looked careful and was badly wrong: complete() runs the
+   instant the first note strikes, so notes two and three were always still
+   in the future and always got stopped. The chime came out as a single lonely
+   ping every time. */
+function cancelChime() {
+  if (!chimeHasBegun()) {
+    chimeVoices.forEach((osc) => {
+      try {
+        osc.stop();
+      } catch (error) {
+        // Already stopped. Nothing to do.
+      }
+    });
+  }
+  chimeVoices = [];
+  chimeAt = 0;
 }
 
 /* Called whenever anything that moves the finish line moves: starting,
@@ -1008,20 +1022,22 @@ probeFileSounds();
    the variable, and everything referring to it updates at once.
    ========================================================================== */
 
+/* Four moods, not six tints. A theme's whole appearance - colours, how far
+   the washes reach, shape layout, blur, grain, vignette, how warm the text
+   is - lives in the Themes section of style.css, keyed off a data-theme
+   attribute on <html>. Nothing here knows what a theme looks like, which is
+   why this list is only ids and names.
+
+   There used to be six, all sharing one layout and one blur, so they came
+   out as the same page under six filters. */
 const THEMES = [
-  { id: "aurora", name: "Aurora", base: "#241a3d", accent: "#7c5cff",
-    blobs: ["#7c3aed", "#d946ef", "#ec4899", "#4f46e5"] },
-  { id: "ocean", name: "Ocean", base: "#04121f", accent: "#0ea5e9",
-    blobs: ["#0ea5e9", "#06b6d4", "#3b82f6", "#14b8a6"] },
-  { id: "sunset", name: "Sunset", base: "#1a0a0f", accent: "#f97316",
-    blobs: ["#f97316", "#ef4444", "#ec4899", "#eab308"] },
-  { id: "forest", name: "Forest", base: "#071410", accent: "#10b981",
-    blobs: ["#10b981", "#22c55e", "#84cc16", "#0d9488"] },
-  { id: "midnight", name: "Midnight", base: "#050510", accent: "#6366f1",
-    blobs: ["#312e81", "#1e3a8a", "#4c1d95", "#0f172a"] },
-  { id: "rose", name: "Rose", base: "#1a0812", accent: "#ec4899",
-    blobs: ["#f43f5e", "#ec4899", "#d946ef", "#fb7185"] },
+  { id: "aurora", name: "Aurora" },
+  { id: "midnight", name: "Midnight" },
+  { id: "ember", name: "Ember" },
+  { id: "fog", name: "Fog" },
 ];
+
+const DEFAULT_THEME = "aurora";
 
 const FONTS = [
   { label: "Clash Display", stack: '"Clash Display", "Outfit", system-ui, sans-serif' },
@@ -1045,19 +1061,31 @@ const fontSelect = document.getElementById("font-select");
 const zoneSelect = document.getElementById("zone-select");
 const hourFormatControl = document.getElementById("hour-format-control");
 
-let activeTheme = "aurora";
+let activeTheme = DEFAULT_THEME;
 
 function applyTheme(id) {
-  const theme = THEMES.find((t) => t.id === id);
-  if (!theme) return;
+  /* Ocean, Sunset, Forest and Rose are gone, so a returning visitor can
+     easily be carrying an id that no longer exists. */
+  if (!THEMES.some((theme) => theme.id === id)) id = DEFAULT_THEME;
   activeTheme = id;
 
-  const root = document.documentElement.style;
-  root.setProperty("--bg-base", theme.base);
-  root.setProperty("--accent", theme.accent);
-  theme.blobs.forEach((colour, index) => {
-    root.setProperty("--blob-" + "abcd"[index], colour);
-  });
+  /* The entire theme is one attribute. CSS does the rest.
+
+     Transitions are switched off across the switch, for two reasons. Twenty
+     properties easing to new values at slightly different rates looks like a
+     glitch rather than a fade. And Chrome wedges a transition whose value
+     comes from a custom property if the property changes repeatedly - click
+     through the themes quickly and buttons get stuck on an old accent, which
+     is exactly what happened here.
+
+     Reading offsetWidth between the two class changes is the trick: it forces
+     the browser to recompute styles right there, while transitions are still
+     off, so the new colours land instantly and no transition ever starts. */
+  const root = document.documentElement;
+  root.classList.add("theme-switching");
+  root.dataset.theme = id;
+  void root.offsetWidth;
+  root.classList.remove("theme-switching");
 
   themeGrid.querySelectorAll(".theme-swatch").forEach((swatch) => {
     swatch.classList.toggle("is-active", swatch.dataset.theme === id);
@@ -1073,8 +1101,6 @@ function buildThemeGrid() {
     swatch.className = "theme-swatch";
     swatch.dataset.theme = theme.id;
     swatch.title = theme.name;
-    swatch.style.background =
-      "linear-gradient(135deg, " + theme.blobs.join(", ") + ")";
     swatch.innerHTML =
       '<span class="theme-swatch-name">' + theme.name + "</span>";
     swatch.addEventListener("click", () => applyTheme(theme.id));

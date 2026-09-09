@@ -23,7 +23,9 @@ dependencies. Open the folder, run one command, and it works.
   Sequence (pattern memory), Snake, Dino Run, Sudoku with generated puzzles,
   and 2048
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
-- **Themes, fonts, 12/24-hour clock, and full timezone support**
+- **Four themes that are actually different** — each one sets its own shape
+  layout, blur, grain, vignette and text warmth, not just a palette
+- **Fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
 
@@ -71,9 +73,16 @@ A few decisions worth calling out:
   large blurred shapes, which re-blurred roughly two million pixels per frame
   and made the whole page feel laggy. Static blurs are rasterised once, which
   is what allows the current organic shapes to exist at all.
-- **All colour and typography lives in CSS custom properties**, so the theme
-  and font pickers are a few lines that rewrite variables rather than
-  reaching into individual rules.
+- **All colour and typography lives in CSS custom properties**, so the font
+  picker is a few lines that rewrite variables rather than reaching into
+  individual rules.
+- **A theme is one attribute on `<html>`.** `applyTheme()` sets
+  `data-theme="midnight"` and stops; every rule that cares keys off it in CSS.
+  No JavaScript knows what a theme looks like, which is why adding one means
+  writing a CSS block and a name in a list. It also lets a theme change the
+  *composition* — where the shapes sit, how soft they are, how strong the
+  grain and vignette are — rather than only recolouring it. Six themes that
+  shared one layout came out as the same page under six filters.
 - **State is separated from rendering.** Each feature keeps its data in one
   place and has a single function that draws it; nothing else touches the DOM.
   It's the idea behind React, without React.
