@@ -2008,6 +2008,7 @@ let calTokenClient = null;
 
 let calEvents = null; // null = never loaded, [] = loaded and empty
 let calLoadedAt = 0; // for the staleness check when the tab is reopened
+let calRange = null; // the two dates the loaded events were grouped against
 let calStatus = "idle"; // idle | loading | ready | error
 let calError = "";
 
@@ -2031,8 +2032,9 @@ function calZoneOffset(instant, timeZone) {
   return match[1] + match[2] + ":" + (match[3] || "00");
 }
 
-/* Midnight to midnight in the clock's timezone, not the browser's. Someone
-   who has set the clock to another zone means it.
+/* The window runs from midnight today to midnight after tomorrow, in the
+   clock's timezone rather than the browser's - someone who set the clock to
+   another zone meant it.
 
    The bounds must be complete RFC3339 instants - "2026-09-09T00:00:00" on its
    own is rejected with a flat 400. The `timeZone` parameter does NOT rescue
@@ -2044,25 +2046,51 @@ function calZoneOffset(instant, timeZone) {
    zone that has one - so this is the offset covering most of the day. On that
    single day the window edge can be an hour out, which for a study dashboard
    beats re-deriving the offset per boundary. */
-function calDayBounds() {
+function calLocalDate(instant) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: clockSettings.timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(new Date());
+  }).formatToParts(instant);
   const get = (type) => parts.find((part) => part.type === type).value;
-  const today = get("year") + "-" + get("month") + "-" + get("day");
+  return get("year") + "-" + get("month") + "-" + get("day");
+}
 
-  const offset = calZoneOffset(
-    new Date(today + "T12:00:00Z"),
-    clockSettings.timeZone
-  );
+function calRangeBounds() {
+  const today = calLocalDate(new Date());
+
+  /* Date arithmetic done at noon UTC so adding a day cannot land on the
+     wrong side of a midnight or a DST hour. */
+  const next = new Date(today + "T12:00:00Z");
+  next.setUTCDate(next.getUTCDate() + 1);
+  const tomorrow = next.toISOString().slice(0, 10);
 
   return {
-    timeMin: today + "T00:00:00" + offset,
-    timeMax: today + "T23:59:59" + offset,
+    today: today,
+    tomorrow: tomorrow,
+    timeMin: today + "T00:00:00" + calZoneOffset(new Date(today + "T12:00:00Z"), clockSettings.timeZone),
+    timeMax: tomorrow + "T23:59:59" + calZoneOffset(next, clockSettings.timeZone),
   };
+}
+
+/* Which of the two days an event belongs under.
+
+   All-day events carry `date`; timed ones carry `dateTime` and have to be
+   converted into the clock's zone first, or an 11pm event lands on the wrong
+   day for anyone whose calendar zone differs from their clock.
+
+   The clamp matters: a multi-day all-day event that began last week has a
+   start date before today, so bucketing on the raw value would drop it out of
+   both groups and it would silently vanish from a day it is genuinely on. */
+function calEventDay(event, range) {
+  const raw = event.start && event.start.dateTime
+    ? calLocalDate(new Date(event.start.dateTime))
+    : (event.start && event.start.date) || range.today;
+
+  if (raw <= range.today) return range.today;
+  if (raw === range.tomorrow) return range.tomorrow;
+  return null; // outside the window; should not happen, but do not guess
 }
 
 function calFormatTime(iso) {
@@ -2162,19 +2190,19 @@ async function loadCalendar() {
   calStatus = "loading";
   renderCalendar();
 
-  const bounds = calDayBounds();
+  const range = calRangeBounds();
   const url =
     CAL_API +
     "?" +
     new URLSearchParams({
-      timeMin: bounds.timeMin,
-      timeMax: bounds.timeMax,
+      timeMin: range.timeMin,
+      timeMax: range.timeMax,
       timeZone: clockSettings.timeZone,
       // Expands recurring events into their individual occurrences, which is
-      // the only way "today" means anything.
+      // the only way a named day means anything.
       singleEvents: "true",
       orderBy: "startTime",
-      maxResults: "20",
+      maxResults: "40",
     });
 
   try {
@@ -2196,6 +2224,7 @@ async function loadCalendar() {
 
     const data = await response.json();
     calEvents = (data.items || []).filter((item) => item.status !== "cancelled");
+    calRange = range;
     calStatus = "ready";
     calError = "";
     calLoadedAt = Date.now();
@@ -2270,7 +2299,7 @@ function renderCalendar() {
   calBody.innerHTML = "";
 
   if (calStatus === "loading") {
-    calBody.append(calNote("Loading today's events..."));
+    calBody.append(calNote("Loading your calendar..."));
     return;
   }
 
@@ -2283,7 +2312,7 @@ function renderCalendar() {
   if (calStatus === "idle" || calEvents === null) {
     calBody.append(
       calNote(
-        "Connect your Google Calendar to see today's events here. Read-only, and nothing is stored."
+        "Connect your Google Calendar to see today and tomorrow here. Read-only, and nothing is stored."
       )
     );
     calBody.append(calButton("Connect Google Calendar", connectCalendar, true));
@@ -2291,12 +2320,34 @@ function renderCalendar() {
   }
 
   if (calEvents.length === 0) {
-    calBody.append(calNote("Nothing on the calendar today."));
+    calBody.append(calNote("Nothing on the calendar today or tomorrow."));
   } else {
-    const list = document.createElement("ul");
-    list.className = "cal-list";
-    calEvents.forEach((event) => list.append(calRow(event)));
-    calBody.append(list);
+    const range = calRange || calRangeBounds();
+    const days = [
+      { label: "Today", key: range.today },
+      { label: "Tomorrow", key: range.tomorrow },
+    ];
+
+    days.forEach((day) => {
+      const heading = document.createElement("h3");
+      heading.className = "cal-day";
+      heading.textContent = day.label;
+      calBody.append(heading);
+
+      const forDay = calEvents.filter(
+        (event) => calEventDay(event, range) === day.key
+      );
+
+      if (forDay.length === 0) {
+        calBody.append(calNote("Nothing scheduled."));
+        return;
+      }
+
+      const list = document.createElement("ul");
+      list.className = "cal-list";
+      forDay.forEach((event) => list.append(calRow(event)));
+      calBody.append(list);
+    });
   }
 
   const actions = document.createElement("div");
@@ -2313,7 +2364,7 @@ renderCalendar();
 const CAL_STALE_MS = 5 * MINUTE;
 
 document.addEventListener("click", (event) => {
-  const tab = event.target.closest && event.target.closest('.tab[data-tab="today"]');
+  const tab = event.target.closest && event.target.closest('.tab[data-tab="calendar"]');
   if (!tab) return;
   if (calStatus === "ready" && Date.now() - calLoadedAt > CAL_STALE_MS) loadCalendar();
 });

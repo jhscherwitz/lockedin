@@ -1848,6 +1848,21 @@ body.pip-open main {
   color: var(--text-dim);
 }
 
+/* Day heading. First one sits flush; later ones get air above them. */
+.cal-day {
+  margin: 0;
+  font-family: var(--display-font);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.cal-day:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
 .cal-list {
   display: flex;
   flex-direction: column;
