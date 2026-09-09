@@ -1201,9 +1201,15 @@ let pipButtonEl = null;
 let pipStatusEl = null;
 let pipStyleEl = null;
 let pipThemeKey = null;
+let pipSegments = [];
 
-/* Rebuilds the mini window's stylesheet from the live CSS variables, so it
-   carries the same background mesh, accent and timer font as the page. */
+/* Rebuilds the mini window's stylesheet from the live page, so it carries the
+   same background mesh, accent, font, weight and letter-spacing.
+
+   Tracking is read off the real timer and converted to em. Copying the px
+   value would be wrong: the pop-out's type is sized to its own window, so the
+   same pixel tracking would be proportionally tighter or looser than the
+   page's. As a ratio it stays identical at any size. */
 function pipStyles() {
   const root = getComputedStyle(document.documentElement);
   const get = (name, fallback) => root.getPropertyValue(name).trim() || fallback;
@@ -1212,9 +1218,14 @@ function pipStyles() {
   const accent = get("--accent", "#7c5cff");
   const font = get("--timer-font", '"Outfit", system-ui, sans-serif');
   const a = get("--blob-a", "#7c3aed");
-  const b = get("--blob-b", "#ec4899");
-  const c = get("--blob-c", "#f43f5e");
-  const d = get("--blob-d", "#2563eb");
+  const b = get("--blob-b", "#d946ef");
+  const c = get("--blob-c", "#ec4899");
+  const d = get("--blob-d", "#4f46e5");
+
+  const timer = getComputedStyle(timerEl);
+  const pageSize = parseFloat(timer.fontSize) || 16;
+  const trackingEm = (parseFloat(timer.letterSpacing) || 0) / pageSize;
+  const weight = timer.fontWeight || "700";
 
   return `
     * { box-sizing: border-box; }
@@ -1260,20 +1271,41 @@ function pipStyles() {
       min-height: 12px;
     }
     .mini-time {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 19vw;
-      font-weight: 600;
+      font-weight: ${weight};
       line-height: 0.95;
-      letter-spacing: -0.045em;
+      letter-spacing: ${trackingEm.toFixed(4)}em;
       font-variant-numeric: tabular-nums;
       text-shadow: 0 3px 26px rgba(0, 0, 0, 0.4);
     }
+    /* Same drawn square colon as the page, in the same em units so it scales
+       with the type here exactly as it does there. */
+    .mini-colon {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.16em;
+      margin: 0 0.11em;
+      transform: translateY(-0.03em);
+    }
+    .mini-colon::before, .mini-colon::after {
+      content: "";
+      display: block;
+      width: 0.135em;
+      height: 0.135em;
+      border-radius: 0.022em;
+      background: currentColor;
+    }
     .mini-btn {
       border: 0;
-      border-radius: 999px;
+      border-radius: 8px;
       padding: 7px 26px;
       font-family: inherit;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: #fff;
       background: ${accent};
       cursor: pointer;
@@ -1281,6 +1313,31 @@ function pipStyles() {
     }
     .mini-btn:active { transform: scale(0.97); }
   `;
+}
+
+/* Mirrors setTimerText: minutes and seconds as separate spans with a drawn
+   colon between, rebuilt only when crossing an hour changes the shape. */
+function setPipTime(text) {
+  if (!pipWindow || !pipTimeEl) return;
+  const parts = text.split(":");
+
+  if (pipSegments.length !== parts.length) {
+    pipTimeEl.innerHTML = "";
+    pipSegments = parts.map((_, i) => {
+      if (i > 0) {
+        const colon = pipWindow.document.createElement("span");
+        colon.className = "mini-colon";
+        pipTimeEl.append(colon);
+      }
+      const segment = pipWindow.document.createElement("span");
+      pipTimeEl.append(segment);
+      return segment;
+    });
+  }
+
+  parts.forEach((part, i) => {
+    if (pipSegments[i].textContent !== part) pipSegments[i].textContent = part;
+  });
 }
 
 function currentPipThemeKey() {
@@ -1303,8 +1360,7 @@ function renderPip() {
     pipStyleEl.textContent = pipStyles();
   }
 
-  const text = formatTime(displayMs());
-  if (pipTimeEl.textContent !== text) pipTimeEl.textContent = text;
+  setPipTime(formatTime(displayMs()));
 
   const label = isRunning ? "Pause" : "Start";
   if (pipButtonEl.textContent !== label) pipButtonEl.textContent = label;
@@ -1354,6 +1410,7 @@ async function openPip() {
     pipStatusEl = null;
     pipStyleEl = null;
     pipThemeKey = null;
+    pipSegments = [];
     pipBtn.classList.remove("is-active");
     document.body.classList.remove("pip-open");
   });
@@ -1981,8 +2038,8 @@ const sqMessage = document.getElementById("sq-message");
 const sqNewBtn = document.getElementById("sq-new");
 
 const SQ_N = 4;
-const SQ_TILE = 64;
-const SQ_GAP = 6;
+const SQ_TILE = 80;
+const SQ_GAP = 8;
 const SQ_BEST_KEY = "focus-app-sq-best-tile";
 
 // Warm at the low end, cool and deeper as the numbers climb.

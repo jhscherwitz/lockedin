@@ -1186,7 +1186,7 @@ body.pip-open main {
    ========================================================================== */
 
 .panel-games {
-  width: min(376px, calc(100vw - 3rem));
+  width: min(420px, calc(100vw - 3rem));
   max-height: min(82vh, 640px);
 }
 
@@ -1253,18 +1253,18 @@ body.pip-open main {
 
 .fl-row {
   display: grid;
-  grid-template-columns: repeat(5, 44px);
+  grid-template-columns: repeat(5, 56px);
   gap: 5px;
 }
 
 .fl-tile {
   display: grid;
   place-items: center;
-  height: 44px;
+  height: 56px;
   border: 2px solid rgba(255, 255, 255, 0.16);
-  border-radius: 6px;
+  border-radius: 7px;
   font-family: var(--display-font);
-  font-size: 1.35rem;
+  font-size: 1.7rem;
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
@@ -1314,8 +1314,8 @@ body.pip-open main {
 }
 
 .fl-key {
-  min-width: 26px;
-  height: 38px;
+  min-width: 30px;
+  height: 44px;
   padding: 0 0.35rem;
   border: 0;
   border-radius: 5px;
@@ -1461,19 +1461,19 @@ body.pip-open main {
    animates them sliding rather than teleporting between cells. */
 .sq-board {
   position: relative;
-  width: 286px;
-  height: 286px;
+  width: 360px;
+  height: 360px;
   margin: 0 auto;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
   touch-action: none;
 }
 
 .sq-cell {
   position: absolute;
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  width: 80px;
+  height: 80px;
+  border-radius: 19px;
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -1481,11 +1481,11 @@ body.pip-open main {
   position: absolute;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
   font-family: var(--display-font);
-  font-size: 1.35rem;
+  font-size: 1.65rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #1b1033;
@@ -1494,8 +1494,8 @@ body.pip-open main {
 }
 
 /* Larger numbers need to fit in the same blob. */
-.sq-tile.len3 { font-size: 1.15rem; }
-.sq-tile.len4 { font-size: 0.92rem; }
+.sq-tile.len3 { font-size: 1.4rem; }
+.sq-tile.len4 { font-size: 1.1rem; }
 
 .sq-tile.is-spawn {
   animation: sq-pop 0.19s ease-out;
@@ -1678,7 +1678,7 @@ body.pip-open main {
 
 .ms-board {
   display: grid;
-  grid-template-columns: repeat(9, 30px);
+  grid-template-columns: repeat(9, 36px);
   gap: 2px;
   justify-content: center;
   margin: 0 auto;
@@ -1689,14 +1689,14 @@ body.pip-open main {
 }
 
 .ms-cell {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.15);
   font-family: var(--display-font);
-  font-size: 0.88rem;
+  font-size: 1.02rem;
   font-weight: 700;
   line-height: 1;
   color: var(--text);
@@ -1859,13 +1859,13 @@ body.pip-open main {
 .sm-pads {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  width: 286px;
+  gap: 9px;
+  width: 360px;
   margin: 0 auto;
 }
 
 .sm-pad {
-  height: 100px;
+  height: 125px;
   border: 0;
   border-radius: 16px;
   cursor: pointer;
@@ -1913,7 +1913,7 @@ body.pip-open main {
 
 .sn-board {
   display: grid;
-  grid-template-columns: repeat(13, 20px);
+  grid-template-columns: repeat(13, 25px);
   gap: 1px;
   justify-content: center;
   margin: 0 auto;
@@ -1924,8 +1924,8 @@ body.pip-open main {
 }
 
 .sn-cell {
-  width: 20px;
-  height: 20px;
+  width: 25px;
+  height: 25px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.05);
 }
@@ -1949,8 +1949,8 @@ body.pip-open main {
 
 .dn-canvas {
   display: block;
-  width: 286px;
-  height: 150px;
+  width: 360px;
+  height: 189px;
   margin: 0 auto;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.24);
@@ -1967,8 +1967,11 @@ body.pip-open main {
    box, heavier ones between boxes. */
 .su-board {
   display: grid;
-  grid-template-columns: repeat(9, 32px);
-  justify-content: center;
+  grid-template-columns: repeat(9, 40px);
+  /* box-sizing is border-box globally, which would fold the 2px border into
+     max-content and squeeze the columns by 4px. */
+  box-sizing: content-box;
+  width: max-content;
   margin: 0 auto;
   border: 2px solid rgba(255, 255, 255, 0.34);
   border-radius: 7px;
@@ -1977,15 +1980,15 @@ body.pip-open main {
 }
 
 .su-cell {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
   border-right: 1px solid rgba(255, 255, 255, 0.09);
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   background: transparent;
   font-family: var(--display-font);
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--accent);
   cursor: pointer;
@@ -2039,7 +2042,7 @@ body.pip-open main {
 }
 
 .su-key {
-  padding: 0.45rem 0;
+  padding: 0.6rem 0;
   border: 0;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.13);
