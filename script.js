@@ -1,4 +1,28 @@
 /* ==========================================================================
+   Audio
+
+   One AudioContext for the whole page. Browsers cap how many a page may
+   create, and a context starts out suspended until the page has had a real
+   click, so everything that makes a sound comes through here rather than
+   building its own.
+   ========================================================================== */
+
+let audioCtx = null;
+
+function audioContext() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // Suspended is the normal state until the page has been clicked once.
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  } catch (error) {
+    return null; // No Web Audio here. Callers fall back to silence.
+  }
+}
+
+/* ==========================================================================
    Clock
 
    Formatting goes through Intl.DateTimeFormat rather than Date's own
@@ -78,6 +102,8 @@ const settings = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   roundsBeforeLongBreak: 4,
+  chime: true,
+  notify: false,
 };
 
 let isRunning = false;
@@ -220,6 +246,7 @@ function start() {
   isRunning = true;
   runStartedAt = Date.now();
   ticker = setInterval(tick, 250);
+  syncAlarm();
   render();
 }
 
@@ -230,18 +257,39 @@ function stop() {
   }
   clearInterval(ticker);
   ticker = null;
+  cancelChime();
   render();
 }
 
 function complete() {
+  // Read before stop(), which clears the booking.
+  const chimed = chimeStarted();
+
   stop();
   bankedMs = 0;
+
+  let body;
   if (settings.mode === "pomodoro") {
     advancePhase();
     announcement = phase === "focus" ? "Back to work" : "Break time";
+    if (phase === "focus") {
+      body = "Break over. Round " + round + " starts when you do.";
+    } else {
+      const minutes =
+        phase === "short" ? settings.shortBreakMinutes : settings.longBreakMinutes;
+      body = "Focus round done. Take " + minutes + " minutes.";
+    }
   } else {
     announcement = "Time is up";
+    body = "Your " + settings.focusMinutes + "-minute session is done.";
   }
+
+  /* Normally the booked chime is sounding as this runs. It will not have
+     started if the machine slept through the end of the session - the audio
+     clock sleeps too - so in that case play it now instead. */
+  if (settings.chime && !chimed) bookChime(0);
+  notifyDone(body);
+
   timerEl.classList.add("is-done");
   render();
 }
@@ -264,6 +312,126 @@ function setTimerMode(mode) {
   round = 1;
   resetTimer();
   updateConditionalFields();
+}
+
+/* ==========================================================================
+   End-of-session alert
+
+   The chime is booked in advance on the audio clock rather than played at the
+   moment the timer reaches zero. Browsers throttle background tabs hard - a
+   setInterval or setTimeout in a tab that has been hidden for a few minutes
+   can be held back by up to a minute - and a focus timer that dings a minute
+   late is a focus timer you stop trusting. The Web Audio clock runs on the
+   audio thread and is not throttled, so a note booked an hour out still
+   sounds exactly on time whatever the tab is doing.
+   ========================================================================== */
+
+// A5 then D6: two soft notes a fourth apart, rising.
+const CHIME_NOTES = [
+  { freq: 880.0, delay: 0 },
+  { freq: 1174.66, delay: 0.13 },
+];
+const CHIME_TAIL = 1.6; // seconds a note takes to fade away
+
+let chimeVoices = []; // every oscillator booked but not yet finished
+let chimeAt = 0; // audio-clock time the first note is booked for
+
+/* One note: a sine plus a quieter octave above it, struck hard and left to
+   ring, which is roughly what a small bell does. */
+function chimeNote(ctx, at, freq) {
+  const partials = [
+    { ratio: 1, level: 1 },
+    { ratio: 2, level: 0.3 },
+  ];
+
+  partials.forEach((partial) => {
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = freq * partial.ratio;
+
+    const gain = ctx.createGain();
+    const peak = Math.max(0.0002, 0.22 * partial.level * masterVolume);
+    // An exponential ramp cannot reach zero, hence the near-silent floor.
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(peak, at + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + CHIME_TAIL);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(at);
+    osc.stop(at + CHIME_TAIL + 0.05);
+    chimeVoices.push({ osc: osc, at: at });
+  });
+}
+
+// Zero means now, which is what the settings preview passes.
+function bookChime(msFromNow) {
+  const ctx = audioContext();
+  if (!ctx) return;
+  chimeAt = ctx.currentTime + Math.max(0, msFromNow) / 1000 + 0.02;
+  CHIME_NOTES.forEach((note) => {
+    chimeNote(ctx, chimeAt + note.delay, note.freq);
+  });
+}
+
+/* Silences notes that have not started yet. One already sounding is left to
+   ring out - cutting a bell off mid-strike sounds like a fault. */
+function cancelChime() {
+  const now = audioCtx ? audioCtx.currentTime : Infinity;
+  chimeVoices.forEach((voice) => {
+    if (voice.at <= now) return;
+    try {
+      voice.osc.stop();
+    } catch (error) {
+      // Already stopped. Nothing to do.
+    }
+  });
+  chimeVoices = [];
+  chimeAt = 0;
+}
+
+/* Has the booked chime started? This is what separates a chime landing right
+   now from a stale one: if the machine slept through the end of a session the
+   audio clock slept with it, so the booking is minutes out of date. */
+function chimeStarted() {
+  if (!chimeAt || !audioCtx) return false;
+  return audioCtx.currentTime >= chimeAt - 0.25;
+}
+
+/* Called whenever anything that moves the finish line moves: starting,
+   pausing, resetting, editing the length, switching modes. */
+function syncAlarm() {
+  cancelChime();
+  const target = targetMs();
+  if (!isRunning || target === null || !settings.chime) return;
+  bookChime(target - elapsedMs());
+}
+
+function notificationsGranted() {
+  return (
+    typeof Notification !== "undefined" && Notification.permission === "granted"
+  );
+}
+
+function notifyDone(body) {
+  if (!settings.notify || !notificationsGranted()) return;
+  try {
+    const note = new Notification(APP_NAME, {
+      body: body,
+      // A tag makes each new notification replace the last rather than
+      // stacking a column of them up over a long Pomodoro run.
+      tag: "lockedin-session",
+      // The chime is already the sound. Only let the system add its own
+      // when the chime is switched off.
+      silent: settings.chime,
+    });
+    note.onclick = () => {
+      window.focus();
+      note.close();
+    };
+  } catch (error) {
+    // Some mobile browsers only allow notifications from a service worker.
+  }
 }
 
 /* ---- Click the big number to change the length ---- */
@@ -326,8 +494,17 @@ const focusInput = document.getElementById("focus-minutes");
 const shortInput = document.getElementById("short-minutes");
 const longInput = document.getElementById("long-minutes");
 const roundsInput = document.getElementById("rounds");
+const chimeToggle = document.getElementById("chime-toggle");
+const notifyToggle = document.getElementById("notify-toggle");
 const modeControl = document.getElementById("timer-mode-control");
 function syncSettingInputs() {
+  chimeToggle.checked = settings.chime;
+
+  /* Permission can be revoked in the browser's settings between visits, so a
+     saved "on" only counts if the browser still agrees. */
+  settings.notify = settings.notify && notificationsGranted();
+  notifyToggle.checked = settings.notify;
+
   focusInput.value = settings.focusMinutes;
   shortInput.value = settings.shortBreakMinutes;
   longInput.value = settings.longBreakMinutes;
@@ -342,6 +519,7 @@ function bindNumberInput(input, key, min, max) {
     }
     input.value = settings[key];
     bankedMs = 0;
+    syncAlarm();
     render();
   });
 }
@@ -350,6 +528,55 @@ bindNumberInput(focusInput, "focusMinutes", 1, 600);
 bindNumberInput(shortInput, "shortBreakMinutes", 1, 60);
 bindNumberInput(longInput, "longBreakMinutes", 1, 60);
 bindNumberInput(roundsInput, "roundsBeforeLongBreak", 2, 10);
+
+chimeToggle.addEventListener("change", () => {
+  settings.chime = chimeToggle.checked;
+  syncAlarm(); // book it for a session already running, or unbook it
+  // Play it once on the way on, so the setting is not a mystery.
+  if (settings.chime) bookChime(0);
+});
+
+/* Browsers only show the permission prompt in response to a click, which is
+   exactly where this runs - asking on page load would be refused. */
+notifyToggle.addEventListener("change", () => {
+  if (!notifyToggle.checked) {
+    settings.notify = false;
+    return;
+  }
+
+  const refuse = (message) => {
+    notifyToggle.checked = false;
+    settings.notify = false;
+    showToast(message);
+  };
+
+  if (typeof Notification === "undefined") {
+    refuse("This browser cannot show notifications.");
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    refuse(
+      "Notifications are blocked for this site. You can turn them back on in your browser's site settings."
+    );
+    return;
+  }
+
+  if (Notification.permission === "granted") {
+    settings.notify = true;
+    return;
+  }
+
+  Notification.requestPermission().then((result) => {
+    settings.notify = result === "granted";
+    notifyToggle.checked = settings.notify;
+    if (!settings.notify) {
+      showToast("Notifications stayed off - the browser did not grant permission.");
+    }
+    // The click that opened the prompt has long since been and gone.
+    scheduleSave();
+  });
+});
 
 // Only show the fields that apply to the current mode.
 function updateConditionalFields() {
@@ -2137,19 +2364,10 @@ function sqCanMove() {
    Bigger merges sound lower and longer, so the sound tells you the size of
    what just happened, and every pop is pitch-jittered so no two are alike.
    Identical pops become grating within about ten clicks. */
-let sqAudioCtx = null;
-
 function sqSquishSound(value) {
-  try {
-    if (!sqAudioCtx) {
-      sqAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (sqAudioCtx.state === "suspended") sqAudioCtx.resume();
-  } catch (error) {
-    return; // No audio available; the game still plays.
-  }
+  const ctx = audioContext();
+  if (!ctx) return; // No audio available; the game still plays.
 
-  const ctx = sqAudioCtx;
   const now = ctx.currentTime;
 
   const tier = Math.log2(value); // 4 -> 2, 2048 -> 11
@@ -3238,16 +3456,9 @@ function smReadBest() {
 }
 
 function smTone(freq, seconds) {
-  try {
-    if (!sqAudioCtx) {
-      sqAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (sqAudioCtx.state === "suspended") sqAudioCtx.resume();
-  } catch (error) {
-    return; // No audio; the colours still carry the game.
-  }
+  const ctx = audioContext();
+  if (!ctx) return; // No audio; the colours still carry the game.
 
-  const ctx = sqAudioCtx;
   const now = ctx.currentTime;
 
   const osc = ctx.createOscillator();

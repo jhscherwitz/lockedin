@@ -585,6 +585,78 @@ main {
   color: var(--text-dim);
 }
 
+/* A field whose label and control sit side by side rather than stacked.
+   Used for on/off rows, where a full-width control would look absurd. */
+.field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.field-row .field-label {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Switch
+
+   A real <input type="checkbox"> redrawn as a sliding switch. appearance:none
+   removes the browser's own control - the box, the tick, everything - leaving
+   an empty element we paint ourselves. Doing it this way rather than with a
+   <div> keeps the keyboard support, the label click and the checked state
+   that the browser already gives a checkbox for free.
+   ========================================================================== */
+
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+/* The knob. */
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text);
+  opacity: 0.6;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.switch:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.switch:checked {
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.switch:checked::after {
+  /* 38 wide - 3 left - 3 right - 14 knob = 18 to travel. */
+  transform: translateX(18px);
+  opacity: 1;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ==========================================================================
    Segmented control
 

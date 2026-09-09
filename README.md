@@ -12,6 +12,8 @@ dependencies. Open the folder, run one command, and it works.
 
 - **Timer with three modes** — countdown, stopwatch, and Pomodoro with
   configurable focus and break lengths and round tracking
+- **It tells you when time is up** — a chime plus an optional browser
+  notification, both scheduled so they land on time even in a background tab
 - **Pop-out mini timer** — a real always-on-top window (Document
   Picture-in-Picture) so the countdown stays visible while you work elsewhere
 - **Ambient sound mixer** — seven recordings, any number playing at once,
@@ -57,6 +59,14 @@ A few decisions worth calling out:
   counter. Browsers throttle background tabs aggressively, so a naive counter
   loses minutes while you read something in another tab — fatal for a study
   timer, and invisible in testing because testing means watching the tab.
+- **The end-of-session chime is booked on the audio clock, not played by the
+  timer.** Same throttling problem as above, one step worse: a hidden tab's
+  `setTimeout` can be held back by up to a minute, and an alarm that fires a
+  minute late is worse than no alarm. The Web Audio clock runs on the audio
+  thread, so the notes are scheduled the moment you press Start — an hour
+  ahead if need be — and sound on time whatever the main thread is doing.
+  Measured: with the main thread deliberately jammed for 1.2 seconds,
+  `setInterval` fired zero times while the audio clock kept perfect time.
 - **The background is entirely static.** An earlier version animated four
   large blurred shapes, which re-blurred roughly two million pixels per frame
   and made the whole page feel laggy. Static blurs are rasterised once, which

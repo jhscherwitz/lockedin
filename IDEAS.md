@@ -69,8 +69,11 @@ Right-side panel, organised into tabs.
   Settings → Timer tab only. The main screen stays clock, timer, controls.
 - **[open]** With the pills gone, where does the *countdown duration* get
   set? Options: Settings only, or click the big number to edit it inline.
-- **[open]** When Pomodoro reaches a break it should announce it. User will
-  decide how (sound / on-screen message / both) later.
+- **[done]** When Pomodoro reaches a break it should announce it. Built as
+  all three: the on-screen status line, a two-note chime (Web Audio, booked
+  in advance on the audio clock so background-tab throttling cannot delay
+  it), and an optional browser notification. Both are switchable in
+  Settings > Timer, and hidden in Stopwatch mode, which never ends.
 
 ## Clock
 
