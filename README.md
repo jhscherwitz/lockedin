@@ -112,18 +112,58 @@ A few decisions worth calling out:
 ## Structure
 
 ```
-index.html     markup
-style.css      all styling, design tokens at the top
-script.js      all behaviour, organised by feature
-serve.py       local dev server with caching disabled
-assets/sounds  ambient MP3s
-IDEAS.md       requirements and decisions, including what was ruled out
+index.html      markup
+style.css       all styling; design tokens and the surface scale at the top
+serve.py        local dev server with caching disabled
+assets/sounds   ambient MP3s
+assets/alerts   your own end-of-session and game-win sounds
+assets/words    Wordle answer and guess lists
+IDEAS.md        requirements and decisions, including what was ruled out
+
+src/main.js     entry point: imports every module, then starts them in order
+src/
+  audio.js      one AudioContext for the page
+  clock.js      timezone and 12/24-hour settings, the live clock
+  timer.js      the three modes, and the click-to-edit duration
+  alerts.js     the chime, your MP3s, and browser notifications
+  settings.js   the Timer tab, number inputs, the segmented control
+  panels.js     opening and closing the five panels
+  sounds.js     the ambient mixer
+  appearance.js themes, fonts, timezone picker
+  tasks.js      task rows and the notepad
+  storage.js    save and restore; runs last on startup
+  pip.js        the pop-out mini timer
+  toast.js      the message strip
+  keys.js       keyboard shortcuts
+  calendar.js   today and tomorrow from Google Calendar
+  music.js      Spotify embeds
+  games/        shell.js plus one file per game
 ```
+
+`src/` is loaded as native ES modules (`<script type="module">`), so there is
+still no build step - but it does mean the page has to be served over HTTP.
+Opening `index.html` straight off disk will not work; use `serve.py`.
 
 ## Status
 
-In progress. Still to come: Spotify playlist embeds, and a Google Calendar
-widget for the day's events.
+Working and deployed. Everything on the original list is built.
 
-The games panel holds a picker, so a second game is a new card and its own
-module rather than a restructure.
+## Notes on the module split
+
+Worth recording, because the module system caught two real design problems
+that a single file had been hiding.
+
+**Modules define on load, and do when told.** The first attempt let each
+module run its own setup at module scope. That broke immediately: the modules
+genuinely import each other in circles - the timer needs the alarm, the alarm
+needs the timer - and a circular import is fine right up until something
+*executes* across the circle while the modules are still initialising.
+`appearance.js` called `applyTheme()` at module scope, which called `render()`
+in `timer.js`, which read a `const` that `timer.js` had not reached yet.
+Setup now lives in `init*()` functions that `main.js` calls in order.
+
+**An imported binding is read-only.** `storage.js` used to assign straight to
+`masterVolume` and `tasks`, which are owned by other modules. In one file that
+worked. As modules it is a `TypeError`, and rightly so - shared mutable state
+should have exactly one place that writes it. The owners now export
+`setMasterVolume()`, `setTasks()` and `clearBanked()`.
