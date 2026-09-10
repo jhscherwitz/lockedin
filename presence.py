@@ -37,11 +37,23 @@ quietly - no polling, nothing to keep in step, nothing to drift.
 
 SETUP, ONCE
 
-  1. Go to https://discord.com/developers/applications and click
+  1. In Discord: Settings -> Activity Privacy -> turn ON "Share your detected
+     activities with others".
+
+     This one first, because it is the only step that fails silently. With it
+     off everything below still works perfectly - the script connects, Discord
+     accepts the activity, no error appears anywhere - and your profile shows
+     nothing at all. It cost an afternoon once already.
+
+  2. Go to https://discord.com/developers/applications and click
      "New Application". Call it LockedIn - the name is what shows in bold on
      your profile, so this is the one part worth typing carefully.
-  2. On that app's General Information page, copy the APPLICATION ID.
-  3. Run this script. It asks for that ID the first time and remembers it in
+
+     First visit shows a "What brings you to the Developer Portal?"
+     questionnaire instead of your apps. Click Skip; New Application is behind
+     it, top right.
+  3. On that app's General Information page, copy the APPLICATION ID.
+  4. Run this script. It asks for that ID the first time and remembers it in
      presence-config.json next to this file.
 
   Optional, for the artwork: on the app's "Rich Presence -> Art Assets" page,
