@@ -68,29 +68,50 @@ export function displayMs() {
   return target === null ? elapsedMs() : Math.max(0, target - elapsedMs());
 }
 
-export function formatTime(ms) {
-  const total = Math.round(ms / 1000);
+/* `fine` adds hundredths, which is what the stopwatch wants and what a
+   countdown very much does not - watching a deadline race away in
+   hundredths is the opposite of calming.
+
+   Note the floor rather than the round. Whole seconds round to the nearest,
+   so 1.6s reads as 2 and the display matches what you would say out loud.
+   With hundredths on show that would be a bug: 1.999s would render as
+   "0:02.99", a second ahead of its own fraction. */
+export function formatTime(ms, fine) {
+  const total = fine ? Math.floor(ms / 1000) : Math.round(ms / 1000);
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const seconds = total % 60;
   const pad = (n) => String(n).padStart(2, "0");
 
   // An hour or more reads as 1:05:30 rather than 65:30.
-  if (hours > 0) return hours + ":" + pad(minutes) + ":" + pad(seconds);
-  return minutes + ":" + pad(seconds);
+  const clock =
+    hours > 0
+      ? hours + ":" + pad(minutes) + ":" + pad(seconds)
+      : minutes + ":" + pad(seconds);
+
+  if (!fine) return clock;
+  return clock + "." + pad(Math.floor((ms % 1000) / 10));
 }
 
 /* The minutes and seconds are separate elements so the colon between them
    can be two drawn squares rather than a font glyph. */
 let timerSegments = [];
 
-function setTimerText(text) {
-  const parts = text.split(":");
+let timerFractionEl = null;
 
-  // Rebuilt only when the shape changes - crossing an hour adds a segment
-  // and a colon. Rebuilding every tick would throw away the DOM 4x a second.
-  if (timerSegments.length !== parts.length) {
+function setTimerText(text) {
+  const dot = text.indexOf(".");
+  const fraction = dot === -1 ? null : text.slice(dot + 1);
+  const parts = (dot === -1 ? text : text.slice(0, dot)).split(":");
+
+  /* Rebuilt only when the shape changes - crossing an hour adds a segment
+     and a colon, and switching to or from the stopwatch adds or removes the
+     fraction. Rebuilding every tick would throw away the DOM thirty times a
+     second in stopwatch mode. */
+  const wantsFraction = fraction !== null;
+  if (timerSegments.length !== parts.length || wantsFraction !== !!timerFractionEl) {
     timerEl.innerHTML = "";
+    timerFractionEl = null;
     timerSegments = parts.map((_, i) => {
       if (i > 0) {
         const colon = document.createElement("span");
@@ -102,11 +123,22 @@ function setTimerText(text) {
       timerEl.append(segment);
       return segment;
     });
+    if (wantsFraction) {
+      /* Its own element, at a smaller size. At the timer's full size the
+         hundredths would be the largest thing on the page and the least
+         worth reading. */
+      timerFractionEl = document.createElement("span");
+      timerFractionEl.className = "timer-fraction";
+      timerEl.append(timerFractionEl);
+    }
   }
 
   parts.forEach((part, i) => {
     if (timerSegments[i].textContent !== part) timerSegments[i].textContent = part;
   });
+  if (timerFractionEl && timerFractionEl.textContent !== "." + fraction) {
+    timerFractionEl.textContent = "." + fraction;
+  }
 }
 
 export function statusText() {
@@ -128,10 +160,22 @@ function canEditDuration() {
    else exists. */
 export const renderHooks = [];
 
+/* The stopwatch shows hundredths, so it has to redraw far more often than a
+   countdown that only changes once a second. Nothing drifts either way - the
+   time is derived from a wall-clock stamp, not accumulated - so this only
+   decides how often the screen catches up. */
+export const TICK_MS = 250;
+export const TICK_MS_FINE = 33;
+
+export function showsFraction() {
+  return settings.mode === "stopwatch";
+}
+
 export function render() {
-  // render() runs four times a second while the timer runs, so every write is
-  // guarded - assigning an unchanged value still costs the browser work.
-  const text = formatTime(displayMs());
+  /* Guarded writes throughout: render() runs four times a second on a
+     countdown and thirty on the stopwatch, and assigning an unchanged value
+     still costs the browser work. */
+  const text = formatTime(displayMs(), showsFraction());
   if (!editing) setTimerText(text);
 
   const label = isRunning ? "Pause" : "Start";
@@ -149,7 +193,11 @@ export function render() {
   const tip = editable ? "Click to change the length" : "";
   if (timerEl.title !== tip) timerEl.title = tip;
 
-  const title = isRunning ? text + " · " + APP_NAME : APP_NAME;
+  /* Whole seconds in the tab title even on the stopwatch. Hundredths there
+     would rewrite it thirty times a second for a strip of text too small and
+     too brief to read. */
+  const coarse = showsFraction() ? formatTime(displayMs()) : text;
+  const title = isRunning ? coarse + " · " + APP_NAME : APP_NAME;
   if (document.title !== title) document.title = title;
 
   renderHooks.forEach((hook) => hook());
@@ -179,7 +227,7 @@ export function start() {
   timerEl.classList.remove("is-done");
   isRunning = true;
   runStartedAt = Date.now();
-  ticker = setInterval(tick, 250);
+  ticker = setInterval(tick, showsFraction() ? TICK_MS_FINE : TICK_MS);
   syncAlarm();
   render();
 }
