@@ -140,7 +140,9 @@ function sqSquishSound(value) {
 
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.Q = 7;
+  /* .Q is an AudioParam, not a number - assigning to it throws in strict
+     mode, which every ES module is. This threw on every squish. */
+  filter.Q.value = 7;
   filter.frequency.setValueAtTime(base * 2.6 * jitter, now);
   filter.frequency.exponentialRampToValueAtTime(base * 0.5 * jitter, now + dur);
 

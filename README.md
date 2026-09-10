@@ -5,8 +5,10 @@
 A single-page focus dashboard: a Pomodoro timer, layerable ambient sounds,
 tasks and a notepad, on one calm screen.
 
-Built with plain HTML, CSS and JavaScript — no framework, no build step, no
-dependencies. Open the folder, run one command, and it works.
+Built with plain HTML, CSS and JavaScript — no framework and no build step.
+One dependency, Anime.js, which is vendored into `src/vendor/` as a file
+rather than installed, so there is still no package manager and nothing is
+fetched at runtime. Open the folder, run one command, and it works.
 
 ## Features
 
@@ -27,11 +29,13 @@ dependencies. Open the folder, run one command, and it works.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
   browser-only, no backend and no server to trust
-- **Nine themes that are actually different** — each sets its own shape
+- **Ten themes that are actually different** — each sets its own shape
   layout, blur, grain, vignette and text warmth, not just a palette. Noir
   drops the blur to 26px so the shapes have visible edges; Midnight uses
   three huge soft masses and a heavy vignette; Ember and Tide replace the
-  background composition outright; Paper is a full daylight inversion
+  background composition outright; Paper is a full daylight inversion.
+  Forest is the default: four masses and a direction, with the light
+  entering from one corner
 - **Fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
@@ -47,8 +51,15 @@ python serve.py
 Then open <http://localhost:8000>.
 
 `serve.py` is Python's built-in `http.server` plus no-cache headers, so an
-edit always shows up on a normal refresh. Without it, browsers happily serve
-a stale copy of `script.js` and it looks like your change did nothing.
+edit to HTML or CSS always shows up on a normal refresh. Without it, browsers
+happily serve a stale copy and it looks like your change did nothing.
+
+**JavaScript is the exception, and it will fool you.** Since `src/` became ES
+modules, a normal refresh reuses the modules already in the tab's module map
+regardless of what the response headers say. The CSS updates, the JS does
+not, and you get a page running new styles against old code - which looks
+like a bug in your change rather than a stale file. Use `Ctrl+Shift+R` after
+editing anything under `src/`.
 
 ## Deploying
 
@@ -90,6 +101,38 @@ A few decisions worth calling out:
   and a browser app never uses one. The access token lives in a variable and
   never touches localStorage — it is a credential, and storing it would only
   make it outlive the session for no benefit.
+- **The icons are Tabler, pasted in rather than installed.** They had been
+  drawn by hand, which mostly worked, but two of them had drifted into each
+  other: Sounds was an equaliser and Settings was a set of sliders, so two
+  buttons in the same dock were five vertical bars with dots on them. The
+  two icon sets also disagreed on stroke weight, 2 against 2.6, which is
+  enough to stop them reading as one family. Tabler is MIT and draws on the
+  same 24 grid at weight 2 with round caps that this project was already
+  using, so adopting it meant copying path data and deleting a stylesheet
+  line - no package, no build step, nothing at runtime. Sounds is a speaker
+  now and Settings keeps the sliders.
+
+- **An accent and the colour that goes on it are chosen together.** The
+  primary button had used the body text colour over `--accent` since the
+  beginning. Measured, that was 4.35:1 - under the 4.5:1 a 14px bold label
+  needs. Checking all ten accents the same way turned up a second one in
+  the same state: Aurora at 4.17/4.35 and Dawn at 4.08/3.96, both *failing
+  against black and white simultaneously*. That is the interesting case,
+  because it cannot be fixed by picking a different text colour; a mid-tone
+  in that zone has no readable partner, and the only fix is to move the
+  accent out of the zone. Both moved. Every theme now declares
+  `--on-accent` next to `--accent`, with the measured ratio in a comment,
+  so the pair is chosen once and together rather than assumed.
+
+- **Three durations and two curves, for a page that does not animate.** The
+  stylesheet had eleven transition durations - 0.08, 0.1, 0.12, 0.13, 0.15,
+  0.18, 0.2, 0.22, 0.25, 0.3 - and almost nothing declared an easing, so
+  most transitions ran on the browser default while a few ran on a
+  cubic-bezier. Nothing about that was visible as a bug; it just meant
+  hovering two different buttons felt like two different pages. It is now
+  `--t-fast` for presses, `--t` for colour, `--t-slow` for things that
+  travel, and the background is still painted once and cached.
+
 - **One surface scale, and it is what made a light theme possible.** Every
   translucent layer resolves from `--surface-1..4`, `--sunk-1..2`,
   `--line-soft/--line/--line-strong` and two shadows. Before that there were

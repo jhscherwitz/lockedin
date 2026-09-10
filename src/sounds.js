@@ -7,13 +7,59 @@
 
 // Adding a sound means adding a line here (and, for kind "file", an MP3
 // named <id>.mp3 in assets/sounds/). Nothing else needs to change.
+/* The icons were emoji, and emoji are the fastest way to make an interface
+   look assembled rather than designed: they are somebody else's artwork,
+   they render differently on every platform, they ignore the theme, and
+   they sit at a different optical weight to every other glyph on screen.
+   These are Tabler outlines like the rest of the app - same 24 grid, same
+   stroke weight, and they take the theme colour. */
 export const SOUNDS = [
-  { id: "light-rain", name: "Light Rain", icon: "\u{1F326}\u{FE0F}" },
-  { id: "heavy-rain", name: "Heavy Rain", icon: "\u{1F327}\u{FE0F}" },
-  { id: "ocean-waves", name: "Ocean Waves", icon: "\u{1F30A}" },
-  { id: "river", name: "River", icon: "\u{1F3DE}\u{FE0F}", doubleTrack: true },
-  { id: "forest-ambience", name: "Forest", icon: "\u{1F332}" },
-  { id: "campfire", name: "Campfire", icon: "\u{1F525}" },
+  {
+    id: "light-rain",
+    name: "Light Rain",
+    icon:
+      '<path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7" />' +
+      '<path d="M11 13v2m0 3v2m4 -5v2m0 3v2" />',
+  },
+  {
+    id: "heavy-rain",
+    name: "Heavy Rain",
+    icon:
+      '<path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" />' +
+      '<path d="M13 14l-2 4l3 0l-2 4" />',
+  },
+  {
+    id: "ocean-waves",
+    name: "Ocean Waves",
+    icon:
+      '<path d="M3 7c3 -2 6 -2 9 0s6 2 9 0" />' +
+      '<path d="M3 12c3 -2 6 -2 9 0s6 2 9 0" />' +
+      '<path d="M3 17c3 -2 6 -2 9 0s6 2 9 0" />',
+  },
+  {
+    id: "river",
+    name: "River",
+    doubleTrack: true,
+    icon:
+      '<path d="M21 12h-2c-.894 0 -1.662 -.857 -1.761 -2c-.296 -3.45 -.749 -6 -2.749 -6s-2.5 3.582 -2.5 8s-.5 8 -2.5 8s-2.452 -2.547 -2.749 -6c-.1 -1.147 -.867 -2 -1.763 -2h-2" />',
+  },
+  {
+    id: "forest-ambience",
+    name: "Forest",
+    icon:
+      '<path d="M16 5l3 3l-2 1l4 4l-3 1l4 4h-9" />' +
+      '<path d="M15 21l0 -3" />' +
+      '<path d="M8 13l-2 -2" />' +
+      '<path d="M8 12l2 -2" />' +
+      '<path d="M8 21v-13" />' +
+      '<path d="M5.824 16a3 3 0 0 1 -2.743 -3.69a3 3 0 0 1 .304 -4.833a3 3 0 0 1 4.615 -3.707a3 3 0 0 1 4.614 3.707a3 3 0 0 1 .305 4.833a3 3 0 0 1 -2.919 3.695h-4z" />',
+  },
+  {
+    id: "campfire",
+    name: "Campfire",
+    icon:
+      '<path d="M12 10.941c2.333 -3.308 .167 -7.823 -1 -8.941c0 3.395 -2.235 5.299 -3.667 6.706c-1.43 1.408 -2.333 3.621 -2.333 5.588c0 3.704 3.134 6.706 7 6.706s7 -3.002 7 -6.706c0 -1.712 -1.232 -4.403 -2.333 -5.588c-2.084 3.353 -3.257 3.353 -4.667 2.235" />',
+  },
 ];
 
 const soundGrid = document.getElementById("sound-grid");
@@ -150,7 +196,7 @@ function buildSoundTiles() {
     const toggle = document.createElement("button");
     toggle.className = "sound-toggle";
     toggle.innerHTML =
-      `<span class="sound-icon">${sound.icon}</span>` +
+      `<span class="sound-icon"><svg viewBox="0 0 24 24" aria-hidden="true">${sound.icon}</svg></span>` +
       `<span class="sound-name">${sound.name}</span>`;
     toggle.addEventListener("click", () => toggleSound(sound.id));
 

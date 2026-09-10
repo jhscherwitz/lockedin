@@ -19,34 +19,36 @@ import { render } from "./timer.js";
    There used to be six, all sharing one layout and one blur, so they came
    out as the same page under six filters. */
 const THEMES = [
+  { id: "forest", name: "Forest" },
   { id: "aurora", name: "Aurora" },
   { id: "midnight", name: "Midnight" },
   { id: "ember", name: "Ember" },
   { id: "tide", name: "Tide" },
   { id: "dawn", name: "Dawn" },
-  { id: "canopy", name: "Canopy" },
+  { id: "canopy", name: "Dapple" },
   { id: "fog", name: "Fog" },
   { id: "noir", name: "Noir" },
   { id: "paper", name: "Paper" },
 ];
 
-const DEFAULT_THEME = "aurora";
+const DEFAULT_THEME = "forest";
 
 const FONTS = [
   { label: "Clash Display", stack: '"Clash Display", "Outfit", system-ui, sans-serif' },
   { label: "Outfit", stack: '"Outfit", system-ui, sans-serif' },
   { label: "Satoshi", stack: '"Satoshi", system-ui, sans-serif' },
-  { label: "Gabarito", stack: '"Gabarito", system-ui, sans-serif' },
-  { label: "Onest", stack: '"Onest", system-ui, sans-serif' },
-  { label: "Bricolage Grotesque", stack: '"Bricolage Grotesque", system-ui, sans-serif' },
-  { label: "Archivo", stack: '"Archivo", system-ui, sans-serif' },
-  { label: "Chivo", stack: '"Chivo", system-ui, sans-serif' },
-  { label: "Rubik", stack: '"Rubik", system-ui, sans-serif' },
-  { label: "Figtree", stack: '"Figtree", system-ui, sans-serif' },
-  { label: "Plus Jakarta Sans", stack: '"Plus Jakarta Sans", system-ui, sans-serif' },
+  { label: "Inter", stack: '"Inter", system-ui, sans-serif' },
+  { label: "Roboto", stack: '"Roboto", system-ui, sans-serif' },
   { label: "Poppins", stack: '"Poppins", system-ui, sans-serif' },
+  { label: "Montserrat", stack: '"Montserrat", system-ui, sans-serif' },
+  { label: "Lato", stack: '"Lato", system-ui, sans-serif' },
+  { label: "Nunito", stack: '"Nunito", system-ui, sans-serif' },
+  { label: "Work Sans", stack: '"Work Sans", system-ui, sans-serif' },
+  { label: "DM Sans", stack: '"DM Sans", system-ui, sans-serif' },
+  { label: "Manrope", stack: '"Manrope", system-ui, sans-serif' },
+  { label: "Rubik", stack: '"Rubik", system-ui, sans-serif' },
   { label: "Space Grotesk", stack: '"Space Grotesk", system-ui, sans-serif' },
-  { label: "DM Mono", stack: '"DM Mono", ui-monospace, monospace' },
+  { label: "JetBrains Mono", stack: '"JetBrains Mono", ui-monospace, monospace' },
 ];
 
 const themeGrid = document.getElementById("theme-grid");
@@ -57,8 +59,11 @@ export const hourFormatControl = document.getElementById("hour-format-control");
 export let activeTheme = DEFAULT_THEME;
 
 export function applyTheme(id) {
-  /* Ocean, Sunset, Forest and Rose are gone, so a returning visitor can
-     easily be carrying an id that no longer exists. */
+  /* Ocean, Sunset and Rose are gone, so a returning visitor can easily be
+     carrying an id that no longer exists. Forest was on that list too and
+     is now the default, which means a visitor who chose it before it was
+     removed gets it back - the one case where this fallback returns
+     something the user actually picked. */
   if (!THEMES.some((theme) => theme.id === id)) id = DEFAULT_THEME;
   activeTheme = id;
 
