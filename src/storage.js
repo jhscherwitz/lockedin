@@ -27,6 +27,7 @@ function collectState() {
     font: fontSelect.value,
     fontDefaultMigrated: true,
     timerDefaultMigrated: true,
+    themeDefaultMigrated: true,
     clock: { hour12: clockSettings.hour12, timeZone: clockSettings.timeZone },
     timer: Object.assign({}, settings),
     master: masterVolume,
@@ -57,6 +58,7 @@ export function scheduleSave() {
 // three events, so this catches all of them.
 
 const LEGACY_DEFAULT_FONT = '"Outfit", system-ui, sans-serif';
+const LEGACY_DEFAULT_THEME = "aurora";
 
 function applySavedState(data) {
   /* The default timer font changed from Outfit to Clash Display. Anyone
@@ -66,6 +68,16 @@ function applySavedState(data) {
      then respected. */
   if (!data.fontDefaultMigrated && data.font === LEGACY_DEFAULT_FONT) {
     delete data.font;
+  }
+
+  /* The default theme changed from Aurora to Forest, and the same reasoning
+     applies as for the font above: Aurora was the default, so almost
+     everyone carrying it never chose it. Without this a returning visitor
+     opens the redesign and sees the old theme, which looks exactly like
+     nothing shipped. The flag means it happens once - pick Aurora
+     deliberately afterwards and it stays. */
+  if (!data.themeDefaultMigrated && data.theme === LEGACY_DEFAULT_THEME) {
+    delete data.theme;
   }
 
   /* The default session length changed from 30 minutes to 60. Anyone still

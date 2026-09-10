@@ -45,6 +45,7 @@ import { initTasks } from "./tasks.js";
 import { initCalendar } from "./calendar.js";
 import { initMusic } from "./music.js";
 import { initGames } from "./games/shell.js";
+import { initMotion } from "./motion.js";
 import { initStorage } from "./storage.js";
 
 /* Order matters here in a way it did not inside one file.
@@ -65,3 +66,9 @@ initMusic();
 initGames();
 
 initStorage(); // last: replays the saved state over everything above
+
+/* After initStorage, deliberately. Motion reads the timer's rendered state
+   to decide what to animate, and the saved session is applied above - start
+   it any earlier and the entrance plays against the defaults, then the
+   restored values snap in over the top of it. */
+initMotion();

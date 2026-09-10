@@ -131,6 +131,21 @@ function renderCustomPlaylists() {
   musicMineEmpty.hidden = list.length > 0;
 }
 
+/* Switching tabs clears the player.
+
+   #music-player is a sibling of both tab panels rather than a child of
+   either, which is what lets one embed serve both lists - and also what
+   made a curated playlist keep playing, and keep its chip lit, after you
+   had moved to Yours. The selection belongs to the list you made it from,
+   so leaving that list ends it. */
+function clearPlayer() {
+  activePlaylist = null;
+  musicPlayer.innerHTML = '<p class="music-empty">Pick a playlist to start</p>';
+  document.querySelectorAll(".music-chip").forEach((chip) => {
+    chip.classList.remove("is-active");
+  });
+}
+
 function buildMusicList() {
   musicList.innerHTML = "";
   PLAYLISTS.forEach((playlist) => musicList.append(musicChip(playlist, false)));
@@ -172,4 +187,20 @@ export function initMusic() {
     playPlaylist(id);
   });
   buildMusicList();
+
+  /* settings.js owns the generic tab wiring and should stay generic, so the
+     music-specific behaviour hangs off the buttons here instead. Only a
+     real change of tab counts; re-clicking the tab you are on should not
+     stop what is playing. */
+  const musicPanel = document.querySelector('.panel[data-panel="music"]');
+  if (musicPanel) {
+    let currentTab = "curated";
+    musicPanel.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        if (tab.dataset.tab === currentTab) return;
+        currentTab = tab.dataset.tab;
+        clearPlayer();
+      });
+    });
+  }
 }
