@@ -49,6 +49,7 @@ import { initGames } from "./games/shell.js";
 import { initMotion } from "./motion.js";
 import { initSession } from "./session.js";
 import { initStorage } from "./storage.js";
+import { initSync } from "./sync.js";
 
 /* Order matters here in a way it did not inside one file.
 
@@ -68,6 +69,10 @@ initMusic();
 initGames();
 
 initStorage(); // replays the saved state over everything above
+
+/* Before initSession, which needs our peer id the moment the share button is
+   wired, and which hands off to connectToHost once it has joined. */
+initSync();
 
 /* After storage, because a shared session deliberately overrides the timer
    settings that storage has just restored - it is the more specific

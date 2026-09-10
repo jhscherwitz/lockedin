@@ -19,8 +19,9 @@ fetched at runtime. Open the folder, run one command, and it works.
 - **Your own sounds** — drop an MP3 in `assets/alerts/` for the session end
   or for beating a game, and it is level-matched and used automatically
 - **Study together** — copy a session link and whoever opens it gets the same
-  timer already running, in sync to the second. No account, no server, and
-  nothing to keep running; see [Studying with other people](#studying-with-other-people)
+  timer already running, in sync to the second. Pause or resume and it reaches
+  them too. No account and no server; see
+  [Studying with other people](#studying-with-other-people)
 - **Discord Rich Presence** — `python presence.py 25/5` puts
   "Focus · round 2 / 23:41 left" on your profile; hand it a session link
   instead and it also gets a button that drops a friend into that same session
@@ -112,6 +113,40 @@ out why.
 
 The one thing it cannot do is fix a wrong clock. If a device is a minute out,
 that person is a minute out; there is no authority here to correct against.
+
+### Pausing together
+
+Pause or resume, and everyone who opened your link does too.
+
+That part cannot work on arithmetic alone. A pause is an *event*, happening
+after the link was made, and a link cannot carry an event that has not happened
+yet — so this is the one piece that needs a live channel. It uses WebRTC
+through PeerJS: the browsers talk **directly**, and a free public server is used
+only to introduce them, never seeing the timer. Nothing is stored and no account
+exists.
+
+The host is the clock. It broadcasts, guests apply, and nobody negotiates —
+which is why there is no conflict resolution anywhere in `sync.js`. Measured
+across two machines, the two timers agreed to **3 milliseconds**.
+
+A guest who presses pause is not fought with; they **leave** the shared session
+and keep their own time. Snapping someone back after they pressed a button is
+hostile, and it is also the shape of bug that never ends — apply, which renders,
+which fires the hook, which sends, which applies.
+
+What it costs, plainly:
+
+- **The host's tab is the session.** Close it and everyone else is told, and
+  carries on alone. A refresh is fine — hosting resumes on the same id, so links
+  already sent keep working.
+- **A strict network can refuse a direct connection**, and the introduction
+  service is someone else's free server, so it can be slow or down.
+
+None of that loses you the timer. Sync failing drops you back to a plain shared
+session, which is exactly what the link was before any of this existed — and a
+link with the `&p=` trimmed off still works perfectly. The 85KB peer library is
+fetched only when you actually share or join; ordinary visitors never download
+it.
 
 ### Discord Rich Presence
 
@@ -296,6 +331,8 @@ src/
   tasks.js      task rows and the notepad
   storage.js    save and restore; runs last on startup
   session.js    shared session links: read one on load, build one to share
+  sync.js       the live half: pause and resume, peer to peer
+  vendor/       anime.js and peerjs, neither installed nor built
   pip.js        the pop-out mini timer
   toast.js      the message strip
   keys.js       keyboard shortcuts
