@@ -392,14 +392,21 @@ html.is-entering .dock-btn {
    Docks (the corner buttons)
    ========================================================================== */
 
-.dock {
+/* One rail down the left edge, vertically centred.
+
+   The chrome lives here rather than on the two navs inside it, so the panel
+   buttons and the tool buttons read as one column with a divider rather than
+   two bars that happen to be near each other. The navs keep their separate
+   aria labels. */
+.dock-rail {
   position: fixed;
-  bottom: 1.4rem;
-  display: flex;
-  gap: 0.25rem;
+  left: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 10;
-  /* A real bar rather than loose dots. Grouping them says these belong
-     together and are a place you go, not decoration in a corner. */
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   padding: 0.35rem;
   border-radius: var(--r-lg);
   border: 1px solid var(--line-soft);
@@ -408,11 +415,17 @@ html.is-entering .dock-btn {
   box-shadow: 0 14px 40px -12px var(--shadow);
 }
 
-.dock-left {
-  left: 1.5rem;
+.dock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
-.dock-right {
-  right: 1.5rem;
+
+/* Tools are a different kind of thing from panels, so they get a hairline
+   rather than just more gap. */
+.dock-tools {
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line-soft);
 }
 
 .dock-btn {
@@ -483,14 +496,16 @@ html.is-entering .dock-btn {
    Panels
    ========================================================================== */
 
+/* Panels open beside the rail, centred on it, rather than above a bottom
+   bar. 7.4rem clears the rail: 1.5rem of offset plus its ~5rem width. */
 .panel {
   position: fixed;
-  bottom: 6.6rem;
-  left: 1.5rem;
+  top: 50%;
+  left: 7.4rem;
   z-index: 20;
   display: flex;
   flex-direction: column;
-  width: min(400px, calc(100vw - 3rem));
+  width: min(400px, calc(100vw - 9rem));
   max-height: min(58vh, 480px);
   border-radius: var(--r-lg);
   border: 1px solid var(--glass-border);
@@ -498,22 +513,28 @@ html.is-entering .dock-btn {
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 60px var(--shadow);
 
-  /* Closed state. visibility (not display) so it can animate. */
+  /* Closed state. visibility (not display) so it can animate.
+
+     Two translateY functions on purpose: the first centres the panel on the
+     rail, the second is the animation. Folding them into one number would
+     mean recomputing the centring every time the animation changes. */
   opacity: 0;
   visibility: hidden;
-  transform: translateY(14px) scale(0.98);
+  transform: translateY(-50%) translateY(14px) scale(0.98);
   transition: opacity var(--t) var(--ease), transform var(--t) var(--ease), visibility var(--t) var(--ease);
 }
 
 .panel.is-open {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translateY(-50%) translateY(0) scale(1);
 }
 
+/* Was the right edge, back when the tools dock lived there. With one rail on
+   the left, every panel opens from the same place. */
 .panel-right {
-  left: auto;
-  right: 1.5rem;
+  left: 7.4rem;
+  right: auto;
 }
 
 .panel-head {
@@ -624,7 +645,7 @@ html.is-entering .dock-btn {
    ========================================================================== */
 
 .panel[data-panel="sounds"] {
-  width: min(440px, calc(100vw - 3rem));
+  width: min(440px, calc(100vw - 9rem));
 }
 
 .sound-master {
@@ -2793,7 +2814,7 @@ body.pip-open main {
    ========================================================================== */
 
 .panel-games {
-  width: min(420px, calc(100vw - 3rem));
+  width: min(420px, calc(100vw - 9rem));
   max-height: min(82vh, 640px);
 }
 
@@ -3375,7 +3396,7 @@ body.pip-open main {
    ========================================================================== */
 
 .panel[data-panel="music"] {
-  width: min(400px, calc(100vw - 3rem));
+  width: min(400px, calc(100vw - 9rem));
   max-height: min(84vh, 640px);
 }
 
@@ -3764,4 +3785,61 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   appearance: none;
   margin: 0;
+}
+
+/* ==========================================================================
+   Narrow screens: the rail goes back to the bottom
+
+   This lives at the end of the file on purpose. Panel geometry is set in
+   several places - the base .panel rule plus per-panel widths for sounds,
+   games and music, all of them later in the file - so a media query placed
+   next to the base rule loses to every one of them on source order alone.
+   It has the same specificity; it just has to come last.
+   ========================================================================== */
+
+/* Below this, a 5rem rail plus a panel leaves nothing worth reading, so the
+   rail goes back to a horizontal bar along the bottom and panels sit above
+   it - the layout this had before. */
+@media (max-width: 700px) {
+  .dock-rail {
+    left: 50%;
+    top: auto;
+    bottom: 1.4rem;
+    transform: translateX(-50%);
+    flex-direction: row;
+    gap: 0.35rem;
+    max-width: calc(100vw - 2rem);
+    overflow-x: auto;
+  }
+
+  .dock {
+    flex-direction: row;
+  }
+
+  .dock-tools {
+    padding-top: 0;
+    padding-left: 0.35rem;
+    border-top: 0;
+    border-left: 1px solid var(--line-soft);
+  }
+
+  .panel,
+  .panel-right {
+    left: 1rem;
+    right: auto;
+    top: auto;
+    bottom: 6.6rem;
+    width: min(400px, calc(100vw - 2rem));
+    transform: translateY(14px) scale(0.98);
+  }
+
+  .panel.is-open {
+    transform: translateY(0) scale(1);
+  }
+
+  .panel[data-panel="sounds"],
+  .panel-games,
+  .panel[data-panel="music"] {
+    width: min(420px, calc(100vw - 2rem));
+  }
 }

@@ -29,7 +29,7 @@ fetched at runtime. Open the folder, run one command, and it works.
   designed level, ship sections and jump pads. Sudoku, Snake, Wordle,
   Minesweeper and Geometry Dash can be won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
-- **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
+- **Today's Google Calendar events** in their own panel — read-only,
   browser-only, no backend and no server to trust. The app is published
   unverified, so anyone can connect - Google shows a warning screen first,
   and there is a lifetime cap of 100 accounts

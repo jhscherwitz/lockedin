@@ -403,9 +403,18 @@ const CAL_STALE_MS = 5 * MINUTE;
    which is how a circular import turns into a TDZ error. */
 export function initCalendar() {
   renderCalendar();
-  document.addEventListener("click", (event) => {
-    const tab = event.target.closest && event.target.closest('.tab[data-tab="calendar"]');
-    if (!tab) return;
+
+  /* Refresh on opening, but only if what is on screen has gone stale -
+     reopening twice in a minute should not re-hit the API.
+
+     This watches the panel's own class rather than the dock button, because
+     the panel can also be opened by a keyboard shortcut and closed by
+     clicking away. The class is the thing that is always true. */
+  const panel = document.querySelector('section.panel[data-panel="calendar"]');
+  if (!panel) return;
+
+  new MutationObserver(() => {
+    if (!panel.classList.contains("is-open")) return;
     if (calStatus === "ready" && Date.now() - calLoadedAt > CAL_STALE_MS) loadCalendar();
-  });
+  }).observe(panel, { attributes: true, attributeFilter: ["class"] });
 }
