@@ -148,9 +148,15 @@ function calEnsureTokenClient() {
     callback: (response) => {
       if (response.error || !response.access_token) {
         calStatus = "error";
+        /* Google returns access_denied for two quite different things: you
+           pressed Cancel, and Google refused before you got the chance -
+           which is what happens on the "unverified app" screen if you back
+           out rather than clicking through Advanced. Saying "you declined"
+           to someone who was blocked is just confusing, so the wording has
+           to cover both without guessing which it was. */
         calError =
           response.error === "access_denied"
-            ? "Access was declined, so there is nothing to show."
+            ? "Google did not grant access. If you cancelled, try again. If you saw an “unverified app” warning, choose Advanced and continue - this is a personal project, so Google has not reviewed it."
             : "Google would not hand over a token. Try connecting again.";
         renderCalendar();
         return;
