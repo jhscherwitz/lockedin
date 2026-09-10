@@ -3,7 +3,16 @@ r"""Discord Rich Presence for a LockedIn session.
 Shows "Focus - Round 2 / 23:41 left" on your Discord profile while you study,
 with a button other people can click to join the same session, in sync.
 
-    python presence.py "https://jhscherwitz.github.io/lockedin/?s=17890...."
+    python presence.py 50           fifty minutes of focus, starting now
+    python presence.py 25/5         Pomodoro: 25 on, 5 off, rounds and all
+    python presence.py 25/5/15/4    ... long break, and rounds before it
+
+    python presence.py "<session link>"
+
+The link form is worth the extra step for two things a bare duration cannot
+do: it picks up a session *already in progress* at the right point, and it is
+what puts the "Study with me" button on your profile - a button needs
+somewhere to point.
 
 WHY THIS IS A SCRIPT AND NOT PART OF THE WEBSITE
 
@@ -70,6 +79,7 @@ Requires nothing installed - standard library only, like serve.py.
 
 import json
 import os
+import re
 import socket
 import struct
 import sys
@@ -90,8 +100,57 @@ OP_CLOSE = 2
 
 
 # ---------------------------------------------------------------------------
-# The session link
+# What you are studying to
+#
+# Two ways in. A duration is the short one and covers the common case - you
+# want the status, and you do not care about anyone joining. A link is the
+# exact one, because it carries a start time that may be in the past.
 # ---------------------------------------------------------------------------
+
+DURATION = re.compile(
+    r"^(\d{1,3})(?:\s*/\s*(\d{1,3}))?(?:\s*/\s*(\d{1,3}))?(?:\s*/\s*(\d{1,3}))?$"
+)
+
+
+def read_timer(text):
+    """A timer described directly: "50", "25/5", "25/5/15/4".
+
+    Returns None when this is not a duration at all, so the caller can try
+    reading it as a link instead. That is the whole dispatch - a thing is a
+    duration or it is a URL, and they look nothing alike.
+    """
+    match = DURATION.match(text.strip())
+    if not match:
+        return None
+
+    def part(index, low, high, fallback):
+        raw = match.group(index)
+        if raw is None:
+            return fallback
+        return max(low, min(high, int(raw)))
+
+    return {
+        # Now, necessarily. A bare duration has no way to say "twenty minutes
+        # ago", which is exactly what the link form is for.
+        "start": now_ms(),
+        # One number is a plain stretch of focus. A pair is a Pomodoro: the
+        # second number has nowhere else to be except a break.
+        "mode": "pomodoro" if match.group(2) is not None else "countdown",
+        "focus": part(1, 1, 600, 60),
+        "short": part(2, 1, 60, 5),
+        "long": part(3, 1, 60, 15),
+        "rounds": part(4, 2, 10, 4),
+        # No link means no button; activity_for() checks for https.
+        "url": "",
+    }
+
+
+def read_session(raw):
+    """Whichever of the two forms this is."""
+    timer = read_timer(raw)
+    if timer is not None:
+        return timer
+    return read_link(raw)
 
 
 def read_link(url):
@@ -110,9 +169,23 @@ def read_link(url):
     raw = one("s")
     if raw is None:
         raise ValueError(
-            "That link has no ?s= in it, so it is not a session link.\n"
-            "In LockedIn open Settings -> Timer and click 'Copy session link'."
+            "That is neither a duration nor a session link.\n"
+            "  A duration:  50   or   25/5   or   25/5/15/4\n"
+            "  A link:      LockedIn -> Settings -> Timer -> Copy session link\n"
+            "If you did paste a link, wrap it in quotes - the & in it will\n"
+            "otherwise be eaten by the shell before Python ever sees it."
         )
+    # Every link the site builds carries m and f alongside s. One with s but no
+    # m did not arrive whole - almost always an unquoted paste, where the shell
+    # cut it at the first &. Worth catching, because the defaults would
+    # otherwise make it look like it worked and quietly show the wrong timer.
+    if one("m") is None:
+        raise ValueError(
+            "That link is missing the settings that come after the &.\n"
+            "It was almost certainly pasted without quotes - the shell cuts\n"
+            "the link at the first &. Put it in \"double quotes\" and retry."
+        )
+
     try:
         start = int(raw)
     except ValueError:
@@ -421,17 +494,18 @@ def run(session):
 
 def main():
     if len(sys.argv) > 1:
-        url = sys.argv[1].strip()
+        raw = sys.argv[1].strip()
     else:
         print(__doc__.strip().split("\n\n")[0])
         print()
-        url = input("Paste your LockedIn session link: ").strip()
+        print("A duration - 50, or 25/5 - or a session link.")
+        raw = input("> ").strip()
 
-    if not url:
-        raise SystemExit("No link given.")
+    if not raw:
+        raise SystemExit("Nothing given. Try: python presence.py 25/5")
 
     try:
-        session = read_link(url)
+        session = read_session(raw)
     except ValueError as error:
         raise SystemExit(str(error))
 

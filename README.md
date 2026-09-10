@@ -21,9 +21,9 @@ fetched at runtime. Open the folder, run one command, and it works.
 - **Study together** — copy a session link and whoever opens it gets the same
   timer already running, in sync to the second. No account, no server, and
   nothing to keep running; see [Studying with other people](#studying-with-other-people)
-- **Discord Rich Presence** — `python presence.py <link>` puts
-  "Focus · round 2 / 23:41 left" on your profile, with a button that drops a
-  friend into the same session
+- **Discord Rich Presence** — `python presence.py 25/5` puts
+  "Focus · round 2 / 23:41 left" on your profile; hand it a session link
+  instead and it also gets a button that drops a friend into that same session
 - **Pop-out mini timer** — a real always-on-top window (Document
   Picture-in-Picture) so the countdown stays visible while you work elsewhere
 - **Ambient sound mixer** — seven recordings, any number playing at once,
@@ -116,8 +116,21 @@ that person is a minute out; there is no authority here to correct against.
 ### Discord Rich Presence
 
 ```bash
+python presence.py 25/5
+```
+
+`50` is fifty minutes of focus; `25/5` is a Pomodoro, cycling rounds and breaks
+exactly as the site does; `25/5/15/4` sets the long break and the rounds before
+it. A session link works too:
+
+```bash
 python presence.py "<paste your session link>"
 ```
+
+The link is worth the extra step for two things a duration cannot do: it picks
+up a session **already in progress** at the right point, and it is what puts the
+**Study with me** button on your profile — a button needs somewhere to point.
+Quote it, or the shell will cut it at the first `&`.
 
 **Do this first: Discord → Settings → Activity Privacy → "Share your detected
 activities with others", on.** It is the only step that fails silently — with
