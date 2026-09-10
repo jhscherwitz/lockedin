@@ -65,27 +65,18 @@ function entrance() {
     )
     .add("#wordmark", { opacity: [0, 1], x: [-14, 0], duration: 520 }, 460)
     .add("#now", { opacity: [0, 1], x: [14, 0], duration: 520 }, 460)
-    /* Each dock arrives from its own edge. That is the only thing telling
-       you they are two groups rather than one row split by a gap. */
+    /* One rail now, so it arrives as one column from the left edge it sits
+       on. The two groups used to fly in from opposite sides, which was the
+       only thing saying they were separate - the divider does that job now,
+       and a column splitting in two directions would just look broken. */
     .add(
-      ".dock-left .dock-btn",
+      ".dock-rail .dock-btn",
       {
         opacity: [0, 1],
         x: [-16, 0],
         scale: [0.85, 1],
         duration: 520,
-        delay: stagger(60),
-      },
-      520
-    )
-    .add(
-      ".dock-right .dock-btn",
-      {
-        opacity: [0, 1],
-        x: [16, 0],
-        scale: [0.85, 1],
-        duration: 520,
-        delay: stagger(60, { from: "last" }),
+        delay: stagger(45),
       },
       520
     );
