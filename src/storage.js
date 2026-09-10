@@ -4,6 +4,7 @@ import { modeControl, positionThumb, syncSettingInputs, updateConditionalFields 
 import { SOUNDS, masterSlider, masterVolume, paintSlider, setMasterVolume, soundState, tiles } from "./sounds.js";
 import { notepad, renderTasks, setTasks, tasks } from "./tasks.js";
 import { resetTimer, settings } from "./timer.js";
+import { showToast } from "./toast.js";
 
 /* ==========================================================================
    Saving
@@ -15,6 +16,21 @@ import { resetTimer, settings } from "./timer.js";
    ========================================================================== */
 
 const STORAGE_KEY = "focus-app-v1";
+
+/* ?fresh - load as a first-time visitor.
+
+   Saved state sits on top of every default, so a changed default is
+   invisible to anyone who has opened the page before - which is everyone
+   testing it. Changing the default theme, or the default font, looks
+   exactly like changing nothing, and the only way to tell the difference
+   used to be to clear storage and lose your tasks doing it.
+
+   This skips the restore for one load. Nothing is written and nothing is
+   deleted: drop the parameter and everything comes back untouched. That
+   non-destructiveness is the whole point - a version that wiped storage
+   would cost you your notes every time you wanted to check a default, so
+   you would never use it. */
+const FRESH = new URLSearchParams(location.search).has("fresh");
 
 function collectState() {
   const volumes = {};
@@ -38,6 +54,10 @@ function collectState() {
 }
 
 function saveState() {
+  /* Both scheduleSave and the beforeunload listener funnel through here, so
+     this one guard is what stops a ?fresh load from writing its defaults
+     over the real saved state on the way out. */
+  if (FRESH) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
   } catch (error) {
@@ -161,6 +181,7 @@ function applySavedState(data) {
 }
 
 function loadState() {
+  if (FRESH) return;
   let data = null;
   try {
     data = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -181,4 +202,11 @@ export function initStorage() {
   document.addEventListener("click", scheduleSave);
   window.addEventListener("beforeunload", saveState);
   loadState();
+
+  if (FRESH) {
+    showToast(
+      "Fresh mode: showing defaults. Your saved settings are untouched - reload without ?fresh to get them back.",
+      7000
+    );
+  }
 }

@@ -61,6 +61,23 @@ not, and you get a page running new styles against old code - which looks
 like a bug in your change rather than a stale file. Use `Ctrl+Shift+R` after
 editing anything under `src/`.
 
+### Seeing the defaults: `?fresh`
+
+Add `?fresh` to the URL - `http://localhost:8000/?fresh`, or the live site -
+to load as a first-time visitor.
+
+Saved state sits on top of every default, so a *changed* default is invisible
+to anyone who has opened the page before, which is everyone testing it.
+Changing the default theme looks exactly like changing nothing. This skips
+the restore for one load so you can see what a new visitor sees.
+
+**Nothing is written and nothing is deleted.** Every write is suppressed for
+that load, including the one on `beforeunload`, so leaving the page cannot
+overwrite your real settings with the defaults you were just looking at.
+Drop the parameter and your theme, tasks, notes and volumes all come back
+untouched. That is deliberate: a version that wiped storage would cost you
+your notes every time you checked a default, so you would never use it.
+
 ## Deploying
 
 A push to `main` is the deploy; GitHub Pages rebuilds in about 30 seconds.
