@@ -118,6 +118,17 @@
             <path d="M14 14m0 1a1 1 0 0 1 1 -1h5a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-5a1 1 0 0 1 -1 -1z" />
           </svg>
         </button>
+
+        <!-- Fullscreen sits with the mini player rather than in the rail: both
+             change how the timer is presented, neither opens a panel. -->
+        <button id="fullscreen-btn" class="icon-btn" aria-label="Toggle fullscreen" title="Fullscreen">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
+            <path d="M4 16v2a2 2 0 0 0 2 2h2" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+            <path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
+          </svg>
+        </button>
       </div>
     </main>
 
@@ -185,15 +196,6 @@
       </nav>
 
       <nav class="dock dock-tools" aria-label="Tools">
-      <button class="dock-btn" id="fullscreen-btn" aria-label="Toggle fullscreen">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
-          <path d="M4 16v2a2 2 0 0 0 2 2h2" />
-          <path d="M16 4h2a2 2 0 0 1 2 2v2" />
-          <path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
-        </svg>
-        <span class="dock-label">Screen</span>
-      </button>
       <button class="dock-btn" data-panel="settings" aria-expanded="false" aria-label="Settings">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
