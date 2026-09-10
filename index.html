@@ -235,6 +235,9 @@
           <button class="game-card" type="button" data-game="squish">
             <span class="game-card-name">2048</span>
           </button>
+          <button class="game-card" type="button" data-game="geometry">
+            <span class="game-card-name">Geometry Dash</span>
+          </button>
         </div>
 
         <div id="game-view" class="game-view" hidden>
@@ -383,6 +386,29 @@
             <canvas id="dn-canvas" class="dn-canvas" width="572" height="300"></canvas>
             <p id="dn-message" class="sq-message">Space, up arrow or tap to jump</p>
             <button id="dn-new" class="fl-new" type="button">Start</button>
+          </div>
+
+          <div class="game-pane" data-game="geometry" hidden>
+            <div class="sq-head">
+              <div class="sq-stat">
+                <span class="sq-stat-label">Progress</span>
+                <span id="gd-progress" class="sq-stat-value">0%</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Best</span>
+                <span id="gd-best" class="sq-stat-value">0%</span>
+              </div>
+              <div class="sq-stat">
+                <span class="sq-stat-label">Attempt</span>
+                <span id="gd-attempt" class="sq-stat-value">0</span>
+              </div>
+            </div>
+            <div class="gd-track" aria-hidden="true">
+              <div id="gd-bar" class="gd-bar"></div>
+            </div>
+            <canvas id="gd-canvas" class="dn-canvas" width="572" height="300"></canvas>
+            <p id="gd-message" class="sq-message">Space, up arrow or tap to jump</p>
+            <button id="gd-new" class="fl-new" type="button">Start</button>
           </div>
 
           <div class="game-pane" data-game="sudoku" hidden>

@@ -1,6 +1,7 @@
 import { bjBet, bjNewRound, bjPhase, bjPlayerHand } from "./blackjack.js";
 import { dnBestEl, dnDraw, dnReadBest, dnStatus } from "./dino.js";
 import { sqNewGame, sqStatus } from "./game2048.js";
+import { gdShow } from "./geometry.js";
 import { msNewGame, msStatus } from "./minesweeper.js";
 import { smBuildPads, smButtons, smRender, smSequence } from "./sequence.js";
 import { snBuild, snCells, snRender, snStatus } from "./snake.js";
@@ -71,6 +72,15 @@ const GAMES = {
     start() {
       dnBestEl.textContent = dnReadBest();
       dnDraw();
+    },
+  },
+  geometry: {
+    /* Never resumes. A run is a single unbroken attempt through a fixed
+       level, so coming back to a half-finished one would be meaningless -
+       the cube would restart mid-air. Reopening shows the board and waits. */
+    inProgress: () => false,
+    start() {
+      gdShow();
     },
   },
   sudoku: {
