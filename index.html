@@ -620,6 +620,25 @@
             </div>
           </div>
 
+          <div class="field" data-show-for="countdown pomodoro">
+            <span class="field-label">Study together</span>
+            <button type="button" class="btn btn-ghost btn-wide" id="share-session">
+              Copy session link
+            </button>
+            <input
+              id="share-link"
+              class="share-link"
+              type="text"
+              readonly
+              hidden
+              aria-label="Session link"
+            />
+            <p class="sound-hint">
+              Whoever opens the link gets this timer already running, in sync to
+              the second. No account needed.
+            </p>
+          </div>
+
           <div class="field field-row" data-show-for="countdown pomodoro">
             <label class="field-label" for="chime-toggle">Chime when a session ends</label>
             <input class="switch" id="chime-toggle" type="checkbox" checked />

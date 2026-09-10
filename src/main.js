@@ -47,6 +47,7 @@ import { initCalendar } from "./calendar.js";
 import { initMusic } from "./music.js";
 import { initGames } from "./games/shell.js";
 import { initMotion } from "./motion.js";
+import { initSession } from "./session.js";
 import { initStorage } from "./storage.js";
 
 /* Order matters here in a way it did not inside one file.
@@ -66,7 +67,12 @@ initCalendar();
 initMusic();
 initGames();
 
-initStorage(); // last: replays the saved state over everything above
+initStorage(); // replays the saved state over everything above
+
+/* After storage, because a shared session deliberately overrides the timer
+   settings that storage has just restored - it is the more specific
+   instruction, so it goes last of the two. */
+initSession();
 
 /* After initStorage, deliberately. Motion reads the timer's rendered state
    to decide what to animate, and the saved session is applied above - start

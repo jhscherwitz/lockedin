@@ -1,5 +1,6 @@
 import { activeTheme, applyFont, applyTheme, fontSelect, hourFormatControl, zoneSelect } from "./appearance.js";
 import { clockSettings, updateNow } from "./clock.js";
+import { timerSettingsBeforeJoin } from "./session.js";
 import { modeControl, positionThumb, syncSettingInputs, updateConditionalFields } from "./settings.js";
 import { SOUNDS, masterSlider, masterVolume, paintSlider, setMasterVolume, soundState, tiles } from "./sounds.js";
 import { notepad, renderTasks, setTasks, tasks } from "./tasks.js";
@@ -45,7 +46,12 @@ function collectState() {
     timerDefaultMigrated: true,
     themeDefaultMigrated: true,
     clock: { hour12: clockSettings.hour12, timeZone: clockSettings.timeZone },
-    timer: Object.assign({}, settings),
+    /* A shared session overwrites the live timer settings with whoever's
+       link you opened. Saving those would quietly replace your own 25-minute
+       Pomodoro with their 50, and you would never know why. So while joined,
+       what gets written is what you had before. Everything else - theme,
+       tasks, notes - saves normally, because none of it was overridden. */
+    timer: Object.assign({}, timerSettingsBeforeJoin || settings),
     master: masterVolume,
     volumes,
     tasks,

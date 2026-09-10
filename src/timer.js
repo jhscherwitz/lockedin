@@ -164,8 +164,8 @@ export const renderHooks = [];
    countdown that only changes once a second. Nothing drifts either way - the
    time is derived from a wall-clock stamp, not accumulated - so this only
    decides how often the screen catches up. */
-export const TICK_MS = 250;
-export const TICK_MS_FINE = 33;
+const TICK_MS = 250;
+const TICK_MS_FINE = 33;
 
 export function showsFraction() {
   return settings.mode === "stopwatch";
@@ -210,6 +210,56 @@ function advancePhase() {
     phase = "focus";
     round += 1;
   }
+}
+
+/* Where a session that began `elapsed` ago has got to.
+
+   This walks the same cycle advancePhase() produces, one phase at a time,
+   rather than deriving it with arithmetic. Slower and completely uninteresting
+   - and that is the point: the two must never disagree. A shared session link
+   that put one person on their long break while everyone else was still in
+   round three would defeat the only thing it exists to do. Walking the real
+   rule means there is no second rule to drift from. */
+export function phaseAt(elapsed) {
+  if (settings.mode !== "pomodoro") {
+    return { phase: "focus", round: 1, offset: elapsed };
+  }
+
+  let left = elapsed;
+  let at = "focus";
+  let n = 1;
+
+  // A guard, not a limit: at one minute a phase this covers over three days.
+  for (let guard = 0; guard < 20000; guard++) {
+    const length =
+      at === "focus"
+        ? settings.focusMinutes * MINUTE
+        : at === "short"
+        ? settings.shortBreakMinutes * MINUTE
+        : settings.longBreakMinutes * MINUTE;
+
+    if (left < length) return { phase: at, round: n, offset: left };
+    left -= length;
+
+    if (at === "focus") {
+      at = n % settings.roundsBeforeLongBreak === 0 ? "long" : "short";
+    } else {
+      at = "focus";
+      n += 1;
+    }
+  }
+  return { phase: "focus", round: 1, offset: 0 };
+}
+
+/* Drop into a session already in progress. start() does the rest: it leaves
+   bankedMs alone, so setting it here is what makes the timer resume partway
+   through rather than from zero. */
+export function joinSessionAt(elapsed) {
+  const at = phaseAt(elapsed);
+  phase = at.phase;
+  round = at.round;
+  bankedMs = at.offset;
+  start();
 }
 
 function tick() {
