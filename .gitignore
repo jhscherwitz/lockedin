@@ -8,3 +8,12 @@ desktop.ini
 
 # Logs
 *.log
+
+# Python bytecode, left behind by running serve.py or presence.py
+__pycache__/
+*.pyc
+
+# Your own Discord application ID, written by presence.py on first run. Not a
+# secret - it is public in every Rich Presence payload - but it is yours, and
+# anyone else cloning this needs to make their own.
+presence-config.json

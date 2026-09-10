@@ -18,6 +18,12 @@ fetched at runtime. Open the folder, run one command, and it works.
   notification, both scheduled so they land on time even in a background tab
 - **Your own sounds** — drop an MP3 in `assets/alerts/` for the session end
   or for beating a game, and it is level-matched and used automatically
+- **Study together** — copy a session link and whoever opens it gets the same
+  timer already running, in sync to the second. No account, no server, and
+  nothing to keep running; see [Studying with other people](#studying-with-other-people)
+- **Discord Rich Presence** — `python presence.py <link>` puts
+  "Focus · round 2 / 23:41 left" on your profile, with a button that drops a
+  friend into the same session
 - **Pop-out mini timer** — a real always-on-top window (Document
   Picture-in-Picture) so the countdown stays visible while you work elsewhere
 - **Ambient sound mixer** — seven recordings, any number playing at once,
@@ -82,6 +88,74 @@ overwrite your real settings with the defaults you were just looking at.
 Drop the parameter and your theme, tasks, notes and volumes all come back
 untouched. That is deliberate: a version that wiped storage would cost you
 your notes every time you checked a default, so you would never use it.
+
+## Studying with other people
+
+### The session link
+
+Settings → Timer → **Copy session link**. Send it to anyone. They open it and
+land in your session already in progress — if you are nineteen minutes into
+round 3, so are they.
+
+This works because of a decision made long before anyone thought about sharing:
+the timer never counted down, it subtracts a start timestamp from the clock.
+That is what kept it accurate in a backgrounded tab, and the unplanned
+consequence is that two computers handed the same start time compute the same
+remaining time forever without ever talking to each other. So the link *is* the
+synchronisation — it carries when the session began and how long its phases
+are, and both browsers do the same arithmetic. There is nothing to host.
+
+Joining does not overwrite your own timer settings. You run the host's lengths
+while you are there, and your own come back afterwards — otherwise opening a
+friend's 50-minute link would quietly replace your 25 and you would never work
+out why.
+
+The one thing it cannot do is fix a wrong clock. If a device is a minute out,
+that person is a minute out; there is no authority here to correct against.
+
+### Discord Rich Presence
+
+```bash
+python presence.py "<paste your session link>"
+```
+
+Setup is once and takes about a minute — create an application at
+[discord.com/developers/applications](https://discord.com/developers/applications),
+copy its **Application ID**, and paste it in when the script asks. It is
+remembered in `presence-config.json`. Nothing needs approving. Full
+instructions, including the optional artwork, are in the docstring at the top
+of `presence.py`.
+
+It needs no `pip install`; like `serve.py` it is standard library only.
+
+**Why a script and not part of the site.** Rich Presence is set over a local
+pipe to the Discord desktop app, and a web page cannot open a pipe. Discord
+does expose a WebSocket transport a browser could reach, but it is shut three
+separate ways: the RPC API is closed to unapproved apps, every command over it
+must first authenticate with an OAuth token, and obtaining that token needs a
+client secret on a server. This site is static files on GitHub Pages. Any one
+of the three would be enough on its own.
+
+The script never asks the page what the timer is doing — it cannot, and it does
+not need to. Given the same start timestamp it derives the phase itself, the
+same trick the share link uses. `phase_at()` in `presence.py` is a
+line-for-line port of `phaseAt()` in `src/timer.js` and has to stay that way.
+It then hands Discord the moment the phase ends and Discord runs the countdown
+itself, so the script sets your presence once per phase and then goes quiet.
+
+### Why there is no Discord Activity
+
+An Activity — the site running in a window inside a voice channel — was
+investigated and deliberately not built. Discord sandboxes an Activity behind a
+proxy where every external URL is blocked by CSP unless individually mapped,
+which would cost the Spotify and Google Calendar panels outright. That would be
+a worthwhile trade if the payoff were syncing everyone in the channel, but the
+Embedded App SDK gives participants no way to share state without a backend,
+and this project has no server. So a serverless Activity would be a smaller
+LockedIn, missing two panels, that *still* could not sync anyone — strictly
+worse than pasting the session link into the channel, which already works.
+
+Worth revisiting only if the site ever grows a backend.
 
 ## Deploying
 
@@ -180,6 +254,7 @@ A few decisions worth calling out:
 index.html      markup
 style.css       all styling; design tokens and the surface scale at the top
 serve.py        local dev server with caching disabled
+presence.py     Discord Rich Presence; run it yourself, talks to the desktop app
 assets/sounds   ambient MP3s
 assets/alerts   your own end-of-session and game-win sounds
 assets/words    Wordle answer and guess lists
@@ -197,6 +272,7 @@ src/
   appearance.js themes, fonts, timezone picker
   tasks.js      task rows and the notepad
   storage.js    save and restore; runs last on startup
+  session.js    shared session links: read one on load, build one to share
   pip.js        the pop-out mini timer
   toast.js      the message strip
   keys.js       keyboard shortcuts
