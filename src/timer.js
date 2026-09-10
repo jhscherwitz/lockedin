@@ -251,15 +251,30 @@ export function phaseAt(elapsed) {
   return { phase: "focus", round: 1, offset: 0 };
 }
 
-/* Drop into a session already in progress. start() does the rest: it leaves
-   bankedMs alone, so setting it here is what makes the timer resume partway
-   through rather than from zero. */
-export function joinSessionAt(elapsed) {
+/* Put the timer exactly where another machine says it is: this far in, and
+   either running or not.
+
+   stop() first, always. It clears the ticker, and start() does not - calling
+   start() on an already-running timer would leave the old interval behind and
+   the clock would tick twice a beat, faster and faster with every update.
+   Whatever stop() banks is overwritten on the next line anyway. */
+export function setSessionState(elapsed, running) {
   const at = phaseAt(elapsed);
+  stop();
   phase = at.phase;
   round = at.round;
   bankedMs = at.offset;
-  start();
+  announcement = "";
+  timerEl.classList.remove("is-done");
+  if (running) start();
+  else render();
+}
+
+/* Drop into a session already in progress. Opening a link is always a join to
+   something under way, so running is not a question here - which is the only
+   reason this is not just the call below it. */
+export function joinSessionAt(elapsed) {
+  setSessionState(elapsed, true);
 }
 
 function tick() {

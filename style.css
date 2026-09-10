@@ -757,6 +757,14 @@ html.is-entering .dock-btn {
   font-size: 0.82rem;
 }
 
+/* Who is connected, once anyone is. Accented rather than dim, because unlike
+   the hint above it this line is live - it changes while you are reading it. */
+.sync-status {
+  margin-top: 0.55rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
 /* Only shown when the clipboard refuses, so it needs to be selectable rather
    than pretty. */
 .share-link {

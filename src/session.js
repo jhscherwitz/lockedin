@@ -1,4 +1,5 @@
 import { syncSettingInputs, updateConditionalFields } from "./settings.js";
+import { connectToHost, myPeerId, startHosting } from "./sync.js";
 import { MINUTE, elapsedMs, isRunning, joinSessionAt, phaseAt, render, settings } from "./timer.js";
 import { showToast } from "./toast.js";
 
@@ -22,6 +23,11 @@ import { showToast } from "./toast.js";
      &m=pomodoro    mode, countdown otherwise
      &f=50&b=10     focus and short-break minutes
      &l=20&r=4      long break, and rounds before it
+     &p=<peer id>   who to ask about pauses - see sync.js
+
+   The last one is the only part that needs anyone to be online, and it is
+   deliberately the only part: strip it, or let it fail, and everything above
+   still lands you in the right second of the right round.
 
    The one thing it cannot do is fix a wrong clock. If someone's device is a
    minute out, they will be a minute out - there is no authority here to
@@ -53,6 +59,9 @@ function readSharedSession() {
     shortBreakMinutes: clampInt(params.get("b"), 1, 60, 5),
     longBreakMinutes: clampInt(params.get("l"), 1, 60, 15),
     roundsBeforeLongBreak: clampInt(params.get("r"), 2, 10, 4),
+    // Optional. Absent on a link made before live sync existed, or one a
+    // person trimmed by hand; either way the session still works.
+    peer: params.get("p") || "",
   };
 }
 
@@ -89,6 +98,7 @@ function buildLink() {
     url.searchParams.set("l", String(settings.longBreakMinutes));
     url.searchParams.set("r", String(settings.roundsBeforeLongBreak));
   }
+  url.searchParams.set("p", myPeerId);
   return url.toString();
 }
 
@@ -102,6 +112,12 @@ export function initSession() {
     shareBtn.addEventListener("click", async () => {
       const link = buildLink();
       if (shareField) shareField.value = link;
+
+      /* Deliberately not awaited. Copying the link is the moment someone
+         decides to share, so it is the moment to start listening - but the
+         clipboard write below has to happen while the click is still the
+         browser's idea of a user gesture, and an await here would spend it. */
+      startHosting();
 
       try {
         await navigator.clipboard.writeText(link);
@@ -143,6 +159,11 @@ export function initSession() {
   }
 
   joinSessionAt(elapsed);
+
+  /* After the arithmetic, never instead of it. If the host is online this
+     hands over to them within a beat; if they are not, the line above already
+     put us in the right place and that is the whole session. */
+  if (sharedSession.peer) connectToHost(sharedSession.peer);
 
   const at = phaseAt(elapsed);
   const where =
