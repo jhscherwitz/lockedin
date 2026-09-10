@@ -33,23 +33,121 @@ const THEMES = [
 
 const DEFAULT_THEME = "forest";
 
+/* ---- Fonts ----
+
+   Grouped, because a flat list of twenty-seven is a wall.
+
+   `weight` exists because several display faces ship exactly one weight. The
+   timer asks for 700, and when a font only has a 400 the browser fakes the
+   bold by smearing the glyphs sideways - which reads as a rendering fault
+   rather than a typeface. Those entries declare 400 and get their real
+   drawing instead.
+
+   `google` is the Google Fonts query for that family. Only the three in the
+   upfront <link> load at startup; the rest arrive when the settings panel
+   opens. A visitor uses one font, and downloading twenty-four others before
+   the first paint would be silly. */
+
 const FONTS = [
-  { label: "Clash Display", stack: '"Clash Display", "Outfit", system-ui, sans-serif' },
-  { label: "Outfit", stack: '"Outfit", system-ui, sans-serif' },
-  { label: "Satoshi", stack: '"Satoshi", system-ui, sans-serif' },
-  { label: "Inter", stack: '"Inter", system-ui, sans-serif' },
-  { label: "Roboto", stack: '"Roboto", system-ui, sans-serif' },
-  { label: "Poppins", stack: '"Poppins", system-ui, sans-serif' },
-  { label: "Montserrat", stack: '"Montserrat", system-ui, sans-serif' },
-  { label: "Lato", stack: '"Lato", system-ui, sans-serif' },
-  { label: "Nunito", stack: '"Nunito", system-ui, sans-serif' },
-  { label: "Work Sans", stack: '"Work Sans", system-ui, sans-serif' },
-  { label: "DM Sans", stack: '"DM Sans", system-ui, sans-serif' },
-  { label: "Manrope", stack: '"Manrope", system-ui, sans-serif' },
-  { label: "Rubik", stack: '"Rubik", system-ui, sans-serif' },
-  { label: "Space Grotesk", stack: '"Space Grotesk", system-ui, sans-serif' },
-  { label: "JetBrains Mono", stack: '"JetBrains Mono", ui-monospace, monospace' },
+  // These three are in the upfront <link>, so they need no google entry.
+  { label: "Clash Display", group: "Sans", stack: '"Clash Display", "Outfit", system-ui, sans-serif' },
+  { label: "Outfit", group: "Sans", stack: '"Outfit", system-ui, sans-serif' },
+  { label: "Satoshi", group: "Sans", stack: '"Satoshi", system-ui, sans-serif' },
+
+  { label: "Inter", group: "Sans", stack: '"Inter", system-ui, sans-serif', google: "Inter:wght@300;400;500;600;700" },
+  { label: "Roboto", group: "Sans", stack: '"Roboto", system-ui, sans-serif', google: "Roboto:wght@300;400;500;700" },
+  { label: "Poppins", group: "Sans", stack: '"Poppins", system-ui, sans-serif', google: "Poppins:wght@300;400;500;600;700" },
+  { label: "Montserrat", group: "Sans", stack: '"Montserrat", system-ui, sans-serif', google: "Montserrat:wght@300;400;500;600;700" },
+  { label: "Lato", group: "Sans", stack: '"Lato", system-ui, sans-serif', google: "Lato:wght@300;400;700" },
+  { label: "Nunito", group: "Sans", stack: '"Nunito", system-ui, sans-serif', google: "Nunito:wght@300;400;600;700" },
+  { label: "Work Sans", group: "Sans", stack: '"Work Sans", system-ui, sans-serif', google: "Work+Sans:wght@300;400;500;600;700" },
+  { label: "DM Sans", group: "Sans", stack: '"DM Sans", system-ui, sans-serif', google: "DM+Sans:wght@400;500;700" },
+  { label: "Manrope", group: "Sans", stack: '"Manrope", system-ui, sans-serif', google: "Manrope:wght@400;500;600;700" },
+  { label: "Rubik", group: "Sans", stack: '"Rubik", system-ui, sans-serif', google: "Rubik:wght@400;500;600;700" },
+  { label: "Space Grotesk", group: "Sans", stack: '"Space Grotesk", system-ui, sans-serif', google: "Space+Grotesk:wght@400;500;600;700" },
+
+  { label: "Bebas Neue", group: "Display", weight: 400, stack: '"Bebas Neue", Impact, sans-serif', google: "Bebas+Neue" },
+  { label: "Anton", group: "Display", weight: 400, stack: '"Anton", Impact, sans-serif', google: "Anton" },
+  { label: "Archivo Black", group: "Display", weight: 400, stack: '"Archivo Black", system-ui, sans-serif', google: "Archivo+Black" },
+  { label: "Bungee", group: "Display", weight: 400, stack: '"Bungee", system-ui, sans-serif', google: "Bungee" },
+  { label: "Syne", group: "Display", stack: '"Syne", system-ui, sans-serif', google: "Syne:wght@400;600;700;800" },
+  { label: "Unbounded", group: "Display", stack: '"Unbounded", system-ui, sans-serif', google: "Unbounded:wght@300;400;600;700" },
+  { label: "Orbitron", group: "Display", stack: '"Orbitron", system-ui, sans-serif', google: "Orbitron:wght@400;500;700;900" },
+
+  { label: "Playfair Display", group: "Serif", stack: '"Playfair Display", Georgia, serif', google: "Playfair+Display:wght@400;500;600;700;800" },
+  { label: "Fraunces", group: "Serif", stack: '"Fraunces", Georgia, serif', google: "Fraunces:wght@300;400;600;700" },
+  { label: "Instrument Serif", group: "Serif", weight: 400, stack: '"Instrument Serif", Georgia, serif', google: "Instrument+Serif" },
+
+  { label: "JetBrains Mono", group: "Mono", stack: '"JetBrains Mono", ui-monospace, monospace', google: "JetBrains+Mono:wght@400;500;700" },
+  { label: "Major Mono Display", group: "Mono", weight: 400, stack: '"Major Mono Display", ui-monospace, monospace', google: "Major+Mono+Display" },
+  { label: "Silkscreen", group: "Mono", stack: '"Silkscreen", ui-monospace, monospace', google: "Silkscreen:wght@400;700" },
 ];
+
+const FONT_GROUPS = ["Sans", "Display", "Serif", "Mono"];
+
+const fontsRequested = new Set();
+
+function ensureFontLoaded(font) {
+  if (!font || !font.google || fontsRequested.has(font.google)) return;
+  fontsRequested.add(font.google);
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href =
+    "https://fonts.googleapis.com/css2?family=" + font.google + "&display=swap";
+  document.head.append(link);
+}
+
+/* Every family at once. Called when the settings panel first opens, so the
+   dropdown can draw each name in its own face - which is the only sane way to
+   pick a font - without that cost landing on every visitor at startup. */
+function loadAllFonts() {
+  FONTS.forEach(ensureFontLoaded);
+}
+
+function fontByStack(stack) {
+  return FONTS.find((font) => font.stack === stack);
+}
+
+/* One place that changes the font, so the picker and the saved-state restore
+   cannot drift apart. */
+export function applyFont(stack) {
+  const font = fontByStack(stack);
+  if (!font) return false;
+  ensureFontLoaded(font);
+  const root = document.documentElement.style;
+  root.setProperty("--timer-font", font.stack);
+  root.setProperty("--timer-weight", String(font.weight || 700));
+  if (fontSelect.value !== stack) fontSelect.value = stack;
+  return true;
+}
+
+function buildFontSelect() {
+  FONT_GROUPS.forEach((groupName) => {
+    const members = FONTS.filter((font) => font.group === groupName);
+    if (!members.length) return;
+    const group = document.createElement("optgroup");
+    group.label = groupName;
+    members.forEach((font) => {
+      const option = document.createElement("option");
+      option.value = font.stack;
+      option.textContent = font.label;
+      option.style.fontFamily = font.stack;
+      group.append(option);
+    });
+    fontSelect.append(group);
+  });
+
+  fontSelect.addEventListener("change", () => applyFont(fontSelect.value));
+
+  /* Give the webfonts a head start: the panel takes a moment to open and the
+     font row sits below the theme grid, so by the time it is on screen the
+     faces have usually arrived. */
+  const settingsBtn = document.querySelector('.dock-btn[data-panel="settings"]');
+  if (settingsBtn) {
+    settingsBtn.addEventListener("pointerdown", loadAllFonts, { once: true });
+  }
+  fontSelect.addEventListener("pointerdown", loadAllFonts, { once: true });
+}
 
 const themeGrid = document.getElementById("theme-grid");
 export const fontSelect = document.getElementById("font-select");
@@ -106,22 +204,6 @@ function buildThemeGrid() {
   });
 }
 
-function buildFontSelect() {
-  FONTS.forEach((font) => {
-    const option = document.createElement("option");
-    option.value = font.stack;
-    option.textContent = font.label;
-    option.style.fontFamily = font.stack;
-    fontSelect.append(option);
-  });
-
-  fontSelect.addEventListener("change", () => {
-    document.documentElement.style.setProperty(
-      "--timer-font",
-      fontSelect.value
-    );
-  });
-}
 
 /* The full IANA timezone list where the browser exposes it, with a short
    fallback for older browsers that do not. */

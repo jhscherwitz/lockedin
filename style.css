@@ -171,6 +171,9 @@
      falls back to another webfont rather than to a system face. */
   --display-font: "Outfit", system-ui, sans-serif;
   --timer-font: "Clash Display", "Outfit", system-ui, sans-serif;
+  /* Display faces that ship a single weight set this to 400, so the browser
+     draws them instead of faking a bold. See FONTS in appearance.js. */
+  --timer-weight: 700;
 }
 
 * {
@@ -239,7 +242,7 @@ main {
   font-family: var(--timer-font);
   cursor: default;
   font-size: clamp(3.6rem, 14vw, 10rem);
-  font-weight: 700;
+  font-weight: var(--timer-weight);
   letter-spacing: 0.02em;
   display: flex;
   align-items: center;
@@ -2531,11 +2534,15 @@ body.pip-open main {
   gap: 0.5rem;
 }
 
+/* Name only, so the card centres it and holds a fixed height - otherwise a
+   name that wraps to two lines ("Repeat the Sequence") makes its row taller
+   than the others and the grid goes ragged. */
 .game-card {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.7rem 0.75rem;
+  justify-content: center;
+  min-height: 3.1rem;
+  padding: 0.6rem 0.75rem;
   border-radius: var(--r-md);
   border: 1px solid var(--line-soft);
   background: var(--surface-1);
@@ -2566,13 +2573,6 @@ body.pip-open main {
   font-weight: 600;
   line-height: 1.25;
   color: var(--text);
-}
-
-.game-card-desc {
-  font-family: var(--display-font);
-  font-size: 0.72rem;
-  line-height: 1.3;
-  color: var(--text-dim);
 }
 
 /* One column on a narrow screen, where two would be 90px wide. */
