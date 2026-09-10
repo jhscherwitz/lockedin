@@ -421,12 +421,9 @@ html.is-entering .dock-btn {
   gap: 0.25rem;
 }
 
-/* Tools are a different kind of thing from panels, so they get a hairline
-   rather than just more gap. */
-.dock-tools {
-  padding-top: 0.35rem;
-  border-top: 1px solid var(--line-soft);
-}
+/* No divider. It separated two groups of buttons; with Screen moved out to
+   the controls row, Settings is the only tool left and a hairline above a
+   single button reads as a stray line rather than a grouping. */
 
 .dock-btn {
   width: 68px;
@@ -3814,13 +3811,6 @@ input[type="number"]::-webkit-inner-spin-button {
 
   .dock {
     flex-direction: row;
-  }
-
-  .dock-tools {
-    padding-top: 0;
-    padding-left: 0.35rem;
-    border-top: 0;
-    border-left: 1px solid var(--line-soft);
   }
 
   .panel,
