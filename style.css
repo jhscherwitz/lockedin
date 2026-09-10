@@ -745,6 +745,28 @@ html.is-entering .dock-btn {
   opacity: 1;
 }
 
+/* A full-width button in a settings field, where .btn's own padding would
+   leave it floating at its natural width. */
+.btn-wide {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+}
+
+/* Only shown when the clipboard refuses, so it needs to be selectable rather
+   than pretty. */
+.share-link {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+}
+
 /* Small print at the foot of a panel. The music panel uses it too. */
 .sound-hint {
   margin: 0.9rem 0 0;
