@@ -1022,6 +1022,21 @@ html.is-entering .dock-btn {
     radial-gradient(118% 95% at 102% 74%, #123037, transparent 62%), #0d1912;
 }
 
+/* Bright cores over soft halos, the same trick the full theme uses - at
+   62px tall a plain gradient would not read as a glow. */
+.theme-swatch[data-theme="neon"] {
+  background: radial-gradient(22% 30% at 24% 30%, #22d3ee, transparent 60%),
+    radial-gradient(18% 26% at 72% 24%, #e935ff, transparent 60%),
+    radial-gradient(70% 80% at 80% 100%, #7c3aed, transparent 62%),
+    radial-gradient(64% 72% at 8% 104%, #e935ff, transparent 64%), #06040f;
+}
+
+.theme-swatch[data-theme="glacier"] {
+  background: radial-gradient(80% 62% at 8% 2%, #b6d6ee, transparent 78%),
+    radial-gradient(88% 66% at 92% 12%, #9fc6e6, transparent 78%),
+    radial-gradient(92% 70% at 42% 104%, #c8e0e6, transparent 78%), #e9eff5;
+}
+
 .theme-swatch[data-theme="aurora"] {
   background: radial-gradient(120% 95% at 6% 2%, #7c3aed, transparent 66%),
     radial-gradient(115% 90% at 82% 8%, #d946ef, transparent 64%),
@@ -2359,7 +2374,9 @@ body.pip-open main {
    On paper they need to read as raised buttons on a pale ground, so they get
    the white sheet treatment and a hairline instead. */
 [data-theme="paper"] .dock-btn,
-[data-theme="paper"] .icon-btn {
+[data-theme="paper"] .icon-btn,
+[data-theme="glacier"] .dock-btn,
+[data-theme="glacier"] .icon-btn {
   border: 1px solid var(--line);
 }
 
@@ -2368,26 +2385,248 @@ body.pip-open main {
 [data-theme="paper"] .timer,
 [data-theme="paper"] .focus-prompt,
 [data-theme="paper"] .wordmark,
-[data-theme="paper"] .now {
+[data-theme="paper"] .now,
+[data-theme="glacier"] .timer,
+[data-theme="glacier"] .focus-prompt,
+[data-theme="glacier"] .wordmark,
+[data-theme="glacier"] .now {
   text-shadow: none;
 }
 
 /* Minesweeper's digit palette was picked to glow on near-black. On paper the
    pastels vanish, so the same eight take a darker, more saturated set. */
-[data-theme="paper"] .ms-1 { color: #1d4ed8; }
-[data-theme="paper"] .ms-2 { color: #15803d; }
-[data-theme="paper"] .ms-3 { color: #b91c1c; }
-[data-theme="paper"] .ms-4 { color: #6d28d9; }
-[data-theme="paper"] .ms-5 { color: #b45309; }
-[data-theme="paper"] .ms-6 { color: #0f766e; }
-[data-theme="paper"] .ms-7 { color: #a21caf; }
-[data-theme="paper"] .ms-8 { color: #44403c; }
+[data-theme="paper"] .ms-1,
+[data-theme="glacier"] .ms-1 { color: #1d4ed8; }
+[data-theme="paper"] .ms-2,
+[data-theme="glacier"] .ms-2 { color: #15803d; }
+[data-theme="paper"] .ms-3,
+[data-theme="glacier"] .ms-3 { color: #b91c1c; }
+[data-theme="paper"] .ms-4,
+[data-theme="glacier"] .ms-4 { color: #6d28d9; }
+[data-theme="paper"] .ms-5,
+[data-theme="glacier"] .ms-5 { color: #b45309; }
+[data-theme="paper"] .ms-6,
+[data-theme="glacier"] .ms-6 { color: #0f766e; }
+[data-theme="paper"] .ms-7,
+[data-theme="glacier"] .ms-7 { color: #a21caf; }
+[data-theme="paper"] .ms-8,
+[data-theme="glacier"] .ms-8 { color: #44403c; }
 
 /* 2048's tile numerals are dark by design, which is right on its light tiles
    in every theme - but the board behind them is a surface, and on paper that
    surface is now light too, so the low tiles need their text back. */
-[data-theme="paper"] .sq-tile {
+[data-theme="paper"] .sq-tile,
+[data-theme="glacier"] .sq-tile {
   color: #1b1033;
+}
+
+
+/* ---- Neon: lit by signage.
+
+   Every other dark theme here is *atmospheric* - big soft masses, colour
+   diffusing outward. This one is the opposite, and the difference is what
+   makes something read as glowing rather than merely lit: a glow has a hard
+   bright core. So the blur drops to 40px, the shapes shrink, and each bright
+   core sits on a much larger soft halo of the same colour.
+
+   The wash is pulled right back to 34% so the ground stays properly black
+   between the lights, and the vignette is the heaviest of any theme. Grain is
+   nearly off - this one is electric, not filmic. ---- */
+
+:root[data-theme="neon"] {
+  --bg-base: #06040f;
+  --blob-a: #22d3ee;
+  --blob-b: #e935ff;
+  --blob-c: #7c3aed;
+  --blob-d: #0a0f2e;
+
+  --wash: 34%;
+  --shape-blur: 40px;
+  --shape-alpha: 0.95;
+  --grain-opacity: 0.028;
+  --vignette: 0.78;
+
+  --text: #f2f6ff;
+  --text-soft: rgba(242, 246, 255, 0.84);
+  --text-dim: rgba(242, 246, 255, 0.62);
+  --ink-faint: rgba(242, 246, 255, 0.4);
+
+  --surface-1: rgba(255, 255, 255, 0.06);
+  --surface-2: rgba(255, 255, 255, 0.1);
+  --surface-3: rgba(255, 255, 255, 0.17);
+  --surface-4: rgba(255, 255, 255, 0.27);
+
+  --line-soft: rgba(34, 211, 238, 0.12);
+  --line: rgba(34, 211, 238, 0.26);
+  --line-strong: rgba(34, 211, 238, 0.46);
+
+  --panel-bg: rgba(8, 6, 22, 0.76);
+  --panel-solid: rgba(8, 6, 22, 0.95);
+  --menu-bg: #0a0820;
+  --menu-text: #f2f6ff;
+
+  --knob: #ffffff;
+  --danger: #ff6b8a;
+
+  --accent: #22d3ee;
+  --on-accent: #04121a;
+  --accent-soft: rgba(34, 211, 238, 0.5);
+  --accent-wash: rgba(34, 211, 238, 0.2);
+}
+
+/* Cores: small, tight, bright. */
+[data-theme="neon"] .s1 {
+  width: 17vmax;
+  height: 13vmax;
+  top: 6%;
+  left: 9%;
+  background: var(--blob-a);
+  opacity: 0.62;
+  filter: blur(34px);
+}
+
+[data-theme="neon"] .s2 {
+  width: 14vmax;
+  height: 11vmax;
+  top: 12%;
+  right: 11%;
+  background: var(--blob-b);
+  opacity: 0.58;
+  filter: blur(30px);
+}
+
+[data-theme="neon"] .s3 {
+  width: 11vmax;
+  height: 9vmax;
+  top: auto;
+  bottom: 16%;
+  left: 26%;
+  background: var(--blob-a);
+  opacity: 0.44;
+  filter: blur(26px);
+}
+
+/* Halos: the same colours, far bigger and far softer, sitting under the
+   cores. A core on its own looks like a sticker. */
+[data-theme="neon"] .s4 {
+  width: 62vmax;
+  height: 44vmax;
+  bottom: -22%;
+  right: -18%;
+  background: var(--blob-c);
+  opacity: 0.5;
+  filter: blur(130px);
+}
+
+[data-theme="neon"] .s5 {
+  width: 54vmax;
+  height: 38vmax;
+  top: auto;
+  bottom: -18%;
+  left: -16%;
+  background: var(--blob-b);
+  opacity: 0.32;
+  filter: blur(140px);
+}
+
+[data-theme="neon"] .s6 {
+  width: 46vmax;
+  height: 34vmax;
+  top: -14%;
+  left: 24%;
+  background: var(--blob-a);
+  opacity: 0.24;
+  filter: blur(120px);
+}
+
+/* ---- Glacier: the cold daylight.
+
+   Paper is the warm light theme; this is the cold one, and they are not the
+   same idea in two hues. Paper is soft off-white with the colour diffusing
+   through it. Glacier is brighter, cooler, and *crisper* - lower blur, so the
+   pale shapes keep an edge, the way light does through ice rather than
+   through paper. ---- */
+
+:root[data-theme="glacier"] {
+  --bg-base: #e9eff5;
+  --blob-a: #b6d6ee;
+  --blob-b: #d3e6f1;
+  --blob-c: #9fc6e6;
+  --blob-d: #c8e0e6;
+
+  --wash: 80%;
+  --shape-blur: 66px;
+  --shape-alpha: 0.78;
+  --grain-opacity: 0.035;
+  --vignette: 0;
+
+  /* Cold ink, not black - the same reasoning as Paper's warm grey. */
+  --text: #16202b;
+  --text-soft: rgba(22, 32, 43, 0.8);
+  --text-dim: rgba(22, 32, 43, 0.6);
+  --ink-faint: rgba(22, 32, 43, 0.42);
+
+  --surface-1: rgba(22, 32, 43, 0.05);
+  --surface-2: rgba(22, 32, 43, 0.08);
+  --surface-3: rgba(22, 32, 43, 0.13);
+  --surface-4: rgba(22, 32, 43, 0.2);
+
+  --sunk-1: rgba(22, 32, 43, 0.1);
+  --sunk-2: rgba(22, 32, 43, 0.16);
+
+  --line-soft: rgba(22, 32, 43, 0.1);
+  --line: rgba(22, 32, 43, 0.16);
+  --line-strong: rgba(22, 32, 43, 0.36);
+
+  --shadow-soft: rgba(22, 32, 43, 0.08);
+  --shadow: rgba(22, 32, 43, 0.16);
+
+  --panel-bg: rgba(252, 254, 255, 0.84);
+  --panel-solid: rgba(252, 254, 255, 0.96);
+  --menu-bg: #fcfeff;
+  --menu-text: #16202b;
+
+  --knob: #ffffff;
+  --danger: #b3253c;
+
+  --accent: #0e7490;
+  --on-accent: #ffffff;
+  --accent-soft: rgba(14, 116, 144, 0.42);
+  --accent-wash: rgba(14, 116, 144, 0.16);
+}
+
+[data-theme="glacier"] .s1 {
+  width: 48vmax;
+  height: 34vmax;
+  top: -12%;
+  left: -10%;
+}
+
+[data-theme="glacier"] .s2 {
+  width: 42vmax;
+  height: 44vmax;
+  top: -14%;
+  right: -12%;
+}
+
+[data-theme="glacier"] .s4 {
+  width: 58vmax;
+  height: 38vmax;
+  bottom: -18%;
+  right: -14%;
+}
+
+[data-theme="glacier"] .s5 {
+  width: 44vmax;
+  height: 30vmax;
+  top: auto;
+  bottom: -14%;
+  left: -6%;
+}
+
+[data-theme="glacier"] .s3,
+[data-theme="glacier"] .s6 {
+  display: none;
 }
 
 /* ==========================================================================

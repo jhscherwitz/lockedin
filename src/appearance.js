@@ -29,6 +29,8 @@ const THEMES = [
   { id: "fog", name: "Fog" },
   { id: "noir", name: "Noir" },
   { id: "paper", name: "Paper" },
+  { id: "neon", name: "Neon" },
+  { id: "glacier", name: "Glacier" },
 ];
 
 const DEFAULT_THEME = "forest";
