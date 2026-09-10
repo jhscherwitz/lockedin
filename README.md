@@ -23,9 +23,11 @@ fetched at runtime. Open the folder, run one command, and it works.
 - **Ambient sound mixer** — seven recordings, any number playing at once,
   each with its own volume plus a master
 - **Tasks and a notepad** — edited in place, saved automatically
-- **Eight games for breaks** — Wordle (words), Blackjack, Minesweeper,
-  Sequence (pattern memory), Snake, Dino Run, Sudoku with generated puzzles,
-  and 2048. Sudoku, Snake, Wordle and Minesweeper can be won, and say so.
+- **Nine games for breaks** — Wordle (words), Blackjack, Minesweeper, Repeat
+  the Sequence (pattern memory), Snake, Dino Run, Sudoku with generated
+  puzzles, 2048, and a Geometry Dash style one-button platformer with a
+  designed level. Sudoku, Snake, Wordle, Minesweeper and Geometry Dash can be
+  won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
   browser-only, no backend and no server to trust

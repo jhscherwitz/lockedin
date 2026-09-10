@@ -125,10 +125,26 @@ Right-side panel, organised into tabs.
   OAuth, a token backend, and Spotify Premium for every listener.
 - **[not wanted]** Bubble wrap, Schulte table.
 
-### Geometry Dash levels - [later]
+### Geometry Dash levels - [done, one level]
 
-Wanted eventually: a Geometry Dash style precision platformer with designed
-levels rather than procedural obstacles.
+Built. A Geometry Dash style precision platformer with a designed level
+rather than procedural obstacles. One original level, ~31 seconds, 36
+obstacles in 22 jumpable clusters. Progress percent, best percent and an
+attempt counter instead of a score, because the genre is about learning a
+fixed sequence rather than reacting to a random one.
+
+The note below about level design being the real work turned out to be
+exactly right, and produced one thing worth keeping: **obstacles have to be
+reasoned about in clusters, not individually.** Three spikes in a row are a
+single 98px hazard, and an arc that clears the first lands on the third.
+`gdClusters()` groups them and works out the window of take-off positions
+that clears the whole group; `gdVerifyLevel()` then flies a simulated player
+through and reports where it dies. The first run died at 45% - at the first
+triple spike - and the fault was the checker aiming at the leading spike,
+not the level. Worth having caught that way round rather than by assuming
+the level was fine and that I was just bad at it.
+
+Still open: a level editor, more levels, and music. Notes below stand.
 
 - **The Dino Run work carries straight over**: canvas rendering, an obstacle
   list, collision, and - importantly - physics scaled by elapsed time rather

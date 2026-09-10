@@ -34,6 +34,7 @@ import "./games/minesweeper.js";
 import "./games/sequence.js";
 import "./games/snake.js";
 import "./games/dino.js";
+import "./games/geometry.js";
 import "./games/sudoku.js";
 
 import { initClock } from "./clock.js";
