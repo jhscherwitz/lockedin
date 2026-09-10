@@ -1,4 +1,4 @@
-import { activeTheme, applyTheme, fontSelect, hourFormatControl, zoneSelect } from "./appearance.js";
+import { activeTheme, applyFont, applyTheme, fontSelect, hourFormatControl, zoneSelect } from "./appearance.js";
 import { clockSettings, updateNow } from "./clock.js";
 import { modeControl, positionThumb, syncSettingInputs, updateConditionalFields } from "./settings.js";
 import { SOUNDS, masterSlider, masterVolume, paintSlider, setMasterVolume, soundState, tiles } from "./sounds.js";
@@ -110,12 +110,9 @@ function applySavedState(data) {
 
   // Guard every field: a saved font or timezone might not exist any more,
   // and a <select> silently refuses values that aren't in its list.
-  if (data.font) {
-    fontSelect.value = data.font;
-    if (fontSelect.value === data.font) {
-      document.documentElement.style.setProperty("--timer-font", data.font);
-    }
-  }
+  // applyFont also loads the family and sets the matching weight, and
+  // returns false for a saved font that no longer exists.
+  if (data.font) applyFont(data.font);
 
   if (data.clock) {
     if (typeof data.clock.hour12 === "boolean") {

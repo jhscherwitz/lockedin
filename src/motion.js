@@ -1,3 +1,6 @@
+import { animate, createTimeline, eases, stagger } from "./vendor/anime.esm.js";
+import { elapsedMs, isRunning, renderHooks, targetMs, timerEl } from "./timer.js";
+
 /* ==========================================================================
    Motion
 
@@ -18,8 +21,7 @@
    these move already-rasterised layers instead.
    ========================================================================== */
 
-import { animate, createTimeline, stagger, eases } from "./vendor/anime.esm.js";
-import { renderHooks, timerEl, isRunning, elapsedMs, targetMs } from "./timer.js";
+
 
 const root = document.documentElement;
 
