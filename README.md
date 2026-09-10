@@ -119,12 +119,22 @@ that person is a minute out; there is no authority here to correct against.
 python presence.py "<paste your session link>"
 ```
 
-Setup is once and takes about a minute — create an application at
-[discord.com/developers/applications](https://discord.com/developers/applications),
+**Do this first: Discord → Settings → Activity Privacy → "Share your detected
+activities with others", on.** It is the only step that fails silently — with
+it off the script connects, Discord accepts the activity, no error appears
+anywhere, and your profile shows nothing.
+
+Then create an application at
+[discord.com/developers/applications](https://discord.com/developers/applications)
+(first visit shows a questionnaire — click Skip, New Application is behind it),
 copy its **Application ID**, and paste it in when the script asks. It is
 remembered in `presence-config.json`. Nothing needs approving. Full
 instructions, including the optional artwork, are in the docstring at the top
 of `presence.py`.
+
+Leave the terminal window open while you study. Closing it or pressing Ctrl+C
+clears the status, by design — a presence that outlived the session would be
+worse than none.
 
 It needs no `pip install`; like `serve.py` it is standard library only.
 
