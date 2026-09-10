@@ -26,7 +26,7 @@ fetched at runtime. Open the folder, run one command, and it works.
 - **Nine games for breaks** — Wordle (words), Blackjack, Minesweeper, Repeat
   the Sequence (pattern memory), Snake, Dino Run, Sudoku with generated
   puzzles, 2048, and a Geometry Dash style one-button platformer with a
-  designed level. Sudoku, Snake, Wordle, Minesweeper and Geometry Dash can be
+  designed level, ship sections and jump pads. Sudoku, Snake, Wordle, Minesweeper and Geometry Dash can be
   won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
