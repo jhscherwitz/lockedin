@@ -26,18 +26,19 @@ fetched at runtime. Open the folder, run one command, and it works.
 - **Nine games for breaks** — Wordle (words), Blackjack, Minesweeper, Repeat
   the Sequence (pattern memory), Snake, Dino Run, Sudoku with generated
   puzzles, 2048, and a Geometry Dash style one-button platformer with a
-  designed level, ship sections and jump pads. Sudoku, Snake, Wordle, Minesweeper and Geometry Dash can be
-  won, and say so.
+  designed level, ship sections and jump pads. Sudoku, Snake, Wordle,
+  Minesweeper and Geometry Dash can be won, and say so.
 - **Spotify playlists**, built-in plus your own, loaded only when you pick one
 - **Today's Google Calendar events** in the Notes & Tasks panel — read-only,
   browser-only, no backend and no server to trust
-- **Ten themes that are actually different** — each sets its own shape
+- **Twelve themes that are actually different** — each sets its own shape
   layout, blur, grain, vignette and text warmth, not just a palette. Noir
   drops the blur to 26px so the shapes have visible edges; Midnight uses
   three huge soft masses and a heavy vignette; Ember and Tide replace the
-  background composition outright; Paper is a full daylight inversion.
-  Forest is the default: four masses and a direction, with the light
-  entering from one corner
+  background composition outright; Neon is the only one that glows, with
+  hard bright cores over soft halos; Paper and Glacier are full daylight
+  inversions, one warm and one cold. Forest is the default: four masses and
+  a direction, with the light entering from one corner
 - **Fonts, 12/24-hour clock, and full timezone support**
 - **Keyboard shortcuts** for everything; press `?` to see them
 - Everything persists between visits
