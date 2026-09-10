@@ -24,6 +24,12 @@ function renderPanels() {
     // Tells screen readers whether this button's panel is showing.
     btn.setAttribute("aria-expanded", String(isOpen));
   });
+
+  /* Panels are fixed to the left rail and the timer is centred, so on a wide
+     screen they want the same band of pixels and the panel wins - it covers
+     the leading digit. CSS moves the timer aside from here; which is its
+     business, not this file's, so all that crosses is the fact of it. */
+  document.body.classList.toggle("panel-open", openPanel !== null);
 }
 
 export function togglePanel(name) {

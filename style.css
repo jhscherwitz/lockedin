@@ -642,7 +642,11 @@ html.is-entering .dock-btn {
    ========================================================================== */
 
 .panel[data-panel="sounds"] {
-  width: min(440px, calc(100vw - 9rem));
+  /* The widest panel, and so the only one that still clipped the timer once
+     the timer started stepping aside. 39vw pulls it in on a narrow desktop
+     window and does nothing at 1130px and up, where 440 is already the
+     smaller of the two. */
+  width: min(440px, 39vw, calc(100vw - 9rem));
 }
 
 .sound-master {
@@ -1186,7 +1190,11 @@ html.is-entering .dock-btn {
    ========================================================================== */
 
 .panel[data-panel="tasks"] {
-  width: min(380px, calc(100vw - 3rem));
+  /* 9rem, not 3rem: the rail is 1.5rem from the left edge and the panels start
+     at 7.4rem, so 3rem is a leftover from when the buttons were along the
+     bottom and left no room for them. Every other panel was updated; this one
+     was missed, and would have run under the rail on a narrow window. */
+  width: min(380px, calc(100vw - 9rem));
 }
 
 .task-list {
@@ -1500,12 +1508,44 @@ html.is-entering .dock-btn {
    ========================================================================== */
 
 main {
-  transition: opacity var(--t-slow) var(--ease);
+  transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease);
 }
 
 body.pip-open main {
   opacity: 0;
   pointer-events: none;
+}
+
+/* An open panel lands on top of the timer: the panel is pinned to the rail on
+   the left, the timer is centred in the window, and on a wide screen those are
+   the same pixels. The leading digit ends up showing through the panel's blur,
+   which reads as a rendering fault rather than a design.
+
+   So the timer steps aside and shrinks a little. It stays readable on purpose -
+   the reason you opened Brain Breaks is that you are on a break, and how long
+   is left is exactly what you still want to see.
+
+   The shift shrinks as the window grows, because the overlap does: past about
+   1650px the timer already clears the panel on its own and clamp takes the
+   push to zero, leaving it centred where it belongs. Measured, not guessed -
+   a fixed nudge looked deliberate at 1280 and lopsided at 1920. */
+@media (min-width: 1024px) {
+  body.panel-open main {
+    transform: translateX(clamp(0px, calc(850px - 50vw), 260px)) scale(0.78);
+  }
+}
+
+/* A narrow desktop window - 760 to 1024 - is the hard case: the panel and a
+   readable timer want more pixels than exist, so 0.78 is not enough to get
+   out of the way and the digits end up behind the glass again. The timer
+   gives up more size here rather than give up being visible, which is the
+   right way round: a smaller clock you can read beats a large one you cannot.
+   Below 760 the rail reflows and the panels go full width, so there is
+   nothing left to dodge. */
+@media (min-width: 760px) and (max-width: 1023px) {
+  body.panel-open main {
+    transform: translateX(clamp(0px, calc(700px - 50vw), 250px)) scale(0.6);
+  }
 }
 
 .task-add-row {
@@ -3815,6 +3855,23 @@ input[type="number"]::-webkit-inner-spin-button {
    next to the base rule loses to every one of them on source order alone.
    It has the same specificity; it just has to come last.
    ========================================================================== */
+
+/* A narrow desktop window - two windows side by side, most often. The timer
+   already shrinks hard here to clear the panel; this is the other half of the
+   same bargain, where the panel gives up width too. Neither alone was enough:
+   Brain Breaks is the widest at 420px and still clipped the digits at 1000.
+
+   Every panel that sets its own width is named, because this needs to beat all
+   of them and an attribute selector outranks a bare class. */
+@media (min-width: 760px) and (max-width: 1130px) {
+  .panel,
+  .panel-games,
+  .panel[data-panel="sounds"],
+  .panel[data-panel="music"],
+  .panel[data-panel="tasks"] {
+    width: min(39vw, 420px);
+  }
+}
 
 /* Below this, a 5rem rail plus a panel leaves nothing worth reading, so the
    rail goes back to a horizontal bar along the bottom and panels sit above
