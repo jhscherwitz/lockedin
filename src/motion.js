@@ -96,17 +96,27 @@ function entrance() {
 /* --------------------------------------------------------------------------
    Digits
 
-   render() runs four times a second, so this cannot animate on every call.
-   It animates only the segments whose text actually changed, which in
-   countdown is one segment most seconds. That is the point: the seconds
-   tick and the minutes sit still until they do not.
+   render() runs four times a second on a countdown and thirty on the
+   stopwatch, so this cannot animate on every call. It animates only the
+   segments whose text actually changed, which in countdown is one segment
+   most seconds. That is the point: the seconds tick and the minutes sit
+   still until they do not.
+
+   The stopwatch's hundredths are excluded outright. They change on almost
+   every frame, so animating them would mean thirty overlapping animations a
+   second on one element - and a digit that never settles is not a tick, it
+   is a blur.
    -------------------------------------------------------------------------- */
 
 const lastText = new WeakMap();
 
 function digitsChanged() {
   if (reduce) return;
-  timerEl.querySelectorAll("span:not(.timer-colon)").forEach((segment) => {
+  const digits = timerEl.querySelectorAll(
+    "span:not(.timer-colon):not(.timer-fraction)"
+  );
+
+  digits.forEach((segment) => {
     const text = segment.textContent;
     const previous = lastText.get(segment);
     lastText.set(segment, text);

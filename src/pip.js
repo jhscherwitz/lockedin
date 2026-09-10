@@ -1,4 +1,4 @@
-import { displayMs, formatTime, isRunning, renderHooks, start, statusText, stop, timerEl } from "./timer.js";
+import { displayMs, formatTime, isRunning, renderHooks, showsFraction, start, statusText, stop, timerEl } from "./timer.js";
 import { showToast } from "./toast.js";
 
 /* ==========================================================================
@@ -119,6 +119,14 @@ function pipStyles() {
       border-radius: 0.022em;
       background: currentColor;
     }
+    /* Hundredths, sized down so the seconds stay the thing you read. */
+    .mini-fraction {
+      font-size: 0.5em;
+      opacity: 0.72;
+      align-self: flex-end;
+      padding-bottom: 0.12em;
+      letter-spacing: 0;
+    }
     .mini-btn {
       border: 0;
       border-radius: 8px;
@@ -137,12 +145,18 @@ function pipStyles() {
 
 /* Mirrors setTimerText: minutes and seconds as separate spans with a drawn
    colon between, rebuilt only when crossing an hour changes the shape. */
+let pipFractionEl = null;
+
 function setPipTime(text) {
   if (!pipWindow || !pipTimeEl) return;
-  const parts = text.split(":");
+  const dot = text.indexOf(".");
+  const fraction = dot === -1 ? null : text.slice(dot + 1);
+  const parts = (dot === -1 ? text : text.slice(0, dot)).split(":");
+  const wantsFraction = fraction !== null;
 
-  if (pipSegments.length !== parts.length) {
+  if (pipSegments.length !== parts.length || wantsFraction !== !!pipFractionEl) {
     pipTimeEl.innerHTML = "";
+    pipFractionEl = null;
     pipSegments = parts.map((_, i) => {
       if (i > 0) {
         const colon = pipWindow.document.createElement("span");
@@ -153,11 +167,19 @@ function setPipTime(text) {
       pipTimeEl.append(segment);
       return segment;
     });
+    if (wantsFraction) {
+      pipFractionEl = pipWindow.document.createElement("span");
+      pipFractionEl.className = "mini-fraction";
+      pipTimeEl.append(pipFractionEl);
+    }
   }
 
   parts.forEach((part, i) => {
     if (pipSegments[i].textContent !== part) pipSegments[i].textContent = part;
   });
+  if (pipFractionEl && pipFractionEl.textContent !== "." + fraction) {
+    pipFractionEl.textContent = "." + fraction;
+  }
 }
 
 function currentPipThemeKey() {
@@ -180,7 +202,7 @@ function renderPip() {
     pipStyleEl.textContent = pipStyles();
   }
 
-  setPipTime(formatTime(displayMs()));
+  setPipTime(formatTime(displayMs(), showsFraction()));
 
   const label = isRunning ? "Pause" : "Start";
   if (pipButtonEl.textContent !== label) pipButtonEl.textContent = label;
