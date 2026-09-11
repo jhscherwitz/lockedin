@@ -81,16 +81,27 @@ const DRIFT_MS = 1500;
 const HOSTING_KEY = "lockedin-hosting";
 const ID_KEY = "lockedin-channel-id";
 
+const NAME_KEY = "lockedin-name";
+
 let role = null; // null | "host" | "guest"
 let client = null;
 let topic = "";
 let applying = false; // true while a guest is being moved by the host
-let heartbeat = null;
-let watchdog = null;
+let stateTimer = null; // host only: the clock
+let helloTimer = null; // everyone: "still here"
+let watchdog = null; // everyone: who has gone quiet
+let hostWatch = null; // guests only: has the clock gone quiet
 let lastHostAt = 0;
-const seenGuests = new Map(); // id -> last heard, host only
+let myName = "";
+
+/* Everyone in the room, keyed by the sender id in their messages - including
+   us, added locally, because the channel does not echo our own traffic back.
+   Value is { name, host, at }, where at is when we last heard from them. */
+const roster = new Map();
 
 const statusEl = document.getElementById("sync-status");
+const peopleEl = document.getElementById("sync-people");
+const nameEl = document.getElementById("sync-name");
 
 /* Ours, decided here rather than by a server, because the share link carries
    it and the link is built the instant the button is clicked. */
@@ -151,18 +162,138 @@ function publish(message) {
    Hosting
    -------------------------------------------------------------------------- */
 
-function describeGuests() {
-  if (role !== "host") return;
-  const count = seenGuests.size;
-  if (!count) {
-    setStatus("Hosting - nobody has joined yet.");
+/* --------------------------------------------------------------------------
+   Who is here
+
+   Everyone announces themselves on the same channel and everyone keeps the
+   same list, so a guest can see the other guests rather than only the host
+   seeing a count. The host is not special here - it is special about the
+   clock, which is a different thing.
+   -------------------------------------------------------------------------- */
+
+function displayName(name) {
+  const trimmed = (name || "").trim();
+  return trimmed ? trimmed.slice(0, 24) : "Someone";
+}
+
+function sayHello() {
+  publish({ t: "hi", name: myName, host: role === "host" });
+}
+
+function renderPeople() {
+  if (!peopleEl) return;
+
+  if (!role || roster.size === 0) {
+    peopleEl.innerHTML = "";
+    peopleEl.hidden = true;
     return;
   }
-  setStatus(
-    count === 1
-      ? "1 person is studying with you. Your pauses reach them."
-      : count + " people are studying with you. Your pauses reach them."
-  );
+
+  /* Host first, then alphabetical. A list that reorders itself every time
+     someone's heartbeat lands would be unreadable, so the sort never depends
+     on when anyone was last heard. */
+  const people = [...roster.entries()].sort((a, b) => {
+    if (a[1].host !== b[1].host) return a[1].host ? -1 : 1;
+    return displayName(a[1].name).localeCompare(displayName(b[1].name));
+  });
+
+  peopleEl.innerHTML = "";
+  people.forEach(([id, person]) => {
+    const row = document.createElement("div");
+    row.className = "sync-person";
+
+    const dot = document.createElement("span");
+    dot.className = "sync-dot";
+    row.append(dot);
+
+    const name = document.createElement("span");
+    name.className = "sync-name-text";
+    name.textContent = displayName(person.name);
+    row.append(name);
+
+    if (person.host) {
+      const tag = document.createElement("span");
+      tag.className = "sync-tag";
+      tag.textContent = "host";
+      row.append(tag);
+    }
+    if (id === myClientId) {
+      const tag = document.createElement("span");
+      tag.className = "sync-tag sync-tag-you";
+      tag.textContent = "you";
+      row.append(tag);
+    }
+
+    peopleEl.append(row);
+  });
+  peopleEl.hidden = false;
+}
+
+function describeRoom() {
+  if (!role) return;
+  const others = roster.size - 1; // ourselves are in there too
+
+  if (role === "host") {
+    setStatus(
+      others <= 0
+        ? "Hosting - nobody has joined yet."
+        : others === 1
+        ? "1 person is studying with you. Your pauses reach them."
+        : others + " people are studying with you. Your pauses reach them."
+    );
+  } else {
+    setStatus(
+      others <= 1
+        ? "Synced. The host's pauses reach you."
+        : "Synced with " + others + " others. The host's pauses reach you."
+    );
+  }
+  renderPeople();
+}
+
+/* Anyone we have not heard from in a while has closed their tab. There is no
+   goodbye message: a browser being shut does not get to send one, so silence
+   has to be the signal or half the departures would go unnoticed. */
+function pruneRoster() {
+  const cutoff = Date.now() - GUEST_GONE_MS;
+  let left = null;
+  roster.forEach((person, id) => {
+    if (id === myClientId) return;
+    if (person.at < cutoff) {
+      left = person;
+      roster.delete(id);
+    }
+  });
+  if (left) {
+    showToast(displayName(left.name) + " left the session.");
+    describeRoom();
+  }
+}
+
+function noteHello(message) {
+  const id = message.from;
+  const known = roster.has(id);
+  roster.set(id, {
+    name: message.name,
+    host: !!message.host,
+    at: Date.now(),
+  });
+  if (!known) {
+    showToast(displayName(message.name) + " joined the session.");
+    // Answer straight away so they appear in our list and we in theirs,
+    // rather than both waiting out a heartbeat.
+    sayHello();
+    if (role === "host") broadcastState();
+  }
+  describeRoom();
+}
+
+function enterRoom() {
+  roster.clear();
+  roster.set(myClientId, { name: myName, host: role === "host", at: Date.now() });
+  describeRoom();
+  if (!helloTimer) helloTimer = setInterval(sayHello, HELLO_MS);
+  if (!watchdog) watchdog = setInterval(pruneRoster, 4000);
 }
 
 function broadcastState() {
@@ -186,37 +317,16 @@ export function startHosting() {
   openChannel(
     myChannelId,
     (message) => {
-      if (message.t !== "hi") return;
-      const known = seenGuests.has(message.from);
-      seenGuests.set(message.from, Date.now());
-      if (!known) {
-        showToast("Someone joined your session.");
-        // Answer immediately, so they are not adrift until the next beat.
-        broadcastState();
-      }
-      describeGuests();
+      if (message.t === "hi") noteHello(message);
     },
     () => {
-      describeGuests();
+      enterRoom();
+      sayHello();
       broadcastState();
     }
   );
 
-  if (!heartbeat) heartbeat = setInterval(broadcastState, HEARTBEAT_MS);
-
-  if (!watchdog) {
-    watchdog = setInterval(() => {
-      const cutoff = Date.now() - GUEST_GONE_MS;
-      let dropped = false;
-      seenGuests.forEach((at, id) => {
-        if (at < cutoff) {
-          seenGuests.delete(id);
-          dropped = true;
-        }
-      });
-      if (dropped) describeGuests();
-    }, 5000);
-  }
+  if (!stateTimer) stateTimer = setInterval(broadcastState, HEARTBEAT_MS);
 }
 
 /* --------------------------------------------------------------------------
@@ -232,20 +342,25 @@ export function joinChannel(channelId) {
   openChannel(
     channelId,
     (message) => {
+      if (message.t === "hi") {
+        noteHello(message);
+        return;
+      }
       if (message.t !== "state") return;
       lastHostAt = Date.now();
-      setStatus("Synced. The host's pauses reach you.");
       applyState(message);
+      describeRoom();
     },
     () => {
-      publish({ t: "hi" });
+      enterRoom();
+      sayHello();
     }
   );
 
-  if (!heartbeat) heartbeat = setInterval(() => publish({ t: "hi" }), HELLO_MS);
-
-  if (!watchdog) {
-    watchdog = setInterval(() => {
+  /* Separate from the roster prune: a host who goes quiet is a different
+     event from a guest who does, because the clock stops being anyone's. */
+  if (!hostWatch) {
+    hostWatch = setInterval(() => {
       if (role !== "guest") return;
       if (Date.now() - lastHostAt < HOST_GONE_MS) return;
       setStatus("The host is not online - your timer runs on the link alone.");
@@ -272,10 +387,10 @@ function applyState(message) {
 
 function leaveSession() {
   role = null;
-  clearInterval(heartbeat);
-  clearInterval(watchdog);
-  heartbeat = null;
-  watchdog = null;
+  [stateTimer, helloTimer, watchdog, hostWatch].forEach(clearInterval);
+  stateTimer = helloTimer = watchdog = hostWatch = null;
+  roster.clear();
+  renderPeople();
   if (client) {
     client.close();
     client = null;
@@ -297,6 +412,32 @@ export function initSync() {
   }
   myChannelId = stored || randomId(8);
   myClientId = randomId(6);
+
+  /* Kept here rather than in storage.js, which owns the settings blob. This
+     is not a setting - it is only ever sent, never applied to the page. */
+  try {
+    myName = localStorage.getItem(NAME_KEY) || "";
+  } catch (error) {
+    myName = "";
+  }
+
+  if (nameEl) {
+    nameEl.value = myName;
+    nameEl.addEventListener("input", () => {
+      myName = nameEl.value.slice(0, 24);
+      try {
+        localStorage.setItem(NAME_KEY, myName);
+      } catch (error) {
+        // Private mode; the name just will not outlive the tab.
+      }
+      const me = roster.get(myClientId);
+      if (me) me.name = myName;
+      renderPeople();
+      // Tell the room now rather than on the next beat, so a name being
+      // typed shows up while the person is still looking at the panel.
+      if (role) sayHello();
+    });
+  }
 
   let wasRunning = isRunning;
 
