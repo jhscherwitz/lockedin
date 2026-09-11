@@ -163,6 +163,17 @@ link with the `&p=` trimmed off still works perfectly.
 
 ### Discord Rich Presence
 
+**Double-click `start-presence.bat`**, then press Enter. That is the whole
+thing: Enter on its own gives you a 25/5 Pomodoro, or type `50` for fifty
+minutes of focus, or paste a session link.
+
+It is not automatic and deliberately cannot be. Your status exists only while
+that window is open, and closing it clears the status — a presence that outlived
+the session would be telling people you are studying hours after you stopped.
+Nothing else clears it, so nothing else can.
+
+From a terminal, if you prefer:
+
 ```bash
 python presence.py 25/5
 ```
@@ -178,7 +189,10 @@ python presence.py "<paste your session link>"
 The link is worth the extra step for two things a duration cannot do: it picks
 up a session **already in progress** at the right point, and it is what puts the
 **Study with me** button on your profile — a button needs somewhere to point.
-Quote it, or the shell will cut it at the first `&`.
+
+On a command line a link must be **quoted**, or the shell cuts it at the first
+`&`. Pasted at the prompt it needs no quotes at all, since nothing typed there
+goes through a shell — which is the other reason to prefer the double-click.
 
 **Do this first: Discord → Settings → Activity Privacy → "Share your detected
 activities with others", on.** It is the only step that fails silently — with
@@ -326,6 +340,7 @@ index.html      markup
 style.css       all styling; design tokens and the surface scale at the top
 serve.py        local dev server with caching disabled
 presence.py     Discord Rich Presence; run it yourself, talks to the desktop app
+start-presence.bat  double-click launcher for the above
 assets/sounds   ambient MP3s
 assets/alerts   your own end-of-session and game-win sounds
 assets/words    Wordle answer and guess lists

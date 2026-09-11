@@ -499,7 +499,10 @@ def main():
         print(__doc__.strip().split("\n\n")[0])
         print()
         print("A duration - 50, or 25/5 - or a session link.")
-        raw = input("> ").strip()
+        print("Press Enter on its own for a 25/5 Pomodoro.")
+        # Enter alone is the double-click path. Someone who opened this from
+        # start-presence.bat wants a status, not a questionnaire.
+        raw = input("> ").strip() or "25/5"
 
     if not raw:
         raise SystemExit("Nothing given. Try: python presence.py 25/5")
