@@ -694,6 +694,7 @@
       <nav class="tabs" role="tablist" aria-label="Settings sections">
         <button class="tab is-active" data-tab="timer">Timer</button>
         <button class="tab" data-tab="theme">Theme</button>
+        <button class="tab" data-tab="font">Font</button>
         <button class="tab" data-tab="clock">Clock</button>
         <button class="tab" data-tab="zone">Timezone</button>
       </nav>
@@ -771,10 +772,17 @@
             <span class="field-label">Background</span>
             <div id="theme-grid" class="theme-grid"></div>
           </div>
+        </div>
 
+        <div class="tab-panel" data-tab="font">
           <div class="field">
             <label class="field-label" for="font-select">Timer font</label>
             <select id="font-select" class="select"></select>
+            <p class="field-hint">
+              Sets the timer, the clock, the focus prompt and the calculator —
+              the things you read at a glance. Buttons and body text keep their
+              own face, so a display font never ends up in a paragraph.
+            </p>
           </div>
         </div>
 
