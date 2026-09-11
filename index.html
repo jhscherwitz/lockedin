@@ -201,6 +201,15 @@
         </svg>
         <span class="dock-label">Music</span>
       </button>
+      <button class="dock-btn" data-panel="together" aria-expanded="false" aria-label="Study together">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+          <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+        </svg>
+        <span class="dock-label">Together</span>
+      </button>
       </nav>
 
       <nav class="dock dock-tools" aria-label="Tools">
@@ -496,6 +505,44 @@
       </div>
     </section>
 
+    <section class="panel" data-panel="together" aria-label="Study together">
+      <header class="panel-head">
+        <h2>Study together</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+      <div class="panel-body">
+        <div class="field" data-show-for="countdown pomodoro">
+          <button type="button" class="btn btn-ghost btn-wide" id="share-session">
+            Copy session link
+          </button>
+          <input
+            id="share-link"
+            class="share-link"
+            type="text"
+            readonly
+            hidden
+            aria-label="Session link"
+          />
+          <p class="sound-hint">
+            Whoever opens the link gets this timer already running, in sync to
+            the second. No account needed. Pause or resume and it reaches them
+            too, for as long as this tab stays open.
+          </p>
+          <p class="sound-hint sync-status" id="sync-status" hidden></p>
+        </div>
+
+        <!-- A stopwatch counts up with nothing to arrive at, so there is no
+             shared moment to put anyone in. Saying so beats an empty panel. -->
+        <div class="field" data-show-for="stopwatch">
+          <p class="sound-hint">
+            The stopwatch has nothing to share - it counts up, with no end to be
+            in sync about. Switch to Countdown or Pomodoro in Settings and the
+            link appears here.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <section class="panel panel-calc" data-panel="calculator" aria-label="Calculator">
       <header class="panel-head">
         <h2>Calculator</h2>
@@ -655,7 +702,6 @@
       </header>
       <nav class="tabs" role="tablist" aria-label="Settings sections">
         <button class="tab is-active" data-tab="timer">Timer</button>
-        <button class="tab" data-tab="share">Together</button>
         <button class="tab" data-tab="theme">Theme</button>
         <button class="tab" data-tab="clock">Clock</button>
         <button class="tab" data-tab="zone">Timezone</button>
@@ -715,40 +761,6 @@
           <div class="field field-row" data-show-for="countdown pomodoro">
             <label class="field-label" for="notify-toggle">Browser notification</label>
             <input class="switch" id="notify-toggle" type="checkbox" />
-          </div>
-        </div>
-
-        <div class="tab-panel" data-tab="share">
-          <div class="field" data-show-for="countdown pomodoro">
-            <span class="field-label">Study together</span>
-            <button type="button" class="btn btn-ghost btn-wide" id="share-session">
-              Copy session link
-            </button>
-            <input
-              id="share-link"
-              class="share-link"
-              type="text"
-              readonly
-              hidden
-              aria-label="Session link"
-            />
-            <p class="sound-hint">
-              Whoever opens the link gets this timer already running, in sync to
-              the second. No account needed. Pause or resume and it reaches them
-              too, for as long as this tab stays open.
-            </p>
-            <p class="sound-hint sync-status" id="sync-status" hidden></p>
-          </div>
-
-          <!-- A stopwatch counts up with nothing to arrive at, so there is no
-               shared moment to put anyone in. Saying so beats an empty tab. -->
-          <div class="field" data-show-for="stopwatch">
-            <span class="field-label">Study together</span>
-            <p class="sound-hint">
-              The stopwatch has nothing to share - it counts up, with no end to
-              be in sync about. Switch the Timer tab to Countdown or Pomodoro
-              and the link appears here.
-            </p>
           </div>
         </div>
 
