@@ -1625,6 +1625,12 @@ html.is-entering .dock-btn {
 
 /* ==========================================================================
    Dock and panel polish
+
+   These selectors are declared earlier as well, and the overlap is the point:
+   this block is a late pass that re-tunes a few values after the shapes were
+   settled, so .panel's box-shadow and .panel-head h2's font-weight are meant
+   to win here. Deliberate, not a duplicate - said out loud because an audit
+   for repeated selectors flags them every time otherwise.
    ========================================================================== */
 
 .dock-btn {
@@ -1691,18 +1697,19 @@ html.is-entering .dock-btn {
   transform: translateY(-1px);
 }
 
+/* No translateY(0) to undo the hover lift above: transform is one property,
+   so naming it here replaces the hover's translateY outright rather than
+   adding to it. Writing the zero looked like it was doing something, which is
+   how this ended up declared twice. */
 .icon-btn:active {
-  transform: translateY(0) scale(0.94);
+  transform: scale(0.94);
 }
 
 /* The arrow spins when pressed, so the reset reads as a reset. Scoped to
-   reset: spinning the mini player's icon would mean nothing. */
+   reset: spinning the mini player's icon would mean nothing. The id outranks
+   the class above, so this wins wherever the two both apply. */
 #reset-btn:active {
   transform: rotate(-180deg) scale(0.94);
-}
-
-.icon-btn:active {
-  transform: scale(0.94);
 }
 
 /* The mini player used to live in the dock and borrowed .dock-btn.is-active
