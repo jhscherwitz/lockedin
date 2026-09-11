@@ -43,6 +43,7 @@ import { initSettings } from "./settings.js";
 import { initSounds } from "./sounds.js";
 import { initAppearance } from "./appearance.js";
 import { initTasks } from "./tasks.js";
+import { initCalculator } from "./calculator.js";
 import { initCalendar } from "./calendar.js";
 import { initMusic } from "./music.js";
 import { initGames } from "./games/shell.js";
@@ -65,6 +66,7 @@ initSounds();
 initAppearance();
 initTasks();
 initCalendar();
+initCalculator();
 initMusic();
 initGames();
 
