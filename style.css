@@ -779,6 +779,147 @@ html.is-entering .dock-btn {
   font-size: 0.7rem;
 }
 
+/* ==========================================================================
+   Calculator
+   ========================================================================== */
+
+/* Wider than a standard panel: five columns of keys need the room, and a
+   cramped keypad is a mistyped sum. */
+.panel-calc {
+  width: min(430px, calc(100vw - 9rem));
+  max-height: min(88vh, 700px);
+}
+
+.calc-screen {
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--r-md);
+  background: var(--sunk-1);
+  border: 1px solid var(--line-soft);
+  text-align: right;
+}
+
+/* The sum itself. Wraps rather than scrolls, so a long expression stays
+   readable instead of sliding out of sight. */
+.calc-input {
+  font-family: var(--timer-font), ui-monospace, monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  word-break: break-all;
+  min-height: 1.9rem;
+}
+
+/* The running answer, shown while you type and before you commit. Quieter
+   than the sum on purpose: it is a preview, not the result. */
+.calc-result {
+  margin-top: 0.25rem;
+  min-height: 1.1rem;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.calc-result.is-error {
+  color: var(--danger, #ff6b6b);
+  font-size: 0.8rem;
+}
+
+.calc-modes {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.7rem 0 0.5rem;
+}
+
+.calc-mode {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--text-dim);
+  font-family: var(--display-font);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+
+.calc-mode:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.calc-mode.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.calc-keys {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+}
+
+.calc-key {
+  padding: 0.7rem 0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--display-font);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t) var(--ease), transform 90ms var(--ease);
+}
+
+.calc-key:hover {
+  background: var(--surface-3);
+}
+
+/* The press needs to land immediately - a key that eases into being pressed
+   feels broken on the tenth digit. */
+.calc-key:active {
+  transform: scale(0.94);
+}
+
+/* Functions read as the supporting cast: same size, less contrast, so the
+   digits stay the thing the eye lands on. */
+.calc-fn {
+  background: var(--surface-1);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.calc-fn:hover {
+  color: var(--text);
+}
+
+.calc-op {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.calc-warm {
+  color: var(--danger, #ff6b6b);
+}
+
+.calc-equals {
+  grid-column: span 2;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.calc-equals:hover {
+  background: var(--accent);
+  filter: brightness(1.08);
+}
+
 /* Small print at the foot of a panel. The music panel uses it too. */
 .sound-hint {
   margin: 0.9rem 0 0;

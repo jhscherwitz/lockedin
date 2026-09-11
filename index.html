@@ -176,6 +176,14 @@
         </svg>
         <span class="dock-label">Calendar</span>
       </button>
+      <button class="dock-btn" data-panel="calculator" aria-expanded="false" aria-label="Calculator">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="3" width="16" height="18" rx="2" />
+          <rect x="7" y="6" width="10" height="4" rx="1" />
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01M16 17h.01" />
+        </svg>
+        <span class="dock-label">Calc</span>
+      </button>
       <button class="dock-btn" data-panel="sounds" aria-expanded="false" aria-label="Sounds">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 8a5 5 0 0 1 0 8" />
@@ -485,6 +493,84 @@
       </header>
       <div class="panel-body">
         <div id="calendar-body" class="cal-body"></div>
+      </div>
+    </section>
+
+    <section class="panel panel-calc" data-panel="calculator" aria-label="Calculator">
+      <header class="panel-head">
+        <h2>Calculator</h2>
+        <button class="panel-close" aria-label="Close">&times;</button>
+      </header>
+      <div class="panel-body">
+        <div class="calc-screen">
+          <div class="calc-input" id="calc-input">0</div>
+          <div class="calc-result" id="calc-result"></div>
+        </div>
+
+        <div class="calc-modes">
+          <button type="button" class="calc-mode" id="calc-second" aria-pressed="false">2nd</button>
+          <button type="button" class="calc-mode" id="calc-deg" aria-label="Degrees">DEG</button>
+        </div>
+
+        <div class="calc-keys" id="calc-keys">
+          <button type="button" class="calc-key calc-fn" data-insert="(">(</button>
+          <button type="button" class="calc-key calc-fn" data-insert=")">)</button>
+          <button type="button" class="calc-key calc-fn" data-action="back">&#9003;</button>
+          <button type="button" class="calc-key calc-warm" data-action="clear">C</button>
+          <button type="button" class="calc-key calc-op" data-insert="÷">÷</button>
+
+          <button type="button" class="calc-key calc-fn" data-insert="sin(" data-insert-second="asin(">
+            <span class="calc-key-label">sin</span>
+          </button>
+          <button type="button" class="calc-key calc-fn" data-insert="cos(" data-insert-second="acos(">
+            <span class="calc-key-label">cos</span>
+          </button>
+          <button type="button" class="calc-key calc-fn" data-insert="tan(" data-insert-second="atan(">
+            <span class="calc-key-label">tan</span>
+          </button>
+          <button type="button" class="calc-key calc-fn" data-insert="^">x&#8319;</button>
+          <button type="button" class="calc-key calc-op" data-insert="×">×</button>
+
+          <button type="button" class="calc-key calc-fn" data-insert="ln(" data-insert-second="exp(">
+            <span class="calc-key-label">ln</span>
+          </button>
+          <button type="button" class="calc-key calc-fn" data-insert="log(" data-insert-second="10^(">
+            <span class="calc-key-label">log</span>
+          </button>
+          <button type="button" class="calc-key calc-fn" data-insert="√(" data-insert-second="cbrt(">
+            <span class="calc-key-label">√</span>
+          </button>
+          <button type="button" class="calc-key calc-fn" data-insert="^2">x²</button>
+          <button type="button" class="calc-key calc-op" data-insert="−">−</button>
+
+          <button type="button" class="calc-key" data-insert="7">7</button>
+          <button type="button" class="calc-key" data-insert="8">8</button>
+          <button type="button" class="calc-key" data-insert="9">9</button>
+          <button type="button" class="calc-key calc-fn" data-insert="!">n!</button>
+          <button type="button" class="calc-key calc-op" data-insert="+">+</button>
+
+          <button type="button" class="calc-key" data-insert="4">4</button>
+          <button type="button" class="calc-key" data-insert="5">5</button>
+          <button type="button" class="calc-key" data-insert="6">6</button>
+          <button type="button" class="calc-key calc-fn" data-insert="π">π</button>
+          <button type="button" class="calc-key calc-fn" data-insert="%">%</button>
+
+          <button type="button" class="calc-key" data-insert="1">1</button>
+          <button type="button" class="calc-key" data-insert="2">2</button>
+          <button type="button" class="calc-key" data-insert="3">3</button>
+          <button type="button" class="calc-key calc-fn" data-insert="e">e</button>
+          <button type="button" class="calc-key calc-fn" data-insert="1/(">1/x</button>
+
+          <button type="button" class="calc-key" data-insert="0">0</button>
+          <button type="button" class="calc-key" data-insert=".">.</button>
+          <button type="button" class="calc-key calc-fn" data-insert="Ans">Ans</button>
+          <button type="button" class="calc-key calc-equals" data-action="equals">=</button>
+        </div>
+
+        <p class="sound-hint">
+          Type straight at it when this panel is open — digits, brackets and
+          <kbd>Enter</kbd> all work. <strong>Ans</strong> is the last answer.
+        </p>
       </div>
     </section>
 
