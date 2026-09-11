@@ -3058,25 +3058,6 @@ body.pip-open main {
   padding: 0.4rem 0.7rem;
 }
 
-/* ---- Geometry Dash: the progress track ---- */
-
-.gd-track {
-  height: 6px;
-  margin: 0 0 0.5rem;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.gd-bar {
-  height: 100%;
-  width: 0;
-  border-radius: var(--r-pill);
-  background: var(--accent);
-  /* No transition: the bar is redrawn every frame, and easing it would put
-     it permanently behind the cube it is meant to describe. */
-}
-
 /* Stopwatch hundredths.
 
    Half size and slightly dimmed, and aligned to the baseline rather than the

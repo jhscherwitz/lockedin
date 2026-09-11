@@ -125,7 +125,12 @@ Right-side panel, organised into tabs.
   OAuth, a token backend, and Spotify Premium for every listener.
 - **[not wanted]** Bubble wrap, Schulte table.
 
-### Geometry Dash levels - [done, one level]
+### Geometry Dash levels - [built, then removed]
+
+**Removed on request: it was not fun enough to keep.** The note kept below
+because the finding under it outlived the game, and because "we tried this
+and it did not land" is worth more here than a gap where it used to be. The
+code is in git history if it is ever wanted back.
 
 Built. A Geometry Dash style precision platformer with a designed level
 rather than procedural obstacles. One original level, ~31 seconds, 36
