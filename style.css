@@ -414,6 +414,29 @@ html.is-entering .dock-btn {
   gap: 0.65rem;
 }
 
+/* How much of the theme's accent the rail takes.
+
+   Zero here, because :root is Forest - its gold over the green glass was the
+   one that looked wrong, and Forest being the default makes it the rail most
+   people see. The other eleven opt in below.
+
+   Low even where it is on. The active button is this same accent at full
+   strength and has to stay the loudest thing in the rail, so the wash reads
+   as belonging without competing. */
+:root {
+  --dock-tint: 0%;
+  --dock-edge: 0%;
+  --dock-hover: 0%;
+}
+
+/* Every theme but Forest. The :not is needed because picking Forest from the
+   list does set data-theme="forest" - it just reads its colours from :root. */
+[data-theme]:not([data-theme="forest"]) {
+  --dock-tint: 12%;
+  --dock-edge: 20%;
+  --dock-hover: 18%;
+}
+
 .dock {
   display: flex;
   flex-direction: column;
@@ -421,22 +444,15 @@ html.is-entering .dock-btn {
   padding: 0.35rem;
   border-radius: var(--r-lg);
 
-  /* The glass takes a wash of the theme's accent instead of staying neutral.
-     Every theme already swung its background, its blur and its accent, but
-     the rail stayed the same slab of grey in all of them - flat black over
-     Neon's cyan, flat white over Paper.
-
-     Twelve percent is deliberately low. It has to read as belonging to the
-     theme without competing with the active button, which is that same accent
-     at full strength and needs to stay the loudest thing in the rail. The
-     wash is a gradient layer rather than a flat colour so it sits *over*
-     --panel-bg and keeps that alpha, which is what the blur behind it needs
-     to still show through. */
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line-soft));
+  /* At 0% these collapse to exactly what they were before the wash existed:
+     a --line-soft border over a plain --panel-bg. The gradient is a layer
+     rather than a flat colour so it sits over --panel-bg and keeps that
+     alpha, which is what the blur behind it needs to still show through. */
+  border: 1px solid color-mix(in srgb, var(--accent) var(--dock-edge), var(--line-soft));
   background:
     linear-gradient(
-      color-mix(in srgb, var(--accent) 12%, transparent),
-      color-mix(in srgb, var(--accent) 12%, transparent)
+      color-mix(in srgb, var(--accent) var(--dock-tint), transparent),
+      color-mix(in srgb, var(--accent) var(--dock-tint), transparent)
     ),
     var(--panel-bg);
   backdrop-filter: blur(16px);
@@ -475,8 +491,9 @@ html.is-entering .dock-btn {
 
 .dock-btn:hover {
   /* Hover leans the same way the pill does, so the whole rail belongs to one
-     theme rather than a coloured tray holding grey buttons. */
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+     theme rather than a coloured tray holding grey buttons. Zero in Forest,
+     where that is plain --surface-2 again. */
+  background: color-mix(in srgb, var(--accent) var(--dock-hover), var(--surface-2));
   color: var(--text);
   transform: translateY(-2px);
 }
