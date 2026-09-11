@@ -6,7 +6,7 @@
     <title>LockedIn</title>
     <meta
       name="description"
-      content="A single-page focus dashboard: a Pomodoro timer, layerable ambient sounds, tasks and a notepad, on one calm screen."
+      content="A focus timer you can share. Send the link and whoever opens it lands in your session already running, in sync to the second - plus ambient sound, tasks, notes and games for the breaks."
     />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
@@ -17,9 +17,20 @@
     <meta property="og:title" content="LockedIn" />
     <meta
       property="og:description"
-      content="A single-page focus dashboard: a Pomodoro timer, layerable ambient sounds, tasks and a notepad, on one calm screen."
+      content="A focus timer you can share. Send the link and whoever opens it lands in your session already running, in sync to the second - plus ambient sound, tasks, notes and games for the breaks."
     />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:site_name" content="LockedIn" />
+
+    <!-- summary, not summary_large_image. The large card is a 1200x630 slot
+         and there is no image to put in it, so asking for one got an empty
+         box. A small card with a real title and description renders properly
+         everywhere; promote this the day an og:image exists. -->
+    <meta name="twitter:card" content="summary" />
+
+    <!-- Discord paints the embed's left stripe with this. Costs one line and
+         is the difference between the card looking placed and looking
+         pasted. -->
+    <meta name="theme-color" content="#d9a441" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
