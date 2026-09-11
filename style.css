@@ -398,6 +398,11 @@ html.is-entering .dock-btn {
    buttons and the tool buttons read as one column with a divider rather than
    two bars that happen to be near each other. The navs keep their separate
    aria labels. */
+/* The rail holds the glass rather than being it. Two separate pills with the
+   page showing through between them, which is what actually separates
+   Settings from the six above: a margin inside one container only moves
+   buttons around on the same surface, and the surface is the thing the eye
+   reads as "these belong together". */
 .dock-rail {
   position: fixed;
   left: 1.5rem;
@@ -406,28 +411,36 @@ html.is-entering .dock-btn {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.35rem;
-  border-radius: var(--r-lg);
-  border: 1px solid var(--line-soft);
-  background: var(--panel-bg);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 14px 40px -12px var(--shadow);
+  gap: 0.65rem;
 }
 
 .dock {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-}
+  padding: 0.35rem;
+  border-radius: var(--r-lg);
 
-/* No divider, but still a gap. A hairline above a single button read as a
-   stray line rather than a grouping; space says the same thing without
-   drawing anything. Settings is a different kind of button from the six above
-   it - those open a panel and come back, this one changes the page - and the
-   gap is the only thing left saying so. */
-.dock-tools {
-  margin-top: 0.55rem;
+  /* The glass takes a wash of the theme's accent instead of staying neutral.
+     Every theme already swung its background, its blur and its accent, but
+     the rail stayed the same slab of grey in all of them - flat black over
+     Neon's cyan, flat white over Paper.
+
+     Twelve percent is deliberately low. It has to read as belonging to the
+     theme without competing with the active button, which is that same accent
+     at full strength and needs to stay the loudest thing in the rail. The
+     wash is a gradient layer rather than a flat colour so it sits *over*
+     --panel-bg and keeps that alpha, which is what the blur behind it needs
+     to still show through. */
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line-soft));
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--accent) 12%, transparent),
+      color-mix(in srgb, var(--accent) 12%, transparent)
+    ),
+    var(--panel-bg);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 40px -12px var(--shadow);
 }
 
 .dock-btn {
@@ -461,7 +474,9 @@ html.is-entering .dock-btn {
 }
 
 .dock-btn:hover {
-  background: var(--surface-2);
+  /* Hover leans the same way the pill does, so the whole rail belongs to one
+     theme rather than a coloured tray holding grey buttons. */
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
   color: var(--text);
   transform: translateY(-2px);
 }
@@ -4046,12 +4061,10 @@ input[type="number"]::-webkit-inner-spin-button {
     flex-direction: row;
   }
 
-  /* The rail is a row down here, so the gap that sets Settings apart has to
-     turn with it - a margin-top would push it below the others instead of
-     beside them. */
-  .dock-tools {
-    margin-top: 0;
-    margin-left: 0.5rem;
+  /* Two pills side by side down here, so the rail's own gap does the
+     separating and .dock-tools needs nothing of its own. */
+  .dock-rail {
+    gap: 0.5rem;
   }
 
   .panel,
