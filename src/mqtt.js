@@ -25,6 +25,11 @@
    fail.
    ========================================================================== */
 
+/* The packet types this speaks. SUBACK and PINGRESP are never compared
+   against - they are the two that arrive and are deliberately ignored - but
+   they stay here because this block is the protocol reference, and a list of
+   opcodes with two missing invites the next reader to wonder what happened to
+   them. */
 const CONNECT = 0x10;
 const CONNACK = 0x20;
 const PUBLISH = 0x30;
@@ -196,8 +201,9 @@ export class MqttClient {
       return;
     }
 
-    void SUBACK;
-    void PINGRESP;
+    /* SUBACK and PINGRESP arrive and are meant to be ignored. Both are the
+       broker agreeing with something already assumed - the subscription took,
+       the line is alive - and neither carries anything to act on at QoS 0. */
   }
 
   sendSubscribe(topic) {
