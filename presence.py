@@ -171,7 +171,7 @@ def read_link(url):
         raise ValueError(
             "That is neither a duration nor a session link.\n"
             "  A duration:  50   or   25/5   or   25/5/15/4\n"
-            "  A link:      LockedIn -> Settings -> Timer -> Copy session link\n"
+            "  A link:      LockedIn -> Together -> Copy session link\n"
             "If you did paste a link, wrap it in quotes - the & in it will\n"
             "otherwise be eaten by the shell before Python ever sees it."
         )
