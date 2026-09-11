@@ -70,8 +70,8 @@ initGames();
 
 initStorage(); // replays the saved state over everything above
 
-/* Before initSession, which needs our peer id the moment the share button is
-   wired, and which hands off to connectToHost once it has joined. */
+/* Before initSession, which needs our channel id the moment the share button
+   is wired, and which hands off to joinChannel once it has joined. */
 initSync();
 
 /* After storage, because a shared session deliberately overrides the timer

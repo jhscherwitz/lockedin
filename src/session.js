@@ -1,5 +1,5 @@
 import { syncSettingInputs, updateConditionalFields } from "./settings.js";
-import { connectToHost, myPeerId, startHosting } from "./sync.js";
+import { joinChannel, myChannelId, startHosting } from "./sync.js";
 import { MINUTE, elapsedMs, isRunning, joinSessionAt, phaseAt, render, settings } from "./timer.js";
 import { showToast } from "./toast.js";
 
@@ -98,7 +98,7 @@ function buildLink() {
     url.searchParams.set("l", String(settings.longBreakMinutes));
     url.searchParams.set("r", String(settings.roundsBeforeLongBreak));
   }
-  url.searchParams.set("p", myPeerId);
+  url.searchParams.set("p", myChannelId);
   return url.toString();
 }
 
@@ -163,7 +163,7 @@ export function initSession() {
   /* After the arithmetic, never instead of it. If the host is online this
      hands over to them within a beat; if they are not, the line above already
      put us in the right place and that is the whole session. */
-  if (sharedSession.peer) connectToHost(sharedSession.peer);
+  if (sharedSession.peer) joinChannel(sharedSession.peer);
 
   const at = phaseAt(elapsed);
   const where =
