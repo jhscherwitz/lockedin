@@ -655,6 +655,7 @@
       </header>
       <nav class="tabs" role="tablist" aria-label="Settings sections">
         <button class="tab is-active" data-tab="timer">Timer</button>
+        <button class="tab" data-tab="share">Together</button>
         <button class="tab" data-tab="theme">Theme</button>
         <button class="tab" data-tab="clock">Clock</button>
         <button class="tab" data-tab="zone">Timezone</button>
@@ -706,6 +707,18 @@
             </div>
           </div>
 
+          <div class="field field-row" data-show-for="countdown pomodoro">
+            <label class="field-label" for="chime-toggle">Chime when a session ends</label>
+            <input class="switch" id="chime-toggle" type="checkbox" checked />
+          </div>
+
+          <div class="field field-row" data-show-for="countdown pomodoro">
+            <label class="field-label" for="notify-toggle">Browser notification</label>
+            <input class="switch" id="notify-toggle" type="checkbox" />
+          </div>
+        </div>
+
+        <div class="tab-panel" data-tab="share">
           <div class="field" data-show-for="countdown pomodoro">
             <span class="field-label">Study together</span>
             <button type="button" class="btn btn-ghost btn-wide" id="share-session">
@@ -727,14 +740,15 @@
             <p class="sound-hint sync-status" id="sync-status" hidden></p>
           </div>
 
-          <div class="field field-row" data-show-for="countdown pomodoro">
-            <label class="field-label" for="chime-toggle">Chime when a session ends</label>
-            <input class="switch" id="chime-toggle" type="checkbox" checked />
-          </div>
-
-          <div class="field field-row" data-show-for="countdown pomodoro">
-            <label class="field-label" for="notify-toggle">Browser notification</label>
-            <input class="switch" id="notify-toggle" type="checkbox" />
+          <!-- A stopwatch counts up with nothing to arrive at, so there is no
+               shared moment to put anyone in. Saying so beats an empty tab. -->
+          <div class="field" data-show-for="stopwatch">
+            <span class="field-label">Study together</span>
+            <p class="sound-hint">
+              The stopwatch has nothing to share - it counts up, with no end to
+              be in sync about. Switch the Timer tab to Countdown or Pomodoro
+              and the link appears here.
+            </p>
           </div>
         </div>
 
