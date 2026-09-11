@@ -802,6 +802,77 @@ html.is-entering .dock-btn {
   font-weight: 500;
 }
 
+/* Styled here rather than borrowing a class, so the one text field in this
+   panel cannot drift when another panel's inputs change. */
+#sync-name {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--sunk-1);
+  color: var(--text);
+  font-family: var(--display-font);
+  font-size: 0.88rem;
+}
+
+#sync-name:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.sync-people {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.sync-person {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.32rem 0.1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+/* Presence is the whole point of the row, so the dot is the accent at full
+   strength - it is the one thing here that means "right now". */
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.sync-name-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-tag {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sync-tag-you {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-2));
+  color: var(--text);
+}
+
 /* Only shown when the clipboard refuses, so it needs to be selectable rather
    than pretty. */
 .share-link {

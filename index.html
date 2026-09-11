@@ -512,6 +512,22 @@
       </header>
       <div class="panel-body">
         <div class="field" data-show-for="countdown pomodoro">
+          <label class="field-label" for="sync-name">Your name</label>
+          <input
+            id="sync-name"
+            class="text-input"
+            type="text"
+            maxlength="24"
+            autocomplete="off"
+            placeholder="Someone"
+          />
+          <p class="sound-hint">
+            Only ever sent to people who open your link, and only so they know
+            who is in the room.
+          </p>
+        </div>
+
+        <div class="field" data-show-for="countdown pomodoro">
           <button type="button" class="btn btn-ghost btn-wide" id="share-session">
             Copy session link
           </button>
@@ -529,6 +545,7 @@
             too, for as long as this tab stays open.
           </p>
           <p class="sound-hint sync-status" id="sync-status" hidden></p>
+          <div class="sync-people" id="sync-people" hidden></div>
         </div>
 
         <!-- A stopwatch counts up with nothing to arrive at, so there is no
