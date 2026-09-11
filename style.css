@@ -510,10 +510,6 @@ html.is-entering .dock-btn {
 
 /* The panels open from the dock, so the dock sits under them rather than
    floating in front. */
-.panel {
-  z-index: 20;
-}
-
 /* stroke: currentColor makes the icon inherit the button's text colour,
    so hover and active states recolour the icon for free. */
 .dock-btn svg {
@@ -4121,19 +4117,15 @@ input[type="number"]::-webkit-inner-spin-button {
     bottom: 1.4rem;
     transform: translateX(-50%);
     flex-direction: row;
-    gap: 0.35rem;
+    /* Two pills side by side down here, so the rail's own gap is what sets
+       Settings apart and .dock-tools needs nothing of its own. */
+    gap: 0.5rem;
     max-width: calc(100vw - 2rem);
     overflow-x: auto;
   }
 
   .dock {
     flex-direction: row;
-  }
-
-  /* Two pills side by side down here, so the rail's own gap does the
-     separating and .dock-tools needs nothing of its own. */
-  .dock-rail {
-    gap: 0.5rem;
   }
 
   .panel,
