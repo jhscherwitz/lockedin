@@ -94,7 +94,7 @@ your notes every time you checked a default, so you would never use it.
 
 ### The session link
 
-Settings → Timer → **Copy session link**. Send it to anyone. They open it and
+Open **Together** in the rail → **Copy session link**. Send it to anyone. They open it and
 land in your session already in progress — if you are nineteen minutes into
 round 3, so are they.
 
