@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LockedIn - link preview card</title>
+
+    <!-- ======================================================================
+         This page is not part of the site. It exists to be photographed.
+
+         Link previews want a 1200x630 image and there is no way to make one
+         from inside a static project, so this draws the card at exactly that
+         size and a person screenshots it once. See the note at the bottom of
+         the page for how.
+
+         It borrows style.css rather than restating any colour, so the card is
+         the real Forest theme and cannot drift from it. The only additions are
+         the overrides directly below, which pin the background inside the card
+         box instead of letting it fill the window.
+         ====================================================================== -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=satoshi&amp;f[]=clash-display&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      /* The page behind the card is the card's own base colour, so a
+         screenshot that overshoots the edge by a few pixels picks up more of
+         the same green rather than a visible seam. Square corners for the same
+         reason - a rounded card would show page behind the curve. */
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: var(--bg-base, #0b1711);
+      }
+
+      .og-card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 92px;
+        box-sizing: border-box;
+      }
+
+      /* style.css fixes the background to the window. Inside the card it has
+         to be absolute, or the shapes would be laid out against the browser
+         rather than against the 1200x630 box. */
+      .og-card .background {
+        position: absolute;
+        inset: 0;
+      }
+
+      .og-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .og-wordmark {
+        font-family: var(--display-font);
+        font-size: 44px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        opacity: 0.92;
+      }
+
+      /* The timer is the product, so it is the thing that is large. Everything
+         else on this card is a caption for it. */
+      .og-timer {
+        margin: 26px 0 0;
+        font-family: var(--timer-font);
+        font-size: 208px;
+        font-weight: var(--timer-weight, 600);
+        line-height: 0.92;
+        letter-spacing: 0.01em;
+        color: var(--text);
+        text-shadow: 0 8px 60px rgba(0, 0, 0, 0.38);
+      }
+
+      .og-line {
+        margin: 34px 0 0;
+        font-family: var(--display-font);
+        font-size: 31px;
+        font-weight: 500;
+        color: var(--text);
+        opacity: 0.86;
+      }
+
+      .og-line b {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      /* A screenshot guide, not part of the card. Hidden from the card box
+         itself because it sits outside it. */
+      .og-how {
+        max-width: 1200px;
+        margin: 26px auto 60px;
+        padding: 0 6px;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.65;
+        color: #cfe3d7;
+        opacity: 0.75;
+      }
+      .og-how code {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="og-card" id="og-card">
+      <!-- The same seven shapes the site draws, so this is literally the
+           page's own background rather than an impression of it. -->
+      <div class="background" aria-hidden="true">
+        <div class="shape s1"></div>
+        <div class="shape s2"></div>
+        <div class="shape s3"></div>
+        <div class="shape s4"></div>
+        <div class="shape s5"></div>
+        <div class="shape s6"></div>
+        <div class="grain"></div>
+        <div class="vignette"></div>
+      </div>
+
+      <div class="og-content">
+        <div class="og-wordmark">lockedin</div>
+        <div class="og-timer">25:00</div>
+        <p class="og-line">Study together — <b>one link, one clock</b></p>
+      </div>
+    </div>
+
+    <p class="og-how">
+      <strong>To make the preview image:</strong> press <code>Win + Shift + S</code>,
+      drag a box around the card above, then paste it into Paint and save it as
+      <code>og.png</code> in this project folder. Slight overshoot is fine — the
+      page behind the card is the same colour. Then tell Claude it's there.
+    </p>
+  </body>
+</html>
