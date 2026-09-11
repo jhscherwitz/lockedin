@@ -4155,4 +4155,74 @@ input[type="number"]::-webkit-inner-spin-button {
   .panel[data-panel="music"] {
     width: min(420px, calc(100vw - 2rem));
   }
+
+  /* Tasks has to be named too. Its own rule is an attribute selector, which
+     outranks the plain .panel above no matter what order they appear in, so
+     without this line it kept its desktop sum of 100vw - 9rem - and 9rem of
+     margin on a 375px phone left it 231px wide next to everything else's 336.
+     The 9rem is right on a desktop, where it clears the rail. */
+  .panel[data-panel="tasks"] {
+    width: min(400px, calc(100vw - 2rem));
+  }
+
+  /* ---- Fingers, not cursors ----------------------------------------------
+
+     A pointer is one pixel and a fingertip is about forty, and most of these
+     controls were sized for the pointer. Nothing here changes a layout: it
+     raises minimum heights and grows two hit areas, so the same design is
+     simply reachable.
+
+     Measured rather than guessed. The close button was 23x26, the task
+     checkbox 17x17 and its delete 15x18 - all of which are fine to click and
+     a coin toss to tap. */
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .panel-close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    /* Pull it back out to the panel's edge: the button grew, and without this
+       the larger box would push the cross inwards away from the corner. */
+    margin: -7px -8px -7px 0;
+  }
+
+  .tab {
+    min-height: 42px;
+  }
+
+  .segment {
+    min-height: 40px;
+  }
+
+  .calc-mode,
+  .music-chip {
+    min-height: 38px;
+  }
+
+  .task-check {
+    width: 28px;
+    height: 28px;
+  }
+
+  .task-delete {
+    width: 32px;
+    height: 32px;
+  }
+
+  .task-add,
+  #focus-minutes,
+  #short-break,
+  #long-break,
+  #rounds {
+    min-height: 42px;
+  }
+
+  /* The switches stay at 38x22 on purpose. They are a background plus a knob
+     positioned in fixed pixels, so resizing the box slides the knob off its
+     track - and a toggle you can hit anywhere along its length is far more
+     forgiving than its height suggests. Small, but not actually hard to use. */
 }
