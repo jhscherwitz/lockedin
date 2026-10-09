@@ -5,6 +5,34 @@
 A single-page focus dashboard: a Pomodoro timer, layerable ambient sounds,
 tasks and a notepad, on one calm screen.
 
+![LockedIn main screen](docs/screenshot-main.jpg)
+
+## Highlights
+
+- **Google Calendar via OAuth 2.0, entirely client-side** — no server ever
+  holds a token; the access token lives in memory and never touches storage
+- **Discord Rich Presence over the local IPC wire protocol**, implemented
+  directly in Python with the standard library only — no dependencies
+- **Live pause/resume sync across machines** through a hand-written ~8KB MQTT
+  client, after WebRTC proved unreliable across home NATs
+- **Shared study sessions with no backend** — the timer derives from a start
+  timestamp, so a link alone keeps two browsers in sync to the second
+- **Always-on-top mini timer** via the Document Picture-in-Picture API, plus
+  Spotify playlists, an ambient sound mixer, and eight break games
+
+**Tech:** vanilla JavaScript (ES modules), HTML, CSS, Python ·
+OAuth 2.0 · MQTT over WebSocket · Web Audio API · GitHub Pages ·
+no framework, no build step, no backend
+
+<details>
+<summary>More screenshots</summary>
+
+![Ambient sound mixer](docs/screenshot-sounds.jpg)
+
+</details>
+
+## Overview
+
 Built with plain HTML, CSS and JavaScript — no framework and no build step.
 One dependency, Anime.js, which is vendored into `src/vendor/` as a file
 rather than installed, so there is still no package manager and nothing is
